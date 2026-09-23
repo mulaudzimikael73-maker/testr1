@@ -1,0 +1,49 @@
+Garden update — new seeds + new flowers/trees
+==============================================
+
+Upload/replace these files in your repo (flat structure kept from this zip):
+
+  script.js                          ->  script.js  (replaces existing)
+  seed-store.js                      ->  seed-store.js  (replaces existing)
+  assets/flowers/protea.png          ->  assets/flowers/protea.png
+  assets/flowers/zinnia.png          ->  assets/flowers/zinnia.png
+  assets/flowers/camellia.png        ->  assets/flowers/camellia.png
+  assets/flowers/marigold.png        ->  assets/flowers/marigold.png
+  assets/flowers/babysBreath.png     ->  assets/flowers/babysBreath.png
+  assets/flowers/ranunculus.png      ->  assets/flowers/ranunculus.png
+  assets/flowers/blueRose.png        ->  assets/flowers/blueRose.png
+  assets/flowers/weepingCherry.png   ->  assets/flowers/weepingCherry.png
+  assets/flowers/redwood.png         ->  assets/flowers/redwood.png
+  assets/flowers/baobab.png          ->  assets/flowers/baobab.png
+  assets/flowers/wisteriaArch.png    ->  assets/flowers/wisteriaArch.png
+  assets/flowers/cacaoTree.png       ->  assets/flowers/cacaoTree.png
+
+What changed
+------------
+1) Seeds added to the Seed Shop for flowers that already had art but no
+   seed: Carnation (4 MB), Daisy (4), Poppy (4), Daffodil (4), Pink Rose (5),
+   White Rose (5), Hydrangea (5), Chrysanthemum (5), Hibiscus (5), Peony (8),
+   Iris (8). Priced to match the existing Common/Uncommon/Rare bands already
+   used by Tulip/Rose/Snapdragon/Lily/etc.
+
+2) 7 new flowers added (art cropped from your reference sheet, seeds in the
+   shop too):
+     Marigold (Common, 4 MB), Baby's Breath (Common, 4 MB),
+     Zinnia (Uncommon, 5 MB), Camellia (Uncommon, 5 MB),
+     Protea (Rare, 9 MB), Ranunculus (Rare, 9 MB),
+     Blue Rose (Legendary, 24 MB)
+
+3) 5 new trees added (also cropped from your reference sheet):
+     Cacao Tree (Epic, 20 MB), Weeping Cherry (Rare, 26 MB),
+     Redwood (Epic, 32 MB), Baobab (Epic, 34 MB),
+     Wisteria Arch (Legendary, 40 MB)
+
+4) The 6 new non-legendary flowers (Marigold, Baby's Breath, Zinnia,
+   Camellia, Protea, Ranunculus) were also added to STANDARD_FLOWERS, so
+   they can show up from "random flower" rewards too — same as your other
+   standard flowers. Blue Rose was left out of that pool, same as
+   Moonflower, since it's Legendary-tier.
+
+Everything else (Garden growth logic, weather, watering, etc.) is
+untouched — this is purely new catalog entries plus the matching seed
+images.
