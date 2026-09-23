@@ -1,0 +1,69 @@
+MIZZYGRAM — PHASE 3 (Build The MizzyGram Community)
+=====================================================
+
+UPDATED FILES (replace the existing ones at the ROOT of the repo):
+  mizzygram.js
+  mizzygram.css
+
+Nothing else was touched. No new asset files needed — every fictional
+account's avatar and posts are drawn on the fly as little gradient +
+emoji SVG cards, so there's nothing extra to upload. Still
+single-device (IndexedDB), same as Phase 1 & 2.
+
+WHAT'S NEW
+
+1. Seven fictional accounts, each with their own look and voice:
+     @mikaelhq            🏢  Mikael HQ           — dry command-centre memos
+     @lizzyos              💻  LizzyOS             — glitchy, affectionate system logs
+     @bowlingfederation     🎳  Bowling Federation  — over-the-top sports commentary
+     @chocolateemergency    🍫  Chocolate Emergency — dramatic crisis alerts
+     @bankofmicky            💰  Bank of Micky       — mock-formal Token Jar banking
+     @mickysdailynews         📰  Micky's Daily News  — tabloid headlines about you two
+   Each has a bio, a personality, a handful of seed posts on their own
+   profile, and already follows both Lizzy and Mikael (Micky's Daily
+   News follows literally everyone — it's the paparazzi account).
+   They're all tagged "bot" on their profile so it's clear they're
+   fictional, not real accounts.
+
+2. Their posts are real MizzyGram posts.
+   Each account's seed captions (e.g. ChocolateEmergency's "🚨
+   CHOCOLATE ALERT 🚨") turn into actual posts on their profile and in
+   Explore, with a generated announcement-card image, backdated over
+   the last several days so the feed doesn't look like it was all
+   posted at once.
+
+3. The community reacts to you.
+   Whenever Lizzy or Mikael posts a new photo, 2–5 of the fictional
+   accounts show up over the next few seconds to react (their favourite
+   emoji most of the time — Chocolate Emergency leans 🍫, Bowling
+   Federation leans 🎳, etc.), and about 60% of the time one of them
+   also leaves a comment from their personality-flavored comment bank
+   — occasionally as a reply to an existing comment instead of a new
+   one. It's throttled and randomized on purpose so it feels like
+   people dropping by, not a bot spam attack. Existing posts that
+   never got any love also get a first pass of this the next time the
+   app loads.
+
+4. @Mikael, built out separately.
+   Mikael already had his own real profile (Phase 2) with the "Switch
+   to Mikael" button for when he's actually using the app himself —
+   posting, commenting, liking and replying as himself. On top of
+   that, he now has a quiet passive presence too: when Lizzy posts and
+   Mikael isn't the one currently driving the app, he's included in
+   the pool of accounts that may react — so it still feels like he's
+   there even when he's not holding the phone.
+   He also now has Stories — tap his avatar at the top of the Home
+   feed to see a couple of seeded ones. Tap left/right (or use the
+   arrow keys) to move between them; they're marked as "seen" per
+   person so the ring fades once you've viewed them.
+
+EDIT ACCOUNTS / PERSONALITIES
+  Open mizzygram.js and edit the CONFIG.users block near the top —
+  add/edit bio, posts, comments (the comment bank used when reacting),
+  favReaction (their most-used emoji), and tile (the emoji + two
+  gradient colors used to draw their avatar and post cards).
+
+After GitHub Pages deploys, hard refresh (Ctrl+Shift+R). If you'd
+like a completely fresh run of the seeded posts/stories (e.g. after
+editing captions), clearing the site's IndexedDB storage for the page
+will make it reseed on next load.
