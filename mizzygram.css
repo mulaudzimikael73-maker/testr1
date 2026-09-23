@@ -82,7 +82,7 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .postHead time{margin-left:auto;font-size:12px;color:var(--soft)}
 .photo{position:relative;background:var(--blush);user-select:none;-webkit-user-select:none}
 .photo>img{display:block;width:100%;max-height:560px;object-fit:cover}
-.burst{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0}
+.burst{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;font-size:88px;filter:drop-shadow(0 6px 16px #2a103066)}
 .burst svg{width:96px;height:96px;fill:#fff;stroke:none;filter:drop-shadow(0 6px 16px #2a103066)}
 .photo.pop .burst{animation:pop .7s ease-out}
 @keyframes pop{0%{opacity:0;transform:scale(.5)}25%{opacity:1;transform:scale(1.1)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
@@ -194,3 +194,62 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* =====================================================================
+   Phase 2 — Make It Social
+   ===================================================================== */
+
+/* clickable avatar / username resets (used for profile navigation) */
+button.ava{border:0;cursor:pointer}
+button.uname{border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit}
+button.uname:hover{text-decoration:underline}
+
+/* reactions */
+.likeWrap{position:relative}
+.reactEmoji{font-size:21px;line-height:1}
+.likes{display:block;border:0;background:none;padding:0 14px;margin-top:2px;font-weight:700;font-size:14px;color:inherit;cursor:pointer;text-align:left}
+.likes:hover{text-decoration:underline}
+
+.reactPop{
+  position:absolute;z-index:40;display:flex;gap:2px;padding:6px;border-radius:999px;
+  background:var(--paper);box-shadow:0 14px 34px #2a103044,0 0 0 1px var(--line);
+  transform:translate(-50%,6px) scale(.85);opacity:0;pointer-events:none;
+  transition:transform .16s ease,opacity .16s ease;
+}
+.reactPop.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
+.reactOpt{border:0;background:none;font-size:23px;line-height:1;padding:6px;border-radius:50%;cursor:pointer;transition:transform .1s ease,background .1s ease}
+.reactOpt:hover,.reactOpt:focus-visible{background:var(--blush);transform:scale(1.2)}
+
+.reactGroup{padding:10px 16px 4px}
+.reactGroup+.reactGroup{border-top:1px solid var(--line);padding-top:12px}
+.reactGroupHead{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:6px}
+.reactGroupHead span{margin-left:auto;color:var(--soft)}
+.reactUser{display:flex;align-items:center;gap:10px;width:100%;padding:6px 0;border:0;background:none;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.reactUser:hover{text-decoration:underline}
+
+/* comments */
+.cList{padding:4px 16px}
+.cItem{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:7px 0}
+.cItem.reply{margin-left:40px}
+.cBody{min-width:0;line-height:1.4;overflow-wrap:anywhere}
+.cUname{border:0;background:none;padding:0;font-weight:700;cursor:pointer;font:inherit;color:inherit}
+.cUname:hover{text-decoration:underline}
+.cMeta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:3px;font-size:12px;color:var(--soft)}
+.cLink{border:0;background:none;padding:0;font:inherit;font-size:12px;font-weight:700;color:var(--soft);cursor:pointer}
+.cLink:hover{color:var(--pink)}
+.cLink.danger:hover{color:#b4173f}
+.cNone{padding:32px 16px;text-align:center;color:var(--soft)}
+
+.replyBanner{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;background:var(--blush);font-size:13px;color:var(--ink)}
+.replyBanner button{border:0;background:none;width:22px;height:22px;display:grid;place-items:center;cursor:pointer;color:var(--soft)}
+.replyBanner svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+
+/* follow system */
+.statBtn{border:0;background:none;padding:0;display:block;width:100%;font:inherit;color:inherit;cursor:pointer}
+.statBtn:hover b{color:var(--pink)}
+.btn.sm{min-height:36px;padding:0 16px;font-size:13px}
+.followRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.followRow:last-child{border-bottom:0}
+.followUser{display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:inherit;min-width:0}
+.followUser b{display:block;font-size:14px}
+.followUser small{display:block;color:var(--soft);font-weight:400;font-size:12px}

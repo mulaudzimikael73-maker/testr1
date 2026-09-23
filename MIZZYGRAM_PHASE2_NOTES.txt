@@ -1,0 +1,56 @@
+MIZZYGRAM — PHASE 2 (Make It Social)
+=====================================
+
+UPDATED FILES (replace the existing ones at the ROOT of the repo):
+  mizzygram.js
+  mizzygram.css
+
+Nothing else was touched — mizzygram.html and coop.html/coop.css are
+unchanged. No Cloudflare Worker change needed. Still single-device
+(IndexedDB), same as Phase 1.
+
+WHAT'S NEW
+
+1. Mikael is now a real second profile.
+   Since Followers/Following don't mean anything with only one account,
+   Mikael got added as a second user (assets/mikael-appears/mikael-1.jpg).
+   Mikael already follows Lizzy by default (a nice touch, not toggleable
+   from Lizzy's side since it's his relationship, not hers).
+
+2. Switching who you're "using" MizzyGram as.
+   Open the Profile tab -> your own profile now has a
+   "Switch to Mikael" / "Switch to Lizzy" button. Whoever is acting
+   flips who posts, likes, comments, and follows are attributed to.
+   This is the workaround for being single-device until Phase 3 wires
+   this up to the shared Worker so you can each use your own phone.
+
+3. Likes -> Reactions
+   Tapping the heart still works exactly like before (defaults to ❤️
+   Love) and double-tapping a photo always hearts it, Instagram-style.
+   Press-and-hold the heart button to pick one of the 8 MizzyGram
+   reactions: ❤️ 😂 😈 😍 🔥 🎳 🍫 👀. Tap the reaction count under a
+   photo to see who reacted and with what ("who liked it", upgraded).
+   Old Phase 1 likes are migrated automatically into ❤️ reactions the
+   first time you load the app — nothing is lost.
+
+4. Comments
+   Add, reply (one level of threading, indented), like, and delete your
+   own comments (a Delete link only shows on comments you wrote).
+
+5. Follow system
+   Profile now shows real Followers / Following counts. Tap either
+   number to see the list. Visiting someone else's profile (tap their
+   avatar or username anywhere — a post, a comment, a reaction list)
+   shows a real Follow/Unfollow button.
+
+EDIT USERS / REACTIONS
+  Open mizzygram.js and edit the CONFIG block at the top — CONFIG.users
+  for either profile's name/bio/avatar, CONFIG.reactions for the emoji
+  set.
+
+After GitHub Pages deploys, hard refresh (Ctrl+Shift+R).
+
+NEXT UP — PHASE 3 IDEAS
+  Real per-device sync through the Cloudflare Worker so Lizzy and
+  Mikael can each use MizzyGram from their own phone instead of sharing
+  a device and switching accounts.
