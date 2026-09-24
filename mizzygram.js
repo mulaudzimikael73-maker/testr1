@@ -487,6 +487,142 @@ const CONFIG={
         "Applied for a job I am extremely unqualified for. Confidence is 90% of the process."
       ],
       comments:["This is exactly the kind of quality content this town needs.","I have several follow-up questions, all supportive.","Adding this to my scrapbook of favorite moments.","This deserves a spot in the town festival.","I don't fully understand it, but I fully support it."]
+    },
+
+    /* ---- Brooklyn Nine-Nine cast — post at random, never all on the same day (see seedB99IfNeeded / startB99Posts) ---- */
+    jake:{
+      id:"jake",username:"jake",name:"Jake Peralta",bot:true,favReaction:"funny",
+      avatar:tileAvatar("🚨","#2563eb","#0b1a3a"),
+      bio:"Detective, 99th Precinct.\nTitle of your sex tape. Nine-Nine!",
+      tile:["🚨","#2563eb","#0b1a3a"],
+      posts:[
+        "Solved a case today using only a Die Hard reference and pure instinct. New record.",
+        "Cool cool cool cool cool, no doubt no doubt no doubt, just checking in on this post.",
+        "Made a bet with Amy again. Lost again. Worth it every time.",
+        "Wore my bulletproof vest to a birthday party today. You can never be too prepared. Or normal.",
+        "Captain Holt gave me a look today. I don't know what it meant. I never know what it means.",
+        "Solved the case, saved the day, still lost the parking spot to Terry. Rude.",
+        "Pretty sure I just quoted Die Hard four times in one meeting. Personal best."
+      ],
+      comments:["Noice.","This is the best thing that's happened to me all day, and I once caught a guy whose only disguise was a fake mustache.","Title of your sex tape.","Cool cool cool, love this, no doubt.","This deserves a Die Hard-level celebration."]
+    },
+    amy:{
+      id:"amy",username:"amy",name:"Amy Santiago",bot:true,favReaction:"love",
+      avatar:tileAvatar("🗂️","#ec4899","#4a044e"),
+      bio:"Detective, 99th Precinct.\nBinders, color-coded pens, and a five-year plan.",
+      tile:["🗂️","#ec4899","#4a044e"],
+      posts:[
+        "Reorganized my case files by color, then by date, then by color again. Perfection achieved.",
+        "Got a 'good job' nod from Captain Holt today. Framing it. Mentally. Possibly literally.",
+        "Made a pro/con list for lunch today. Lunch won. Barely.",
+        "Filed my paperwork three days early again. No, I will not be taking questions about why.",
+        "Jake bet me I couldn't finish this report in an hour. Finished it in forty minutes. Never doubt me.",
+        "Started a new binder today. It has a title page. It has tabs. It has my whole heart."
+      ],
+      comments:["This is so well organized, I'm genuinely impressed.","Adding this to my planner immediately.","This deserves a gold star. I'm making one right now.","Ten out of ten, very thorough, very good.","I have a binder just for posts like this now."]
+    },
+    rosa:{
+      id:"rosa",username:"rosa",name:"Rosa Diaz",bot:true,favReaction:"attitude",
+      avatar:tileAvatar("🏍️","#7f1d1d","#1a1a1a"),
+      bio:"Detective, 99th Precinct.\nDon't ask about my personal life. Or my motorcycle. Okay, the motorcycle's fine.",
+      tile:["🏍️","#7f1d1d","#1a1a1a"],
+      posts:[
+        "Someone asked how I was doing today. I said 'fine.' They believed me. Good.",
+        "Rode my motorcycle to work today. Rode it home too. That's the whole update.",
+        "Intimidated a suspect into confessing in under two minutes. New record. Didn't even raise my voice.",
+        "Someone tried to make small talk in the elevator. I let the silence speak for itself.",
+        "Wore leather to a wedding. It was appropriate. I decided it was appropriate.",
+        "Punched a wall today. The wall started it. Metaphorically."
+      ],
+      comments:["Fine. This is good.","Didn't say I liked it. I liked it.","Not bad.","This is acceptable.","Noted."]
+    },
+    terry:{
+      id:"terry",username:"terry",name:"Terry Jeffords",bot:true,favReaction:"cute",
+      avatar:tileAvatar("🥛","#16a34a","#052e16"),
+      bio:"Sergeant, 99th Precinct.\nTerry loves yogurt. Terry loves his girls more.",
+      tile:["🥛","#16a34a","#052e16"],
+      posts:[
+        "Terry ate an entire tub of yogurt today. Terry regrets nothing. Terry needs more yogurt.",
+        "Did 400 push-ups before lunch. Terry's arms are enormous and also very tired.",
+        "Showed everyone a new photo of the girls today. Nobody left the break room for twenty minutes. Worth it.",
+        "Terry organized the equipment room today. Terry loves organization almost as much as protein.",
+        "Broke up a fight today using only Terry's voice. Didn't even have to move.",
+        "Terry cried a little during a commercial today. Terry is not sorry."
+      ],
+      comments:["Terry loves this post.","This made Terry's whole day.","Terry approves, and Terry does not approve lightly.","Terry has opinions and this is a good one.","Terry is very proud of this."]
+    },
+    holt:{
+      id:"holt",username:"holt",name:"Captain Raymond Holt",bot:true,
+      avatar:tileAvatar("🐈","#1e3a5f","#0f172a"),
+      bio:"Captain, 99th Precinct.\nCheddar's father. Efficiency enthusiast.\nI do not smile. This is a smile.",
+      tile:["🐈","#1e3a5f","#0f172a"],
+      posts:[
+        "Cheddar refused to eat his dinner today. We stared at each other for eleven minutes. I do not know who won.",
+        "Delivered a briefing today with zero unnecessary words. It was, I believe, a personal best.",
+        "Someone attempted a joke in the briefing room today. I did not laugh. Internally, I was delighted.",
+        "Reorganized the precinct's filing system. Efficiency increased by 12 percent. I am content.",
+        "Kevin made dinner tonight. It was exquisite. I have already requested it again for Thursday.",
+        "A detective referred to me as 'terrifying' today. I consider this accurate and satisfactory."
+      ],
+      comments:["This is acceptable work.","I am, in my own way, delighted by this.","Well done. This is not said lightly.","I have reviewed this. It meets my standards.","A rare and genuine commendation: good work."]
+    },
+    boyle:{
+      id:"boyle",username:"boyle",name:"Charles Boyle",bot:true,favReaction:"love",
+      avatar:tileAvatar("🍲","#92400e","#451a03"),
+      bio:"Detective, 99th Precinct.\nAmateur chef. Professional Jake Peralta enthusiast.",
+      tile:["🍲","#92400e","#451a03"],
+      posts:[
+        "Made a seven-course meal for one person today. That person was me. No regrets.",
+        "Told Jake I'd take a bullet for him today. He said thanks, I think he meant it.",
+        "Tried a new recipe involving an ingredient I can't pronounce. It was incredible. I cried a little.",
+        "Organized a surprise party today. It went sideways almost immediately. Still count it as a win.",
+        "Someone said my food smelled weird today. Their loss, honestly. Their tremendous loss.",
+        "Had an emotional breakthrough during lunch. Also had a great sandwich. Big day overall."
+      ],
+      comments:["This made me emotional, in a good way!","I would fight someone over how good this is.","This deserves its own seven-course celebration.","Genuinely one of the best things I've seen today.","I'm tearing up a little, not gonna lie."]
+    },
+    gina:{
+      id:"gina",username:"gina",name:"Gina Linetti",bot:true,favReaction:"fire",
+      avatar:tileAvatar("💃","#f472b6","#6b21a8"),
+      bio:"Civilian Administrator, 99th Precinct.\nHuman form of the 100 emoji. You're welcome.",
+      tile:["💃","#f472b6","#6b21a8"],
+      posts:[
+        "Did absolutely nothing productive today and somehow still ran this entire precinct. Iconic.",
+        "Taught myself a new dance today. Debuted it in the break room. No applause was necessary. I heard it anyway.",
+        "Ignored several emails today. They're still there. I'm still fabulous. Balance.",
+        "Someone asked me to do actual work today. I considered it. Then I didn't.",
+        "Posted a selfie today. It broke the internet. My internet. In my head.",
+        "Gave someone advice today. It was extremely good advice. They didn't take it. Their loss."
+      ],
+      comments:["This is iconic and I don't say that lightly, I say it constantly but I mean it.","Obsessed. Big mood. All of it.","This deserves way more attention, immediately.","I would put this on a billboard.","This is giving main character energy and I respect it."]
+    },
+    hitchcock:{
+      id:"hitchcock",username:"hitchcock",name:"Hitchcock",bot:true,favReaction:"chocolate",
+      avatar:tileAvatar("🍩","#57534e","#1c1917"),
+      bio:"Detective, 99th Precinct.\nTechnically still employed. Technically.",
+      tile:["🍩","#57534e","#1c1917"],
+      posts:[
+        "Ate lunch at my desk today. And breakfast. Might've been the same meal.",
+        "Solved a cold case today by accident. Went right back to napping after.",
+        "Someone asked when I last left the building. I could not answer with confidence.",
+        "Scully and I split a large pizza today. Between the two of us. Just the two of us.",
+        "Did not do much today. Did not plan to. Zero regrets."
+      ],
+      comments:["Yeah, this is good, I liked it.","Didn't move much today but I moved my thumb for this.","Solid. Real solid.","I'd get up and clap but I won't.","Good one."]
+    },
+    scully:{
+      id:"scully",username:"scully",name:"Scully",bot:true,favReaction:"cute",
+      avatar:tileAvatar("🥪","#a16207","#422006"),
+      bio:"Detective, 99th Precinct.\nFamily photos and snacks, mostly in that order.",
+      tile:["🥪","#a16207","#422006"],
+      posts:[
+        "Showed everyone photos of my grandkids today. Again. No regrets, they're perfect.",
+        "Had three lunches today. It was a big day for lunch.",
+        "Fainted a little at a crime scene today. Recovered with a sandwich.",
+        "Hitchcock and I solved absolutely nothing today, together, as a team.",
+        "Told a story about my ex-wife today. Twelve minutes long. No one asked. Everyone listened."
+      ],
+      comments:["This is sweet, really.","Reminds me of my grandkids, in a good way.","Nice. Very nice.","This made my whole day a little better.","I liked this. A lot, actually."]
     }
   },
   reactions:[
@@ -1297,6 +1433,34 @@ function startGilmorePosts(){
   },5*60000);
 }
 
+/* ---------- Brooklyn Nine-Nine cast: random, staggered posting (same pattern as the other casts) ---------- */
+const B99_IDS=["jake","amy","rosa","terry","holt","boyle","gina","hitchcock","scully"];
+const b99Bots=()=>B99_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+async function seedB99IfNeeded(){
+  if(await Store.getMeta("npc-seed-b99-v1",false))return;
+  try{await Store.setMeta("npc-seed-b99-v1",true)}catch{}
+  const now=Date.now();
+  for(const u of b99Bots()){
+    if(Math.random()<0.3)continue;
+    const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
+    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
+function startB99Posts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    for(const u of b99Bots()){
+      const lastPost=state.posts.find(p=>p.userId===u.id);
+      const lastAt=lastPost?lastPost.createdAt:0;
+      const minGapHours=16+Math.random()*24;
+      if(Date.now()-lastAt<minGapHours*36e5)continue;
+      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+    }
+  },5*60000);
+}
+
 /* =====================================================================
    Views
    ===================================================================== */
@@ -1859,6 +2023,7 @@ function migratePost(p){
     await seedPresidentIfNeeded();
     await seedOfficeIfNeeded();
     await seedGilmoreIfNeeded();
+    await seedB99IfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
@@ -1883,7 +2048,7 @@ function migratePost(p){
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();
