@@ -1,0 +1,38 @@
+MIZZYGRAM — PHASE 5 (Stories, Notifications, Saved, Sharing)
+==============================================================
+
+UPDATED FILES (replace the existing ones at the ROOT of the repo):
+  mizzygram.js
+  mizzygram.css
+
+Nothing else was touched. Still single-device storage (IndexedDB), no Worker change.
+After GitHub Pages deploys, hard refresh (Ctrl+Shift+R).
+
+WHAT'S NEW
+1. Stories (17)
+   - "Your story" bubble (+) at the start of the Home stories bar.
+   - Create a Photo story or a Text story (6 gradient backgrounds).
+   - Story timer: pick 5s / 10s / 15s. Viewer auto-advances with a progress bar,
+     tap left/right to skip. Stories expire after 24h (CONFIG.storyHours).
+   - React to stories with the 8 MizzyGram reactions; your own story shows seen/reaction counts.
+   - Community accounts (and Mikael, quietly) view + react to your stories.
+   - Three community accounts now have text stories that never expire.
+2. Notifications (18)
+   - Likes/reactions, comments + replies, new followers, 💗 Mikael interactions
+     (anything Mikael does to Lizzy), 🔥 Trending, 🎁 Rewards, plus 📤 Shared.
+   - Filter chips, Today / This week / Earlier, unread highlight, red badge on the bell + nav.
+   - Existing likes/comments are back-filled once (as already read).
+   - Rewards: Welcome, First Photo, Storyteller, Collector, Sharer, Crowd Pleaser,
+     Conversation Starter, Trending (edit REWARDS in mizzygram.js).
+3. Saved posts (19)
+   - Bookmark on every post (tap = save/unsave). Folder icon appears once saved.
+   - Profile -> Saved tab -> collections. Defaults: 💗 Favourites, 🎳 Bowling,
+     😂 Funny, 👀 Suspicious. Create / edit / delete your own.
+4. Post sharing (20)
+   - Paper-plane on every post: send to Mikael and/or community accounts
+     (with an optional message), or add the post to your story.
+   - Mikael gets it as a notification; community accounts react to what you send.
+
+NOT IN THIS BUILD
+   - Video stories, hold-to-pause, and a full "seen by" list (counts only).
+   - Rewards don't touch the Token Jar yet — that would be a Worker/Bank change.

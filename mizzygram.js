@@ -1,7 +1,7 @@
 (()=>{"use strict";
 
 /* =====================================================================
-   MizzyGram — Phase 3 (Build The MizzyGram Community)
+   MizzyGram — Phase 5 (Stories, Notifications, Saved, Sharing)
    Everything is stored in this browser (IndexedDB) for now.
    To change a user's username / bio / picture / personality, edit
    CONFIG below. To act as Mikael instead of Lizzy, use the "Switch to
@@ -140,7 +140,10 @@ const CONFIG={
   maxImage:1080,      // longest side of an uploaded photo, in px
   quality:.85,        // JPEG quality
   maxCaption:500,
-  maxComment:300
+  maxComment:300,
+  storySeconds:5,     // default seconds a photo/text story stays on screen
+  storyHours:24,      // stories disappear after this many hours
+  storyBgs:["linear-gradient(135deg,#ff4d9a,#7a35dc)","linear-gradient(135deg,#ffb84c,#e8317f)","linear-gradient(135deg,#3a7bd5,#7a35dc)","linear-gradient(135deg,#2f8f5b,#123322)","linear-gradient(135deg,#8a5a2c,#3a220f)","linear-gradient(135deg,#3a3a55,#0e0410)"]
 };
 
 const $=id=>document.getElementById(id);
@@ -157,7 +160,9 @@ const I={
   grid:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>',
   send:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
-  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>'
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  bookmark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+  folder:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>'
 };
 
 /* =====================================================================
@@ -219,9 +224,9 @@ const state={
   replyTo:null,           // {id,username} of the comment being replied to
   seenStories:new Set(),  // story ids the active user has already opened
   exploreQuery:"",        // current text in the Explore search box
-  hashtag:""              // tag currently being viewed on the #hashtag page
+  hashtag:"",notifs:[],notifFilter:"all",notifHi:new Set(),saved:{},rewards:{},trendDone:[],savedCol:"",storyDraft:null,booting:false              // tag currently being viewed on the #hashtag page
 };
-const VIEWS=["home","explore","post","notifications","profile","hashtag"];
+const VIEWS=["home","explore","post","notifications","profile","hashtag","saved"];
 const userOf=id=>CONFIG.users[id]||{username:"unknown",name:"Unknown",avatar:""};
 const newestFirst=()=>state.posts.sort((a,b)=>b.createdAt-a.createdAt);
 const reactionOf=id=>CONFIG.reactions.find(r=>r.id===id);
@@ -250,6 +255,7 @@ async function toggleFollow(targetId){
   if(who===targetId||!CONFIG.users[targetId])return;
   if(!followGraph[who])followGraph[who]=new Set();
   followGraph[who].has(targetId)?followGraph[who].delete(targetId):followGraph[who].add(targetId);
+  if(followGraph[who].has(targetId))notify({to:targetId,from:who,kind:"follow",key:"f:"+who+":"+targetId});else unnotify("f:"+who+":"+targetId);
   await saveFollowGraph();
   render(true);renderSheet();
 }
@@ -338,12 +344,12 @@ function scheduleCommunityReactions(post){
 async function communityReact(postId,userId){
   const p=state.posts.find(x=>x.id===postId);if(!p)return;
   const u=CONFIG.users[userId];if(!u)return;
-  if(!p.reactions[userId])p.reactions[userId]=weightedReaction(u);
+  if(!p.reactions[userId]){p.reactions[userId]=weightedReaction(u);reactNotify(p,userId)}
   if(u.comments&&u.comments.length&&Math.random()<0.6){
     const top=p.comments.filter(c=>!c.parentId);
     const replyToExisting=top.length&&Math.random()<0.3;
     const text=u.comments[Math.floor(Math.random()*u.comments.length)];
-    p.comments.push({id:uid(),userId,text,createdAt:Date.now(),likes:[],parentId:replyToExisting?top[Math.floor(Math.random()*top.length)].id:null});
+    const nc={id:uid(),userId,text,createdAt:Date.now(),likes:[],parentId:replyToExisting?top[Math.floor(Math.random()*top.length)].id:null};p.comments.push(nc);notifyComment(p,nc);
   }
   try{await Store.savePost(p)}catch{}
   render(true);renderSheet();
@@ -481,6 +487,224 @@ function bindExplore(){
 }
 
 /* =====================================================================
+   Phase 5 — Notifications, Rewards, Saved posts, Sharing, Story tools
+   ===================================================================== */
+const NOTIF_FILTERS=[["all","All"],["like","❤️ Likes"],["comment","💬 Comments"],["follow","👥 Followers"],["mikael","💗 Mikael"],["trend","🔥 Trending"],["reward","🎁 Rewards"],["share","📤 Shared"]];
+const CATS={like:"❤️",comment:"💬",follow:"👥",mikael:"💗",trend:"🔥",reward:"🎁",share:"📤"};
+const REWARDS={
+  welcome:["👋","Welcome to MizzyGram","You're all set. Post, save, share and collect."],
+  first_post:["📸","First Photo","You posted your first photo."],
+  first_story:["🎞️","Storyteller","You shared your first story."],
+  first_save:["🔖","Collector","You saved your first post."],
+  first_share:["📤","Sharer","You shared a post."],
+  reactions_10:["🔥","Crowd Pleaser","10 reactions on your posts."],
+  comments_5:["💬","Conversation Starter","5 comments on your posts."],
+  trending:["📈","Trending","One of your posts hit Trending."]
+};
+let svTimer=null;
+const storyAlive=x=>x.evergreen||Date.now()-x.createdAt<CONFIG.storyHours*36e5;
+
+/* ----- notifications ----- */
+function persistNotifs(){state.notifs=state.notifs.sort((a,b)=>b.createdAt-a.createdAt).slice(0,300);Store.setMeta("notifs",state.notifs).catch(()=>{})}
+function notify(n){
+  if(!CONFIG.humans.includes(n.to)||n.to===n.from)return;
+  n.id=uid();n.createdAt=n.createdAt||Date.now();n.read=!!n.read||state.booting;
+  n.cat=({postReact:"like",storyReact:"like",commentLike:"like",comment:"comment",reply:"comment"})[n.kind]||n.kind;
+  if(n.from==="mikael"&&n.to==="lizzy"&&["like","comment","follow","share"].includes(n.cat))n.cat="mikael"; // 💗 Mikael interactions
+  if(n.key)state.notifs=state.notifs.filter(x=>x.key!==n.key);
+  state.notifs.unshift(n);
+  if(n.to===state.activeUser&&state.view==="notifications"&&!n.read){n.read=true;state.notifHi.add(n.id);render(true)}
+  persistNotifs();updateBadges();
+}
+function unnotify(key){state.notifs=state.notifs.filter(x=>x.key!==key);persistNotifs();updateBadges()}
+function updateBadges(){
+  const c=state.notifs.filter(n=>n.to===state.activeUser&&!n.read).length;
+  document.querySelectorAll('.top a[href="#notifications"],.bottom a[data-view="notifications"]').forEach(a=>{
+    let b=a.querySelector(".nBadge");
+    if(!c){if(b)b.remove();return}
+    if(!b){b=document.createElement("i");b.className="nBadge";a.appendChild(b)}
+    b.textContent=c>9?"9+":c;
+  });
+}
+function reactNotify(p,who){
+  const r=p.reactions[who],key="pr:"+p.id+":"+who;
+  if(r)notify({to:p.userId,from:who,kind:"postReact",postId:p.id,emoji:reactionOf(r).emoji,key});else unnotify(key);
+  afterActivity();
+}
+function notifyComment(p,c){
+  const par=c.parentId&&p.comments.find(x=>x.id===c.parentId);
+  notify({to:p.userId,from:c.userId,kind:par?"reply":"comment",postId:p.id,text:c.text,key:"c:"+c.id});
+  if(par&&par.userId!==p.userId)notify({to:par.userId,from:c.userId,kind:"reply",postId:p.id,text:c.text,key:"cr:"+c.id});
+  afterActivity();
+}
+function notifText(n){
+  const nm=`<b>${esc(userOf(n.from).name)}</b>`,q=n.text?` “${esc(n.text.slice(0,70))}”`:"";
+  switch(n.kind){
+    case"postReact":return`${nm} reacted ${n.emoji} to your photo.`;
+    case"storyReact":return`${nm} reacted ${n.emoji} to your story.`;
+    case"commentLike":return`${nm} liked your comment.${q}`;
+    case"comment":return`${nm} commented:${q}`;
+    case"reply":return`${nm} replied:${q}`;
+    case"follow":return`${nm} started following you.`;
+    case"share":return`${nm} sent you a post.${q}`;
+    case"trend":return"Your post is <b>trending</b> on MizzyGram!";
+    case"reward":{const r=REWARDS[n.rewardId];return`Reward unlocked: <b>${esc(r[1])}</b> — ${esc(r[2])}`}
+  }
+  return"";
+}
+function notifRow(n){
+  const sys=n.from==="system",u=userOf(n.from),p=n.postId&&state.posts.find(x=>x.id===n.postId);
+  const ava=sys?`<span class="nIcon">${n.kind==="reward"?REWARDS[n.rewardId][0]:"🔥"}</span>`:`<span class="nAva"><img src="${esc(u.avatar)}" alt=""><i>${CATS[n.cat]}</i></span>`;
+  const fb=n.kind==="follow"&&!isFollowing(state.activeUser,n.from)?`<button class="btn primary sm" data-follow="${n.from}">Follow back</button>`:"";
+  return `<div class="nRow ${state.notifHi.has(n.id)?"new":""} ${n.cat==="mikael"?"mikael":""}"><button class="nMain" data-notif="${n.id}">${ava}<span class="nText">${notifText(n)}<small>${ago(n.createdAt)}</small></span>${p?`<img class="nThumb" src="${p.image}" alt="">`:""}</button>${fb}</div>`;
+}
+
+/* ----- rewards + trending ----- */
+function award(u,id){
+  const have=state.rewards[u]||(state.rewards[u]=[]);
+  if(have.includes(id)||!REWARDS[id])return;
+  have.push(id);Store.setMeta("rewards",state.rewards).catch(()=>{});
+  notify({to:u,from:"system",kind:"reward",rewardId:id});
+}
+function milestones(){
+  badgeCache=null;
+  const trend=getBadges().trend;
+  CONFIG.humans.forEach(u=>{
+    const mine=state.posts.filter(p=>p.userId===u);
+    if(mine.length)award(u,"first_post");
+    if(mine.reduce((n,p)=>n+Object.keys(p.reactions).filter(k=>k!==u).length,0)>=10)award(u,"reactions_10");
+    if(mine.reduce((n,p)=>n+p.comments.filter(c=>c.userId!==u).length,0)>=5)award(u,"comments_5");
+    mine.forEach(p=>{if(trend.has(p.id)&&!state.trendDone.includes(p.id)){
+      state.trendDone.push(p.id);Store.setMeta("trend-done",state.trendDone).catch(()=>{});
+      notify({to:u,from:"system",kind:"trend",postId:p.id});award(u,"trending");
+    }});
+  });
+}
+const afterActivity=()=>milestones();
+async function seedNotifsIfNeeded(){
+  if(await Store.getMeta("notif-seed-v1",false))return;
+  state.booting=true;
+  state.posts.filter(p=>CONFIG.humans.includes(p.userId)).forEach(p=>{
+    Object.entries(p.reactions).forEach(([w,r],i)=>{if(w!==p.userId)notify({to:p.userId,from:w,kind:"postReact",postId:p.id,emoji:reactionOf(r).emoji,key:"pr:"+p.id+":"+w,createdAt:Math.min(Date.now(),p.createdAt+6e4*(i+1))})});
+    p.comments.forEach(c=>{if(c.userId!==p.userId)notify({to:p.userId,from:c.userId,kind:"comment",postId:p.id,text:c.text,key:"c:"+c.id,createdAt:c.createdAt})});
+  });
+  notify({to:"lizzy",from:"mikael",kind:"follow",key:"f:mikael:lizzy",createdAt:Date.now()-864e5});
+  milestones();
+  state.booting=false;
+  CONFIG.humans.forEach(u=>award(u,"welcome")); // the one unread item so the badge shows up
+  await Store.setMeta("notif-seed-v1",true);
+}
+
+/* ----- saved posts + collections ----- */
+const DEF_COLS=[["favourites","💗","Favourites"],["bowling","🎳","Bowling"],["funny","😂","Funny"],["suspicious","👀","Suspicious"]];
+function savedOf(u){return state.saved[u]||(state.saved[u]={items:{},cols:DEF_COLS.map(([id,emoji,name])=>({id,emoji,name}))})}
+const isSaved=(u,id)=>!!savedOf(u).items[id];
+const persistSaved=()=>Store.setMeta("saved:"+state.activeUser,savedOf(state.activeUser)).catch(()=>{});
+function savedPosts(u,col){
+  return Object.entries(savedOf(u).items).filter(([,v])=>col==="all"||v.cols.includes(col)).sort((a,b)=>b[1].at-a[1].at).map(([id])=>state.posts.find(p=>p.id===id)).filter(Boolean);
+}
+function toggleSave(id){
+  const sv=savedOf(state.activeUser);
+  if(sv.items[id]){delete sv.items[id];toast("Removed from Saved")}
+  else{sv.items[id]={at:Date.now(),cols:[]};award(state.activeUser,"first_save");toast("Saved 🔖")}
+  persistSaved();render(true);renderSheet();
+}
+function toggleInCol(postId,colId){
+  const sv=savedOf(state.activeUser),it=sv.items[postId]||(sv.items[postId]={at:Date.now(),cols:[]});
+  const i=it.cols.indexOf(colId);i<0?it.cols.push(colId):it.cols.splice(i,1);
+  award(state.activeUser,"first_save");persistSaved();render(true);renderSheet(true);
+}
+function submitColForm(){
+  const s=state.sheet,sv=savedOf(state.activeUser),name=$("colName").value.trim();if(!name)return;
+  const emoji=Array.from($("colEmoji").value.trim())[0]||"📁";
+  let c=s.colId&&sv.cols.find(x=>x.id===s.colId);
+  if(c){c.name=name;c.emoji=emoji}
+  else{
+    c={id:uid(),name,emoji};sv.cols.push(c);
+    if(s.postId){const it=sv.items[s.postId]||(sv.items[s.postId]={at:Date.now(),cols:[]});it.cols.push(c.id)}
+  }
+  persistSaved();
+  if(s.postId)openSheet({type:"collect",id:s.postId});else closeSheet();
+  render(true);
+}
+function deleteCollection(id){
+  if(!confirm("Delete this collection? The posts stay saved."))return;
+  const sv=savedOf(state.activeUser);
+  sv.cols=sv.cols.filter(c=>c.id!==id);Object.values(sv.items).forEach(it=>{it.cols=it.cols.filter(c=>c!==id)});
+  persistSaved();closeSheet(true);
+  if(location.hash==="#saved")render(false);else location.hash="#saved";
+}
+
+/* ----- sharing ----- */
+function sendShare(){
+  const s=state.sheet,p=state.posts.find(x=>x.id===s.id);if(!p||!s.sel.length)return;
+  p.shares=p.shares||[];
+  s.sel.forEach(to=>{
+    p.shares.push({from:state.activeUser,to,at:Date.now()});
+    if(CONFIG.humans.includes(to))notify({to,from:state.activeUser,kind:"share",postId:p.id,text:s.note});
+    else setTimeout(()=>communityReact(p.id,to),1200+Math.random()*3000); // the community reacts to what you send them
+  });
+  Store.savePost(p).catch(()=>{});award(state.activeUser,"first_share");
+  toast("Sent to "+s.sel.slice(0,2).map(i=>userOf(i).name).join(", ")+(s.sel.length>2?" +"+(s.sel.length-2):"")+" 💌");
+  closeSheet();
+}
+async function shareToStory(){
+  const p=state.posts.find(x=>x.id===state.sheet.id);if(!p)return;
+  if(await publishStory({kind:"photo",image:p.image,caption:"📌 @"+userOf(p.userId).username+(p.caption?": "+p.caption.slice(0,80):""),duration:6000}))closeSheet();
+}
+
+/* ----- stories: create / react / community ----- */
+function openStoryComposer(){state.storyDraft={mode:"photo",image:null,text:"",bg:0,secs:CONFIG.storySeconds};openSheet({type:"storyCompose"})}
+async function publishStory(f){
+  const st={id:uid(),userId:state.activeUser,createdAt:Date.now(),reactions:{},viewers:{},duration:CONFIG.storySeconds*1000,...f};
+  try{await Store.saveStory(st)}catch{toast("Couldn't save your story");return false}
+  state.stories.push(st);award(state.activeUser,"first_story");
+  toast("Added to your story ✨");render(true);scheduleStoryCommunity(st);return true;
+}
+async function submitStory(){
+  const d=state.storyDraft,err=$("stErr");
+  if(d.mode==="photo"&&!d.image){err.textContent="Choose a photo first.";return}
+  if(d.mode==="text"&&!d.text.trim()){err.textContent="Type something first.";return}
+  const f=d.mode==="photo"?{kind:"photo",image:d.image,caption:""}:{kind:"text",text:d.text.trim(),bg:d.bg};
+  if(await publishStory({...f,duration:d.secs*1000}))closeSheet();
+}
+$("sheet").addEventListener("change",async e=>{
+  if(e.target.id!=="stPhoto")return;
+  try{state.storyDraft.image=await prepareImage(e.target.files&&e.target.files[0]);renderSheet(true)}
+  catch(x){const er=$("stErr");if(er)er.textContent=x.message}
+});
+$("sheet").addEventListener("input",e=>{
+  if(e.target.id==="stText"&&state.storyDraft)state.storyDraft.text=e.target.value;
+  if(e.target.id==="shareNote"&&state.sheet)state.sheet.note=e.target.value;
+});
+function svReact(rid){
+  const s=state.sheet,st=s.list[s.index],me=state.activeUser,key="sr:"+st.id+":"+me;
+  if(st.reactions[me]===rid){delete st.reactions[me];unnotify(key)}
+  else{st.reactions[me]=rid;notify({to:st.userId,from:me,kind:"storyReact",storyId:st.id,emoji:reactionOf(rid).emoji,key})}
+  Store.saveStory(st).catch(()=>{});
+  document.querySelectorAll(".svReact").forEach(b=>b.classList.toggle("on",st.reactions[me]===b.dataset.svReact));
+  const f=document.createElement("span");f.className="svFloat";f.textContent=reactionOf(rid).emoji;
+  $("sheet").firstElementChild.appendChild(f);setTimeout(()=>f.remove(),900);
+}
+function scheduleStoryCommunity(st){
+  const pool=Object.values(CONFIG.users).filter(u=>u.id!==st.userId); // bots + the other human (Mikael's quiet presence)
+  shuffle(pool).slice(0,2+Math.floor(Math.random()*3)).forEach((u,i)=>setTimeout(async()=>{
+    st.viewers[u.id]=Date.now();
+    if(Math.random()<.75){const r=weightedReaction(u);st.reactions[u.id]=r;notify({to:st.userId,from:u.id,kind:"storyReact",storyId:st.id,emoji:reactionOf(r).emoji,key:"sr:"+st.id+":"+u.id})}
+    try{await Store.saveStory(st)}catch{}
+  },1500+Math.random()*9000+i*700));
+}
+const migrateStory=x=>{if(!x.kind){x.kind="photo";x.evergreen=true;x.duration=5000}x.reactions=x.reactions||{};x.viewers=x.viewers||{};return x};
+async function seedBotStoriesIfNeeded(){
+  if(await Store.getMeta("story-seed-v2",false))return;
+  [["chocolateemergency","🚨 Chocolate levels: CRITICAL. Snacks deployed.",4],["bowlingfederation","🎳 Strike Day is still in effect. No gutters. None.",1],["mickysdailynews","📰 BREAKING: you two are still the front page.",5]].forEach(([userId,text,bg],i)=>{
+    const st={id:uid(),userId,kind:"text",text,bg,duration:6000,evergreen:true,createdAt:Date.now()-i*36e5,reactions:{},viewers:{}};
+    state.stories.push(st);Store.saveStory(st).catch(()=>{});
+  });
+  await Store.setMeta("story-seed-v2",true);
+}
+
+/* =====================================================================
    Views
    ===================================================================== */
 function postCard(p){
@@ -488,7 +712,7 @@ function postCard(p){
   const n=p.comments.length;
   const alt=p.caption?`Photo by ${u.username}: ${p.caption.slice(0,100)}`:`Photo by ${u.username}`;
   const groups=reactionCounts(p).slice(0,3).map(g=>g.emoji).join("");
-  const badge=badgeFor(p.id);
+  const badge=badgeFor(p.id),saved=isSaved(state.activeUser,p.id);
   return `<article class="post" data-id="${p.id}">
     <header class="postHead">
       <button class="ava" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
@@ -501,6 +725,10 @@ function postCard(p){
         <button class="act ${mineReact?"on":""}" data-like data-id="${p.id}" aria-pressed="${!!mineReact}" aria-label="${mineReact?"Remove reaction":"Like (hold for more reactions)"}">${mineReact?`<span class="reactEmoji">${reactionOf(mineReact).emoji}</span>`:I.heart}</button>
       </div>
       <button class="act" data-comment aria-label="Comment">${I.comment}</button>
+      <button class="act" data-share aria-label="Share">${I.send}</button>
+      <span class="spacer"></span>
+      ${saved?`<button class="act" data-collect aria-label="Add to collection">${I.folder}</button>`:""}
+      <button class="act ${saved?"on":""}" data-save aria-pressed="${saved}" aria-label="${saved?"Unsave":"Save"}">${I.bookmark}</button>
     </div>
     ${total?`<button class="likes" data-reactions="${p.id}">${groups} ${total} ${total===1?"reaction":"reactions"}</button>`:""}
     ${p.caption?`<div class="cap"><b>${esc(u.username)}</b>${linkifyCaption(p.caption)}</div>`:""}
@@ -513,17 +741,17 @@ function emptyState(icon,title,text,cta){
 }
 
 function storiesBar(){
-  const byUser={};
-  state.stories.forEach(s=>{(byUser[s.userId]||(byUser[s.userId]=[])).push(s)});
-  const order=Object.keys(byUser).sort((a,b)=>{
-    if(a==="mikael")return -1;if(b==="mikael")return 1;
-    return Math.max(...byUser[b].map(s=>s.createdAt))-Math.max(...byUser[a].map(s=>s.createdAt));
+  const me=state.activeUser,byUser={};
+  state.stories.filter(storyAlive).forEach(x=>(byUser[x.userId]||(byUser[x.userId]=[])).push(x));
+  const order=Object.keys(byUser).filter(id=>id!==me).sort((a,b)=>{
+    const ha=CONFIG.humans.includes(a),hb=CONFIG.humans.includes(b);if(ha!==hb)return ha?-1:1;
+    return Math.max(...byUser[b].map(x=>x.createdAt))-Math.max(...byUser[a].map(x=>x.createdAt));
   });
-  if(!order.length)return"";
-  return `<div class="stories">${order.map(uidKey=>{
-    const u=userOf(uidKey),list=byUser[uidKey],unseen=list.some(s=>!state.seenStories.has(s.id));
-    return `<button class="storyRing ${unseen?"unseen":""}" data-story-user="${uidKey}"><span class="storyAva"><img src="${esc(u.avatar)}" alt=""></span><span class="storyName">${esc(u.name)}</span></button>`;
-  }).join("")}</div>`;
+  const ring=(id,label,extra)=>{
+    const u=userOf(id),unseen=(byUser[id]||[]).some(x=>!state.seenStories.has(x.id));
+    return `<div class="storyItem"><button class="storyRing ${unseen?"unseen":""}" data-story-user="${id}"><span class="storyAva"><img src="${esc(u.avatar)}" alt=""></span><span class="storyName">${label}</span></button>${extra||""}</div>`;
+  };
+  return `<div class="stories">${ring(me,"Your story",`<button class="storyAdd" data-st-add aria-label="Add to your story">+</button>`)}${order.map(id=>ring(id,esc(userOf(id).name))).join("")}</div>`;
 }
 
 const renderers={
@@ -559,7 +787,20 @@ const renderers={
     </form>`;
   },
   notifications(){
-    return emptyState('<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',"All quiet","Likes and comments will show up here.");
+    const f=state.notifFilter,all=state.notifs.filter(n=>n.to===state.activeUser).sort((a,b)=>b.createdAt-a.createdAt),list=f==="all"?all:all.filter(n=>n.cat===f);
+    const chips=`<div class="filterRow">${NOTIF_FILTERS.map(([id,l])=>`<button class="fChip ${f===id?"on":""}" data-nfilter="${id}">${l}</button>`).join("")}</div>`;
+    const day=new Date().setHours(0,0,0,0);let last="",html="";
+    list.forEach(n=>{const g=n.createdAt>=day?"Today":n.createdAt>day-6*864e5?"This week":"Earlier";if(g!==last){html+=`<div class="sectionLabel">${g}</div>`;last=g}html+=notifRow(n)});
+    return `<h1 class="pageTitle">Notifications</h1>${chips}${html||emptyState(I.heart,"All quiet","Nothing here yet.")}`;
+  },
+  saved(){
+    const u=state.activeUser,sv=savedOf(u),col=state.savedCol;
+    if(!col){
+      const tl=(id,emoji,name)=>{const ps=savedPosts(u,id),c=ps[0];return `<a class="colTile" href="#saved/${encodeURIComponent(id)}"><span class="colCover">${c?`<img src="${c.image}" alt="">`:`<em>${emoji}</em>`}</span><b>${emoji} ${esc(name)}</b><small>${ps.length} post${ps.length===1?"":"s"}</small></a>`};
+      return `<div class="hashHead"><a class="backLink" href="#profile" aria-label="Back to profile">${I.back}</a><h1 class="pageTitle">Saved</h1></div><div class="colGrid">${tl("all","🔖","All posts")}${sv.cols.map(c=>tl(c.id,c.emoji,c.name)).join("")}<button class="colTile" data-colform><span class="colCover"><em>＋</em></span><b>New collection</b></button></div>`;
+    }
+    const c=sv.cols.find(x=>x.id===col),ps=savedPosts(u,col);
+    return `<div class="hashHead"><a class="backLink" href="#saved" aria-label="Back to Saved">${I.back}</a><h1 class="pageTitle">${c?c.emoji+" "+esc(c.name):"All posts"}</h1>${c?`<button class="cLink editCol" data-colform="${c.id}">Edit</button>`:""}</div>${ps.length?`<div class="grid">${ps.map(tile).join("")}</div>`:emptyState(I.bookmark,"Nothing here yet","Tap the bookmark on a post to save it.")}`;
   },
   profile(){
     const viewing=state.profileUser||state.activeUser;
@@ -583,7 +824,7 @@ const renderers={
           ?`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
-      <div class="gridLabel">${I.grid}<span>Posts</span></div>
+      ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
       ${mine.length?`<div class="grid">${mine.map(tile).join("")}</div>`:`<div class="gridEmpty">No posts yet.</div>`}`;
   }
 };
@@ -597,11 +838,12 @@ function render(keepScroll){
   v.innerHTML=renderers[state.view]();
   v.scrollTop=keepScroll?top:0;
   document.querySelectorAll(".bottom a").forEach(a=>{
-    const forThis=a.dataset.view===state.view||(a.dataset.view==="explore"&&state.view==="hashtag");
+    const forThis=a.dataset.view===state.view||(a.dataset.view==="explore"&&state.view==="hashtag")||(a.dataset.view==="profile"&&state.view==="saved");
     if(forThis)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   });
   if(state.view==="post")bindCompose();
   if(state.view==="explore")bindExplore();
+  updateBadges();
 }
 function route(){
   const raw=(location.hash||"#home").slice(1);
@@ -610,8 +852,15 @@ function route(){
   if(base==="hashtag"){
     state.view="hashtag";
     state.hashtag=decodeURIComponent(slash<0?"":raw.slice(slash+1)).toLowerCase();
+  }else if(base==="saved"){
+    state.view="saved";state.savedCol=decodeURIComponent(slash<0?"":raw.slice(slash+1));
   }else{
     state.view=VIEWS.includes(base)?base:"home";
+  }
+  if(state.view==="notifications"){
+    state.notifHi=new Set();
+    state.notifs.forEach(n=>{if(n.to===state.activeUser&&!n.read){state.notifHi.add(n.id);n.read=true}});
+    persistNotifs();
   }
   closeSheet(true);closeReactPicker();
   render(false);
@@ -641,6 +890,7 @@ function bindCompose(){
     try{
       await Store.savePost(post);
       state.posts.push(post);newestFirst();
+      award(state.activeUser,"first_post");
       state.pending=null;
       toast("Posted 💗");
       location.hash="#home";
@@ -658,12 +908,14 @@ async function toggleReaction(id,reactionId){
   const p=state.posts.find(x=>x.id===id);if(!p)return;
   if(p.reactions[state.activeUser]===reactionId)delete p.reactions[state.activeUser];
   else p.reactions[state.activeUser]=reactionId;
+  reactNotify(p,state.activeUser);
   try{await Store.savePost(p)}catch{toast("Couldn't save that reaction")}
   render(true);renderSheet();
 }
 async function forceLove(id){
   const p=state.posts.find(x=>x.id===id);if(!p)return;
   p.reactions[state.activeUser]="love";
+  reactNotify(p,state.activeUser);
   try{await Store.savePost(p)}catch{toast("Couldn't save that reaction")}
   render(true);renderSheet();
 }
@@ -710,7 +962,7 @@ document.addEventListener("click",e=>{
 /* ---------- comments ---------- */
 async function submitComment(postId,text,parentId){
   const p=state.posts.find(x=>x.id===postId);if(!p)return;
-  p.comments.push({id:uid(),userId:state.activeUser,text,createdAt:Date.now(),likes:[],parentId:parentId||null});
+  const nc={id:uid(),userId:state.activeUser,text,createdAt:Date.now(),likes:[],parentId:parentId||null};p.comments.push(nc);notifyComment(p,nc);
   try{await Store.savePost(p)}catch{toast("Couldn't save that comment")}
   state.replyTo=null;
   render(true);renderSheet();
@@ -720,6 +972,8 @@ async function toggleCommentLike(postId,commentId){
   const c=p.comments.find(x=>x.id===commentId);if(!c)return;
   const i=c.likes.indexOf(state.activeUser);
   i<0?c.likes.push(state.activeUser):c.likes.splice(i,1);
+  const ck="cl:"+c.id+":"+state.activeUser;
+  if(i<0)notify({to:c.userId,from:state.activeUser,kind:"commentLike",postId,text:c.text,key:ck});else unnotify(ck);
   try{await Store.savePost(p)}catch{toast("Couldn't save that")}
   render(true);renderSheet();
 }
@@ -752,21 +1006,23 @@ function commentRow(c,isReply){
 
 /* ---------- stories ---------- */
 function openStoryViewer(userId){
-  const list=state.stories.filter(s=>s.userId===userId).sort((a,b)=>a.createdAt-b.createdAt);
-  if(!list.length)return;
+  const list=state.stories.filter(x=>x.userId===userId&&storyAlive(x)).sort((a,b)=>a.createdAt-b.createdAt);
+  if(!list.length){if(userId===state.activeUser)openStoryComposer();return}
   openSheet({type:"story",userId,list,index:0});
   markStorySeen(list[0].id);
 }
 function markStorySeen(id){
   state.seenStories.add(id);
   Store.setMeta("seen-stories:"+state.activeUser,[...state.seenStories]).catch(()=>{});
+  const st=state.stories.find(x=>x.id===id);
+  if(st&&st.userId!==state.activeUser&&!st.viewers[state.activeUser]){st.viewers[state.activeUser]=Date.now();Store.saveStory(st).catch(()=>{})}
 }
 function storyNav(dir){
   const s=state.sheet;if(!s||s.type!=="story")return;
   const ni=s.index+dir;
   if(ni<0)return;
   if(ni>=s.list.length)return closeSheet();
-  s.index=ni;markStorySeen(s.list[ni].id);renderSheet();
+  s.index=ni;markStorySeen(s.list[ni].id);renderSheet(true);
 }
 
 /* ---------- sheets (comments, post viewer, reactions, follow lists, stories) ---------- */
@@ -778,13 +1034,16 @@ function openSheet(s){
 }
 function closeSheet(silent){
   if(!state.sheet)return;
-  state.sheet=null;$("sheet").hidden=true;$("sheet").innerHTML="";
+  const was=state.sheet.type;
+  state.sheet=null;$("sheet").hidden=true;$("sheet").innerHTML="";$("sheet").dataset.type="";clearTimeout(svTimer);
+  if(was==="story"&&!silent)render(true);
   if(!silent&&lastFocus&&document.contains(lastFocus))lastFocus.focus();
 }
-function renderSheet(){
+function renderSheet(force){
   const el=$("sheet"),s=state.sheet;
   if(!s){el.hidden=true;return}
-  el.hidden=false;
+  if(!force&&["story","share","storyCompose","colForm"].includes(s.type)&&el.dataset.type===s.type)return; // don't rebuild while typing / mid-story
+  el.hidden=false;el.dataset.type=s.type;
 
   if(s.type==="post"){
     const p=state.posts.find(x=>x.id===s.id);
@@ -836,19 +1095,62 @@ function renderSheet(){
         </div>`}).join(""):`<div class="cNone">${s.mode==="followers"?"No followers yet.":"Not following anyone yet."}</div>`}</div></div>`;
 
   }else if(s.type==="story"){
-    const st=s.list[s.index],u=userOf(s.userId);
+    const st=s.list[s.index],u=userOf(s.userId),own=s.userId===state.activeUser,mine=st.reactions[state.activeUser],dur=st.duration||5000;
+    const body=st.kind==="text"?`<div class="svText" style="background:${CONFIG.storyBgs[st.bg||0]}"><p>${esc(st.text)}</p></div>`:`<div class="svImgWrap"><img class="svImg" src="${st.image}" alt=""></div>`;
+    const left=own&&!st.evergreen?` · ${Math.max(1,Math.ceil((st.createdAt+CONFIG.storyHours*36e5-Date.now())/36e5))}h left`:"";
     el.innerHTML=`<div class="sheetBody storySheet" role="dialog" aria-modal="true" aria-label="${esc(u.name)}'s story">
-      <div class="svBars">${s.list.map((_,i)=>`<span class="${i<=s.index?"on":""}"></span>`).join("")}</div>
-      <div class="svHead"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><span class="svTime">${ago(st.createdAt)}</span><button class="act" data-close aria-label="Close">${I.close}</button></div>
-      <div class="svImgWrap"><img class="svImg" src="${st.image}" alt=""></div>
-      ${st.caption?`<div class="svCap">${esc(st.caption)}</div>`:""}
+      <div class="svBars">${s.list.map((_,i)=>`<span class="${i<s.index?"done":""}"><i ${i===s.index?`class="cur" style="--d:${dur}ms"`:""}></i></span>`).join("")}</div>
+      <div class="svHead"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><span class="svTime">${ago(st.createdAt)}${left}</span><button class="act" data-close aria-label="Close">${I.close}</button></div>
+      ${body}${st.caption?`<div class="svCap">${esc(st.caption)}</div>`:""}
       <button class="svZone left" type="button" data-story-prev aria-label="Previous story"></button>
       <button class="svZone right" type="button" data-story-next aria-label="Next story"></button>
+      <div class="svFoot">${own?`<span class="svSeen">👁 ${Object.keys(st.viewers).length} seen · ${Object.keys(st.reactions).length} reactions</span><button class="svAdd" data-st-add>＋ Add</button>`:CONFIG.reactions.map(r=>`<button class="svReact ${mine===r.id?"on":""}" data-sv-react="${r.id}" aria-label="React ${r.label}">${r.emoji}</button>`).join("")}</div>
     </div>`;
+    clearTimeout(svTimer);svTimer=setTimeout(()=>storyNav(1),dur);
+
+  }else if(s.type==="storyCompose"){
+    const d=state.storyDraft;
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="New story"><div class="sheetHead"><h2>New story</h2><button class="act" data-close aria-label="Close">${I.close}</button></div><div class="sheetScroll stComp">
+      <div class="seg">${[["photo","📷 Photo"],["text","✍️ Text"]].map(([m,l])=>`<button class="${d.mode===m?"on":""}" data-st-mode="${m}">${l}</button>`).join("")}</div>
+      ${d.mode==="photo"?`<label class="drop stDrop"><input type="file" id="stPhoto" accept="image/*" aria-label="Choose a photo">${d.image?`<img src="${d.image}" alt="Selected photo">`:`<span class="dropHint">${I.photo}<b>Choose a photo</b></span>`}</label>`
+      :`<div class="stText" style="background:${CONFIG.storyBgs[d.bg]}"><textarea id="stText" maxlength="140" placeholder="Type something…" aria-label="Story text">${esc(d.text)}</textarea></div><div class="swatches">${CONFIG.storyBgs.map((b,i)=>`<button style="background:${b}" class="${d.bg===i?"on":""}" data-st-bg="${i}" aria-label="Background ${i+1}"></button>`).join("")}</div>`}
+      <div class="lbl">Show for</div><div class="seg">${[5,10,15].map(n=>`<button class="${d.secs===n?"on":""}" data-st-secs="${n}">${n}s</button>`).join("")}</div>
+      <div class="err" id="stErr" role="alert"></div><button class="btn primary block" data-st-share>Share to story</button></div></div>`;
+
+  }else if(s.type==="collect"){
+    const sv=savedOf(state.activeUser),it=sv.items[s.id];
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Save to collection"><div class="sheetHead"><h2>Save to…</h2><button class="act" data-close aria-label="Close">${I.close}</button></div><div class="sheetScroll">${sv.cols.map(c=>{const on=!!(it&&it.cols.includes(c.id));return `<button class="colRow" data-col-toggle="${c.id}" data-post="${s.id}" aria-pressed="${on}"><span>${c.emoji}</span><b>${esc(c.name)}</b><i>${on?"✓":""}</i></button>`}).join("")}<button class="colRow" data-colform data-post="${s.id}"><span>＋</span><b>New collection</b></button>${it?`<button class="colRow danger" data-unsave="${s.id}"><span>✕</span><b>Remove from Saved</b></button>`:""}</div></div>`;
+
+  }else if(s.type==="colForm"){
+    const c=s.colId&&savedOf(state.activeUser).cols.find(x=>x.id===s.colId);
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Collection"><div class="sheetHead"><h2>${c?"Edit collection":"New collection"}</h2><button class="act" data-close aria-label="Close">${I.close}</button></div>
+      <form class="cForm colForm" id="colForm"><input id="colEmoji" class="emojiIn" maxlength="4" value="${esc(c?c.emoji:"📁")}" aria-label="Emoji"><input id="colName" maxlength="24" placeholder="Collection name" value="${esc(c?c.name:"")}" aria-label="Collection name" autocomplete="off"><button class="btn primary" type="submit">${c?"Save":"Create"}</button></form>
+      ${c?`<button class="colRow danger" data-col-del="${c.id}"><span>🗑️</span><b>Delete collection</b></button>`:""}</div>`;
+    $("colName").focus();
+
+  }else if(s.type==="share"){
+    const p=state.posts.find(x=>x.id===s.id);if(!p){closeSheet();return}
+    const targets=[...CONFIG.humans.filter(h=>h!==state.activeUser),...Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id)];
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Share"><div class="sheetHead"><h2>Share</h2><button class="act" data-close aria-label="Close">${I.close}</button></div><div class="sheetScroll">${targets.map(id=>{const u=userOf(id),on=s.sel.includes(id);return `<button class="colRow" data-share-to="${id}" aria-pressed="${on}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><i>${on?"✓":""}</i></button>`}).join("")}
+      <div class="sharePad"><input id="shareNote" class="shareNote" maxlength="120" placeholder="Add a message…" value="${esc(s.note||"")}" aria-label="Message"><button class="btn primary block" data-share-send ${s.sel.length?"":"disabled"}>Send${s.sel.length?" ("+s.sel.length+")":""}</button><button class="btn ghost block" data-share-story>Add to your story</button></div></div></div>`;
   }
 }
 $("sheet").addEventListener("click",e=>{
   if(e.target.id==="sheet"||e.target.closest("[data-close]"))return closeSheet();
+  const t=e.target,d=state.storyDraft;
+  if(t.closest("[data-st-add]"))return openStoryComposer();
+  const sr=t.closest("[data-sv-react]");if(sr)return svReact(sr.dataset.svReact);
+  const sm=t.closest("[data-st-mode]");if(sm){d.mode=sm.dataset.stMode;return renderSheet(true)}
+  const sb=t.closest("[data-st-bg]");if(sb){d.bg=+sb.dataset.stBg;return renderSheet(true)}
+  const ss=t.closest("[data-st-secs]");if(ss){d.secs=+ss.dataset.stSecs;return renderSheet(true)}
+  if(t.closest("[data-st-share]"))return submitStory();
+  const ct=t.closest("[data-col-toggle]");if(ct)return toggleInCol(ct.dataset.post,ct.dataset.colToggle);
+  const us=t.closest("[data-unsave]");if(us){toggleSave(us.dataset.unsave);return closeSheet()}
+  const cf=t.closest("[data-colform]");if(cf)return openSheet({type:"colForm",colId:cf.dataset.colform||null,postId:cf.dataset.post||null});
+  const cd=t.closest("[data-col-del]");if(cd)return deleteCollection(cd.dataset.colDel);
+  const sh=t.closest("[data-share-to]");if(sh){const a=state.sheet.sel,i=a.indexOf(sh.dataset.shareTo);i<0?a.push(sh.dataset.shareTo):a.splice(i,1);return renderSheet(true)}
+  if(t.closest("[data-share-send]"))return sendShare();
+  if(t.closest("[data-share-story]"))return shareToStory();
   if(e.target.closest("[data-story-prev]"))return storyNav(-1);
   if(e.target.closest("[data-story-next]"))return storyNav(1);
   const userBtn=e.target.closest("[data-user]");
@@ -868,6 +1170,7 @@ $("sheet").addEventListener("click",e=>{
 });
 $("sheet").addEventListener("submit",async e=>{
   e.preventDefault();
+  if(e.target.id==="colForm")return submitColForm();
   const s=state.sheet;if(!s||s.type!=="comments")return;
   const inp=$("cInput"),text=inp.value.trim();if(!text)return;
   inp.value="";
@@ -888,10 +1191,22 @@ function handlePostClick(e){
     if(longPressed){longPressed=false;return}
     return toggleReaction(art.dataset.id,"love");
   }
+  if(e.target.closest("[data-share]")&&art)return openSheet({type:"share",id:art.dataset.id,sel:[],note:""});
+  if(e.target.closest("[data-save]")&&art)return toggleSave(art.dataset.id);
+  if(e.target.closest("[data-collect]")&&art)return openSheet({type:"collect",id:art.dataset.id});
   if(e.target.closest("[data-comment]")&&art)return openSheet({type:"comments",id:art.dataset.id,focusInput:true});
   if(e.target.closest("[data-reactions]")){const btn=e.target.closest("[data-reactions]");return openSheet({type:"reactions",id:btn.dataset.reactions})}
 }
 $("view").addEventListener("click",e=>{
+  const nb=e.target.closest("[data-notif]");
+  if(nb){const n=state.notifs.find(x=>x.id===nb.dataset.notif);if(!n)return;
+    if(n.kind==="follow")return goProfile(n.from);
+    if(n.kind==="storyReact")return openStoryViewer(state.activeUser);
+    if(n.postId)return openSheet({type:["comment","reply","commentLike"].includes(n.kind)?"comments":"post",id:n.postId});
+    return}
+  const nf=e.target.closest("[data-nfilter]");if(nf){state.notifFilter=nf.dataset.nfilter;return render(true)}
+  if(e.target.closest("[data-st-add]"))return openStoryComposer();
+  const cfv=e.target.closest("[data-colform]");if(cfv)return openSheet({type:"colForm",colId:cfv.dataset.colform||null,postId:null});
   const storyBtn=e.target.closest("[data-story-user]");
   if(storyBtn)return openStoryViewer(storyBtn.dataset.storyUser);
   const openBtn=e.target.closest("[data-open]");
@@ -935,6 +1250,8 @@ function migratePost(p){
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
     await seedStoriesIfNeeded();
+    await seedBotStoriesIfNeeded();
+    state.stories=state.stories.map(migrateStory);
     const savedGraph=await Store.getMeta("follow-graph",null);
     if(savedGraph){
       followGraph=followGraphDefault();
@@ -944,6 +1261,11 @@ function migratePost(p){
     if(!CONFIG.users[state.activeUser])state.activeUser=CONFIG.me;
     const savedSeen=await Store.getMeta("seen-stories:"+state.activeUser,[]);
     state.seenStories=new Set(savedSeen);
+    state.notifs=await Store.getMeta("notifs",[]);
+    state.rewards=await Store.getMeta("rewards",{});
+    state.trendDone=await Store.getMeta("trend-done",[]);
+    for(const u of CONFIG.humans){const v=await Store.getMeta("saved:"+u,null);if(v)state.saved[u]=v}
+    await seedNotifsIfNeeded();
   }catch{}
   route();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
