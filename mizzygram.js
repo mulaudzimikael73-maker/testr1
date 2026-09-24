@@ -107,7 +107,7 @@ const CONFIG={
     },
     bankofmicky:{
       id:"bankofmicky",username:"bankofmicky",name:"Bank of Micky",bot:true,favReaction:"fire",
-      avatar:tileAvatar("💰","#2f8f5b","#123322"),
+      avatar:"assets/mizzygram/bankofmicky.png",
       bio:"Handling deposits to the Token Jar since forever.\nInterest rates: unreasonably high for good behaviour.",
       tile:["💰","#2f8f5b","#123322"],
       posts:[
@@ -117,9 +117,9 @@ const CONFIG={
       ],
       comments:["Logging this as a Token Jar deposit. Approved.","This post just increased your account balance significantly.","The Bank of Micky has reviewed this and issued a bonus.","Certified: this is rich (in a good way)."]
     },
-    mickysdailynews:{
-      id:"mickysdailynews",username:"mickysdailynews",name:"Micky's Daily News",bot:true,favReaction:"suspicious",
-      avatar:tileAvatar("📰","#c9c9d6","#4a4a5a"),
+    thedailygobshite:{
+      id:"thedailygobshite",username:"thedailygobshite",name:"TheDailyGobshite",bot:true,favReaction:"suspicious",
+      avatar:"assets/mizzygram/thedailygobshite.png",
       bio:"Covering the Lizzy & Mikael beat, 24 hours a day.\nUnverified sources. Fully biased. Front page always.",
       tile:["📰","#c9c9d6","#4a4a5a"],
       posts:[
@@ -131,7 +131,7 @@ const CONFIG={
     },
     thepresident:{
       id:"thepresident",username:"thepresident",name:"The President",bot:true,favReaction:"fire",
-      avatar:tileAvatar("🏛️","#2a4a9a","#0b1633"),
+      avatar:"assets/mizzygram/thepresident.png",
       bio:"Head of state. Head of the household.\nSpeaking on behalf of the people (two of them).",
       tile:["🏛️","#2a4a9a","#0b1633"],
       posts:[
@@ -872,7 +872,7 @@ function followGraphDefault(){
     if(!u.bot)return;
     g[u.id]=new Set(["lizzy","mikael"]); // every fictional account already follows both of you
   });
-  if(g.mickysdailynews)g.mickysdailynews=new Set(Object.keys(CONFIG.users).filter(id=>id!=="mickysdailynews")); // paparazzi — follows literally everyone
+  if(g.thedailygobshite)g.thedailygobshite=new Set(Object.keys(CONFIG.users).filter(id=>id!=="thedailygobshite")); // paparazzi — follows literally everyone
   return g;
 }
 let followGraph=followGraphDefault();
@@ -1353,7 +1353,7 @@ function scheduleStoryCommunity(st){
 const migrateStory=x=>{if(!x.kind){x.kind="photo";x.evergreen=true;x.duration=5000}x.reactions=x.reactions||{};x.viewers=x.viewers||{};return x};
 async function seedBotStoriesIfNeeded(){
   if(await Store.getMeta("story-seed-v2",false))return;
-  [["chocolateemergency","🚨 Chocolate levels: CRITICAL. Snacks deployed.",4],["bowlingfederation","🎳 Strike Day is still in effect. No gutters. None.",1],["mickysdailynews","📰 BREAKING: you two are still the front page.",5]].forEach(([userId,text,bg],i)=>{
+  [["chocolateemergency","🚨 Chocolate levels: CRITICAL. Snacks deployed.",4],["bowlingfederation","🎳 Strike Day is still in effect. No gutters. None.",1],["thedailygobshite","📰 BREAKING: you two are still the front page.",5]].forEach(([userId,text,bg],i)=>{
     const st={id:uid(),userId,kind:"text",text,bg,duration:6000,evergreen:true,createdAt:Date.now()-i*36e5,reactions:{},viewers:{}};
     state.stories.push(st);Store.saveStory(st).catch(()=>{});
   });

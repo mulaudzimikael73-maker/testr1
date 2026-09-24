@@ -103,7 +103,7 @@ $("moodSendBtn")?.addEventListener("click",async()=>{
 });
 
 // ---- MizzyGram HQ ----
-const MG_ACCTS=[["mikael","🖤 Mikael"],["bankofmicky","💰 @BankOfMicky"],["bowlingfederation","🎳 @BowlingFederation"],["chocolateemergency","🍫 @ChocolateEmergency"],["mickysdailynews","📰 @MickysDailyNews"]];
+const MG_ACCTS=[["mikael","🖤 Mikael"],["bankofmicky","💰 @BankOfMicky"],["bowlingfederation","🎳 @BowlingFederation"],["chocolateemergency","🍫 @ChocolateEmergency"],["thedailygobshite","📰 @TheDailyGobshite"]];
 const MG_REACTS=[["love","❤️ Love"],["funny","😂 Funny"],["attitude","😈 Attitude"],["cute","😍 Cute"],["fire","🔥 Fire"],["bowling","🎳 Bowling"],["chocolate","🍫 Chocolate"],["suspicious","👀 Suspicious"]];
 let mgAcct="mikael",mgSnap=null;
 function mgAcctBtns(){$("mgAccounts").innerHTML=MG_ACCTS.map(([id,l])=>`<button class="annoy-btn ${id===mgAcct?"picked":""}" data-mg-acct="${id}">${l}</button>`).join("");document.querySelectorAll("[data-mg-acct]").forEach(b=>b.onclick=()=>{mgAcct=b.dataset.mgAcct;mgAcctBtns()})}
