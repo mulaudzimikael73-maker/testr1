@@ -1,7 +1,7 @@
 (()=>{"use strict";
 
 /* =====================================================================
-   MizzyGram — Phase 6 (News, Events, On This Day, Achievements)
+   MizzyGram — Phase 7 (Mikael HQ bridge)
    Everything is stored in this browser (IndexedDB) for now.
    To change a user's username / bio / picture / personality, edit
    CONFIG below. To act as Mikael instead of Lizzy, use the "Switch to
@@ -514,7 +514,7 @@ function notify(n){
   if(!CONFIG.humans.includes(n.to)||n.to===n.from)return;
   n.id=uid();n.createdAt=n.createdAt||Date.now();n.read=!!n.read||state.booting;
   n.cat=({postReact:"like",storyReact:"like",commentLike:"like",comment:"comment",reply:"comment"})[n.kind]||n.kind;
-  if(n.from==="mikael"&&n.to==="lizzy"&&["like","comment","follow","share"].includes(n.cat))n.cat="mikael"; // 💗 Mikael interactions
+  if(n.from==="mikael"&&n.to==="lizzy"&&["like","comment","follow","share","newpost","pin"].includes(n.cat))n.cat="mikael"; // 💗 Mikael interactions
   if(n.key)state.notifs=state.notifs.filter(x=>x.key!==n.key);
   state.notifs.unshift(n);
   if(n.to===state.activeUser&&state.view==="notifications"&&!n.read){n.read=true;state.notifHi.add(n.id);render(true)}
@@ -552,6 +552,8 @@ function notifText(n){
     case"follow":return`${nm} started following you.`;
     case"share":return`${nm} sent you a post.${q}`;
     case"event":return esc(n.text);
+    case"newpost":return`${nm} posted a new photo.${q}`;
+    case"pin":return`${nm} pinned a comment on your post.`;
     case"trend":return"Your post is <b>trending</b> on MizzyGram!";
     case"reward":{const r=REWARDS[n.rewardId];return`Reward unlocked: <b>${esc(r[1])}</b> — ${esc(r[2])}`}
   }
@@ -812,6 +814,54 @@ function homeExtras(){
 }
 
 /* =====================================================================
+   Phase 7 — Mikael HQ bridge (HQ queues commands on the Worker; this
+   device polls, applies them, and publishes a small snapshot back)
+   ===================================================================== */
+const WORKER="https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const hqPost=body=>fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})}).then(r=>r.json());
+async function applyCommand(c){
+  const p=c.postId?(c.postId==="latest"?state.posts.find(x=>x.userId==="lizzy"):state.posts.find(x=>x.id===c.postId)):null,save=async()=>{try{await Store.savePost(p)}catch{}};
+  switch(c.kind){
+    case"post":{
+      const u=CONFIG.users[c.account];if(!u)return;
+      const tags=String(c.tags||"").split(/[\s,]+/).filter(Boolean).map(t=>"#"+t.replace(/^#+/,"")).join(" ");
+      const caption=[String(c.caption||"").slice(0,CONFIG.maxCaption),tags].filter(Boolean).join(" ").trim(),t=u.tile||["💭","#ff8fce","#7a35dc"];
+      const post={id:uid(),userId:u.id,image:c.image||cardImage(caption||"…",t[0],t[1],t[2]),caption,mood:c.mood||"",audience:c.audience==="lizzy"?"lizzy":"everyone",createdAt:Date.now(),reactions:{},comments:[],communityScheduled:c.audience==="lizzy"};
+      state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
+      notify({to:"lizzy",from:u.id,kind:"newpost",postId:post.id,text:post.audience==="lizzy"?"Just for you 💗":""});
+      if(u.bot)pushNews("📰","@"+u.username.toUpperCase(),caption.slice(0,90),post.id);
+      if(post.audience!=="lizzy")scheduleCommunityReactions(post);
+      break}
+    case"like":case"react":
+      if(p){p.reactions.mikael=reactionOf(c.reaction)?c.reaction:"love";reactNotify(p,"mikael");await save()}break;
+    case"comment":case"reply":
+      if(p&&c.text){const n={id:uid(),userId:"mikael",text:String(c.text).slice(0,CONFIG.maxComment),createdAt:Date.now(),likes:[],parentId:c.parentId||null};p.comments.push(n);notifyComment(p,n);await save()}break;
+    case"pin":
+      if(p&&p.comments.some(x=>x.id===c.commentId)){p.comments.forEach(x=>{x.pinned=x.id===c.commentId});notify({to:p.userId,from:"mikael",kind:"pin",postId:p.id});await save()}break;
+    case"event":runEvent(c.event);break;
+  }
+  render(true);renderSheet();
+}
+let hqBusy=false,snapSig="";
+function pushSnapshot(){
+  const posts=state.posts.slice(0,25).map(p=>({id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,80),createdAt:p.createdAt,comments:p.comments.map(c=>({id:c.id,userId:c.userId,text:c.text.slice(0,80),parentId:c.parentId,pinned:!!c.pinned}))}));
+  const sig=JSON.stringify(posts);if(sig===snapSig)return;snapSig=sig;
+  hqPost({action:"mg_snapshot_put",snapshot:{at:Date.now(),posts}}).catch(()=>{});
+}
+async function pollHQ(){
+  if(hqBusy||document.hidden||state.activeUser!=="lizzy")return; // only Lizzy's side consumes HQ commands
+  hqBusy=true;
+  try{
+    const d=await (await fetch(WORKER+"?action=mg_queue",{cache:"no-store"})).json();
+    const done=new Set(await Store.getMeta("mg-handled",[])),ids=[];
+    for(const c of d.commands||[]){ids.push(c.id);if(done.has(c.id))continue;done.add(c.id);try{await applyCommand(c)}catch{}}
+    if(ids.length){await Store.setMeta("mg-handled",[...done].slice(-200));hqPost({action:"mg_ack",ids}).catch(()=>{})}
+    pushSnapshot();
+  }catch{}finally{hqBusy=false}
+}
+function startHQ(){setInterval(pollHQ,10000);pollHQ()}
+
+/* =====================================================================
    Views
    ===================================================================== */
 function postCard(p){
@@ -823,7 +873,7 @@ function postCard(p){
   return `<article class="post" data-id="${p.id}">
     <header class="postHead">
       <button class="ava" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
-      <button class="uname" data-user="${u.id}">${esc(u.username)}</button>
+      <button class="uname" data-user="${u.id}">${esc(u.username)}</button>${p.mood?`<small class="mood">${esc(p.mood)}</small>`:""}${p.audience==="lizzy"?`<small class="mood">💗 just for Lizzy</small>`:""}
       <time datetime="${new Date(p.createdAt).toISOString()}">${ago(p.createdAt)}</time>
     </header>
     <div class="photo ${p.classified&&!p.declassified?"classified":""}" data-dbl>${p.classified&&!p.declassified?`<button class="declass" data-declassify="${p.id}">🕵️ CLASSIFIED — tap to declassify</button>`:""}${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
@@ -1114,7 +1164,7 @@ function commentRow(c,isReply){
   return `<div class="cItem ${isReply?"reply":""}">
     <button class="ava sm" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
     <div class="cBody">
-      <div><button class="cUname" data-user="${u.id}">${esc(u.username)}</button> ${esc(c.text)}</div>
+      <div><button class="cUname" data-user="${u.id}">${esc(u.username)}</button> ${c.pinned?'<span class="pinTag">📌 Pinned</span> ':""}${esc(c.text)}</div>
       <div class="cMeta">
         <time>${ago(c.createdAt)}</time>
         ${c.likes.length?`<span>${c.likes.length} like${c.likes.length===1?"":"s"}</span>`:""}
@@ -1178,7 +1228,7 @@ function renderSheet(force){
   }else if(s.type==="comments"){
     const p=state.posts.find(x=>x.id===s.id);
     if(!p){closeSheet();return}
-    const top=p.comments.filter(c=>!c.parentId).sort((a,b)=>a.createdAt-b.createdAt);
+    const top=p.comments.filter(c=>!c.parentId).sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||a.createdAt-b.createdAt);
     const repliesOf=pid=>p.comments.filter(c=>c.parentId===pid).sort((a,b)=>a.createdAt-b.createdAt);
     const list=top.length
       ?`<div class="cList">${top.map(c=>commentRow(c,false)+repliesOf(c.id).map(r=>commentRow(r,true)).join("")).join("")}</div>`
@@ -1394,7 +1444,7 @@ function migratePost(p){
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();startEvents();
+  route();startEvents();startHQ();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();

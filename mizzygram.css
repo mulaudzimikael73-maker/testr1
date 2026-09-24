@@ -442,3 +442,7 @@ button.uname:hover{text-decoration:underline}
 .photo.classified{overflow:hidden}
 .declass{position:absolute;inset:0;z-index:3;border:0;background:#2a103066;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
 .tile.blur img{filter:blur(12px)}
+
+/* Phase 7 */
+.postHead .mood{padding:2px 8px;border-radius:999px;background:var(--blush);color:var(--soft);font-size:11px;font-weight:700}
+.pinTag{font-size:11px;font-weight:700;color:var(--violet)}

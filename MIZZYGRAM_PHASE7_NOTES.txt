@@ -1,0 +1,31 @@
+MIZZYGRAM — PHASE 7 (Mikael HQ)
+================================
+UPDATED FILES (replace at the ROOT of the repo):
+  mikael-hq.html, mikael-hq.js, mikael-hq.css   (new "📸 MizzyGram" tab)
+  mizzygram.js, mizzygram.css
+  cloudflare-worker.js  <- MUST be redeployed to Cloudflare (adds a command queue)
+
+HOW IT WORKS
+  MizzyGram data lives in Lizzy's browser, so HQ can't touch it directly. HQ now
+  drops commands into a queue on the Worker; Lizzy's MizzyGram checks it every
+  ~10 seconds (while open, and while it's "using" MizzyGram as Lizzy), applies each
+  command once, and acks it. It also publishes a small snapshot of recent posts +
+  comments so HQ can list them.
+
+HQ -> MizzyGram tab
+  28. Create MizzyGram Post: photo (optional; a caption card is made if empty), caption,
+      hashtags, mood (same list as My Mood), audience (Everyone / Lizzy only 💗).
+      "Lizzy only" posts get no community reactions and are badged "just for Lizzy".
+  29. Interaction Control (as Mikael): like, send any of the 8 reactions, comment,
+      reply to a chosen comment, pin a comment (shows 📌 Pinned, sorted to the top).
+  30. Fictional Accounts: the account chips choose who posts — Mikael, @BankOfMicky,
+      @BowlingFederation, @ChocolateEmergency, @MickysDailyNews.
+  31. Event Control: Viral Moment, Bowling Challenge, Breaking News,
+      Mystery Account (the Mystery Viewer event), Mikael Surprise.
+  Lizzy gets a notification for HQ posts and pins (Mikael's land under 💗).
+
+LIMITS
+  - "Audience" is a badge + no-community-reactions, not true hiding (both of you share one browser store).
+  - Commands only land while MizzyGram is open on Lizzy's device.
+  - The snapshot upload endpoint is unauthenticated (like annoy_consume); it only holds
+    captions/comment text, and reading it requires the HQ key.
