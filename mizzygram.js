@@ -125,6 +125,18 @@ const CONFIG={
         "📸 FRONT PAGE: MizzyGram's most-followed story continues to develop. Stay tuned."
       ],
       comments:["This is going on the front page. No debate.","Sources confirm: adorable. Printing tomorrow's headline now.","Breaking news just dropped and it's this post.","Exclusive coverage incoming. This is huge."]
+    },
+    thepresident:{
+      id:"thepresident",username:"thepresident",name:"The President",bot:true,favReaction:"fire",
+      avatar:tileAvatar("🏛️","#2a4a9a","#0b1633"),
+      bio:"Head of state. Head of the household.\nSpeaking on behalf of the people (two of them).",
+      tile:["🏛️","#2a4a9a","#0b1633"],
+      posts:[
+        "🏛️ ADDRESS TO THE NATION: The state of the union is strong, affectionate, and slightly dramatic. #StateOfTheUnion",
+        "📜 EXECUTIVE ORDER: Bowling nights are now a protected national tradition. Gutter balls will be reviewed by committee.",
+        "🎖️ PRESIDENTIAL PARDON: Granted to whoever ate the last chocolate. This time only."
+      ],
+      comments:["The President has reviewed this post and approves it.","This has been entered into the national record.","A motion to declare this post a national treasure has passed.","The administration is proud of you both."]
     }
   },
   reactions:[
@@ -844,7 +856,7 @@ async function applyCommand(c){
 }
 let hqBusy=false,snapSig="";
 function pushSnapshot(){
-  const posts=state.posts.slice(0,25).map(p=>({id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,80),createdAt:p.createdAt,comments:p.comments.map(c=>({id:c.id,userId:c.userId,text:c.text.slice(0,80),parentId:c.parentId,pinned:!!c.pinned}))}));
+  const posts=state.posts.slice(0,25).map(p=>({id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,140),mood:p.mood||"",mine:p.reactions.mikael||null,rx:Object.values(p.reactions).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{}),createdAt:p.createdAt,comments:p.comments.map(c=>({id:c.id,userId:c.userId,text:c.text.slice(0,80),parentId:c.parentId,pinned:!!c.pinned}))}));
   const sig=JSON.stringify(posts);if(sig===snapSig)return;snapSig=sig;
   hqPost({action:"mg_snapshot_put",snapshot:{at:Date.now(),posts}}).catch(()=>{});
 }
@@ -860,6 +872,20 @@ async function pollHQ(){
   }catch{}finally{hqBusy=false}
 }
 function startHQ(){setInterval(pollHQ,10000);pollHQ()}
+
+async function seedPresidentIfNeeded(){
+  // existing installs already ran the community seed, so The President gets his own one-time seed
+  if(await Store.getMeta("npc-seed-president-v1",false))return;
+  try{await Store.setMeta("npc-seed-president-v1",true)}catch{}
+  if(state.posts.some(p=>p.userId==="thepresident"))return;
+  const u=CONFIG.users.thepresident;let t=Date.now()-1000*60*60*24*3;
+  for(const caption of u.posts){
+    t+=1000*60*60*(6+Math.random()*14);
+    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:Math.min(t,Date.now()-60000),reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
 
 /* =====================================================================
    Views
@@ -1420,6 +1446,7 @@ function migratePost(p){
   try{
     state.posts=(await Store.allPosts()).map(migratePost);newestFirst();
     await seedCommunityIfNeeded();
+    await seedPresidentIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
