@@ -413,3 +413,32 @@ button.uname:hover{text-decoration:underline}
 .sharePad{display:grid;gap:10px;padding:14px 16px 18px}
 .shareNote{height:44px;padding:0 14px;font:inherit;border:1.5px solid var(--line);border-radius:14px;background:#fff}
 @media(prefers-reduced-motion:reduce){.svBars i.cur{animation-duration:var(--d)!important}}
+
+/* =====================================================================
+   Phase 6 — News, Events, On This Day, Achievements
+   ===================================================================== */
+.newsBanner{display:flex;align-items:center;gap:12px;margin:10px 14px 2px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,#2a1030,#4a1f5c);color:#fff}
+.newsBanner>span{font-size:24px}
+.newsBanner b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.newsBanner small{display:block;margin-top:2px;font-size:13px;opacity:.85;line-height:1.3}
+.newsTools{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 4px}
+.newsCard{margin:0 16px 10px;padding:14px 16px;border:1px solid var(--line);border-left:5px solid var(--pink);border-radius:14px;background:#fff}
+.newsCard[data-open]{cursor:pointer}
+.newsTag{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--pink)}
+.newsCard h3{margin:4px 0 6px;font:400 17px/1.25 var(--display)}
+.newsCard time{font-size:12px;color:var(--soft)}
+.memCard{display:flex;align-items:center;gap:12px;margin:10px 14px 2px;padding:12px;border-radius:16px;background:linear-gradient(135deg,#ffe3f1,#efe1ff);cursor:pointer}
+.memCard img{flex:none;width:56px;height:56px;border-radius:12px;object-fit:cover}
+.memTag{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--violet)}
+.memCard p{margin:3px 0 0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.achGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 16px 24px}
+.ach{display:grid;justify-items:center;gap:4px;padding:16px 10px;border:1.5px dashed var(--line);border-radius:18px;text-align:center;opacity:.6}
+.ach.on{opacity:1;border:1.5px solid #f3b6d6;background:#fff1f8}
+.ach span{font-size:34px}
+.ach small{color:var(--soft);font-size:12px;line-height:1.3}
+.pBadges{margin:-6px 0 12px;font-size:20px;letter-spacing:4px}
+.achLink{margin-top:8px}
+.photo.classified>img{filter:blur(22px);transform:scale(1.1)}
+.photo.classified{overflow:hidden}
+.declass{position:absolute;inset:0;z-index:3;border:0;background:#2a103066;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+.tile.blur img{filter:blur(12px)}

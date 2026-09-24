@@ -1,7 +1,7 @@
 (()=>{"use strict";
 
 /* =====================================================================
-   MizzyGram — Phase 5 (Stories, Notifications, Saved, Sharing)
+   MizzyGram — Phase 6 (News, Events, On This Day, Achievements)
    Everything is stored in this browser (IndexedDB) for now.
    To change a user's username / bio / picture / personality, edit
    CONFIG below. To act as Mikael instead of Lizzy, use the "Switch to
@@ -141,6 +141,8 @@ const CONFIG={
   quality:.85,        // JPEG quality
   maxCaption:500,
   maxComment:300,
+  eventGapMin:3,      // minimum minutes between random events
+  memories:[],        // custom On This Day entries, e.g. {month:9,day:24,year:2025,text:"Something happened between Mikael and Lizzy..."}
   storySeconds:5,     // default seconds a photo/text story stays on screen
   storyHours:24,      // stories disappear after this many hours
   storyBgs:["linear-gradient(135deg,#ff4d9a,#7a35dc)","linear-gradient(135deg,#ffb84c,#e8317f)","linear-gradient(135deg,#3a7bd5,#7a35dc)","linear-gradient(135deg,#2f8f5b,#123322)","linear-gradient(135deg,#8a5a2c,#3a220f)","linear-gradient(135deg,#3a3a55,#0e0410)"]
@@ -224,9 +226,9 @@ const state={
   replyTo:null,           // {id,username} of the comment being replied to
   seenStories:new Set(),  // story ids the active user has already opened
   exploreQuery:"",        // current text in the Explore search box
-  hashtag:"",notifs:[],notifFilter:"all",notifHi:new Set(),saved:{},rewards:{},trendDone:[],savedCol:"",storyDraft:null,booting:false              // tag currently being viewed on the #hashtag page
+  hashtag:"",notifs:[],notifFilter:"all",notifHi:new Set(),saved:{},rewards:{},trendDone:[],savedCol:"",storyDraft:null,booting:false,news:[],lastEvent:0              // tag currently being viewed on the #hashtag page
 };
-const VIEWS=["home","explore","post","notifications","profile","hashtag","saved"];
+const VIEWS=["home","explore","post","notifications","profile","hashtag","saved","news","achievements"];
 const userOf=id=>CONFIG.users[id]||{username:"unknown",name:"Unknown",avatar:""};
 const newestFirst=()=>state.posts.sort((a,b)=>b.createdAt-a.createdAt);
 const reactionOf=id=>CONFIG.reactions.find(r=>r.id===id);
@@ -489,17 +491,19 @@ function bindExplore(){
 /* =====================================================================
    Phase 5 — Notifications, Rewards, Saved posts, Sharing, Story tools
    ===================================================================== */
-const NOTIF_FILTERS=[["all","All"],["like","❤️ Likes"],["comment","💬 Comments"],["follow","👥 Followers"],["mikael","💗 Mikael"],["trend","🔥 Trending"],["reward","🎁 Rewards"],["share","📤 Shared"]];
-const CATS={like:"❤️",comment:"💬",follow:"👥",mikael:"💗",trend:"🔥",reward:"🎁",share:"📤"};
+const NOTIF_FILTERS=[["all","All"],["like","❤️ Likes"],["comment","💬 Comments"],["follow","👥 Followers"],["mikael","💗 Mikael"],["trend","🔥 Trending"],["reward","🎁 Rewards"],["event","🚨 Events"],["share","📤 Shared"]];
+const CATS={like:"❤️",comment:"💬",follow:"👥",mikael:"💗",trend:"🔥",reward:"🎁",share:"📤",event:"🚨"};
 const REWARDS={
   welcome:["👋","Welcome to MizzyGram","You're all set. Post, save, share and collect."],
-  first_post:["📸","First Photo","You posted your first photo."],
+  first_post:["🌱","First Post","You posted your first photo."],
   first_story:["🎞️","Storyteller","You shared your first story."],
   first_save:["🔖","Collector","You saved your first post."],
   first_share:["📤","Sharer","You shared a post."],
-  reactions_10:["🔥","Crowd Pleaser","10 reactions on your posts."],
+  reactions_10:["❤️","10 Likes","10 reactions on your posts."],
   comments_5:["💬","Conversation Starter","5 comments on your posts."],
-  trending:["📈","Trending","One of your posts hit Trending."]
+  trending:["🔥","Trending","One of your posts hit Trending."],
+  viral:["🚀","Viral","A post blew up across MizzyGram."],
+  bowling:["🎳","Bowling Influencer","Collected 3 🎳 reactions on your posts."]
 };
 let svTimer=null;
 const storyAlive=x=>x.evergreen||Date.now()-x.createdAt<CONFIG.storyHours*36e5;
@@ -547,6 +551,7 @@ function notifText(n){
     case"reply":return`${nm} replied:${q}`;
     case"follow":return`${nm} started following you.`;
     case"share":return`${nm} sent you a post.${q}`;
+    case"event":return esc(n.text);
     case"trend":return"Your post is <b>trending</b> on MizzyGram!";
     case"reward":{const r=REWARDS[n.rewardId];return`Reward unlocked: <b>${esc(r[1])}</b> — ${esc(r[2])}`}
   }
@@ -554,7 +559,7 @@ function notifText(n){
 }
 function notifRow(n){
   const sys=n.from==="system",u=userOf(n.from),p=n.postId&&state.posts.find(x=>x.id===n.postId);
-  const ava=sys?`<span class="nIcon">${n.kind==="reward"?REWARDS[n.rewardId][0]:"🔥"}</span>`:`<span class="nAva"><img src="${esc(u.avatar)}" alt=""><i>${CATS[n.cat]}</i></span>`;
+  const ava=sys?`<span class="nIcon">${n.kind==="reward"?REWARDS[n.rewardId][0]:(n.emoji||"🔥")}</span>`:`<span class="nAva"><img src="${esc(u.avatar)}" alt=""><i>${CATS[n.cat]}</i></span>`;
   const fb=n.kind==="follow"&&!isFollowing(state.activeUser,n.from)?`<button class="btn primary sm" data-follow="${n.from}">Follow back</button>`:"";
   return `<div class="nRow ${state.notifHi.has(n.id)?"new":""} ${n.cat==="mikael"?"mikael":""}"><button class="nMain" data-notif="${n.id}">${ava}<span class="nText">${notifText(n)}<small>${ago(n.createdAt)}</small></span>${p?`<img class="nThumb" src="${p.image}" alt="">`:""}</button>${fb}</div>`;
 }
@@ -565,6 +570,7 @@ function award(u,id){
   if(have.includes(id)||!REWARDS[id])return;
   have.push(id);Store.setMeta("rewards",state.rewards).catch(()=>{});
   notify({to:u,from:"system",kind:"reward",rewardId:id});
+  if(!state.booting&&id!=="welcome")pushNews("🏆","ACHIEVEMENT",userOf(u).name+" unlocked \""+REWARDS[id][1]+"\".");
 }
 function milestones(){
   badgeCache=null;
@@ -574,9 +580,12 @@ function milestones(){
     if(mine.length)award(u,"first_post");
     if(mine.reduce((n,p)=>n+Object.keys(p.reactions).filter(k=>k!==u).length,0)>=10)award(u,"reactions_10");
     if(mine.reduce((n,p)=>n+p.comments.filter(c=>c.userId!==u).length,0)>=5)award(u,"comments_5");
+    if(mine.some(p=>p.viral||totalReactions(p)>=8))award(u,"viral");
+    if(mine.reduce((n,p)=>n+Object.values(p.reactions).filter(r=>r==="bowling").length,0)>=3)award(u,"bowling");
     mine.forEach(p=>{if(trend.has(p.id)&&!state.trendDone.includes(p.id)){
       state.trendDone.push(p.id);Store.setMeta("trend-done",state.trendDone).catch(()=>{});
       notify({to:u,from:"system",kind:"trend",postId:p.id});award(u,"trending");
+      pushNews("🔥","TRENDING",userOf(u).name+"'s photo is climbing the Trending charts.",p.id);
     }});
   });
 }
@@ -705,6 +714,104 @@ async function seedBotStoriesIfNeeded(){
 }
 
 /* =====================================================================
+   Phase 6 — News, Random Events, On This Day
+   ===================================================================== */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const persistNews=()=>Store.setMeta("news",state.news).catch(()=>{});
+function pushNews(emoji,tag,headline,postId,createdAt){
+  state.news.unshift({id:uid(),emoji,tag,headline,postId:postId||null,createdAt:createdAt||Date.now()});
+  state.news=state.news.slice(0,60);persistNews();
+  if(state.view==="news"&&!state.booting)render(true);
+}
+const newsCard=n=>`<div class="newsCard" ${n.postId?`data-open="${n.postId}"`:""}><div class="newsTag">${n.emoji} ${esc(n.tag)}</div><h3>${esc(n.headline)}</h3><time>${ago(n.createdAt)}</time></div>`;
+async function seedNewsIfNeeded(){
+  if(await Store.getMeta("news-seed-v1",false))return;
+  const h=36e5;
+  [["📰","BREAKING NEWS","Lizzy has challenged Mikael to another bowling match.",1],
+   ["🎳","BOWLING FEDERATION","Federation denies involvement. Officially.",5],
+   ["🍫","CHOCOLATE EMERGENCY","Regional shortage declared. Lizzy 'not worried'.",9],
+   ["💗","EXCLUSIVE","Sources: Mikael has not stopped smiling since Tuesday.",20]
+  ].forEach(([e,t,l,ago_])=>state.news.push({id:uid(),emoji:e,tag:t,headline:l,postId:null,createdAt:Date.now()-ago_*h}));
+  persistNews();await Store.setMeta("news-seed-v1",true);
+}
+async function botPost(userId,caption,extra){
+  const u=CONFIG.users[userId],post={id:uid(),userId,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:true,...extra};
+  state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
+  render(true);return post;
+}
+async function declassify(id){
+  const p=state.posts.find(x=>x.id===id);if(!p)return;
+  p.declassified=true;try{await Store.savePost(p)}catch{}
+  toast("Declassified 🕵️");render(true);renderSheet();
+}
+const humanPost=()=>{const mine=state.posts.filter(p=>p.userId===state.activeUser),all=state.posts.filter(p=>CONFIG.humans.includes(p.userId));return pick(mine.length?mine:all.length?all:[null])};
+const bots=()=>Object.values(CONFIG.users).filter(u=>u.bot);
+const EVENTS={
+  breaking:{e:"🚨",tag:"BREAKING NEWS",run(){return{headline:pick(["Lizzy has challenged Mikael to another bowling match.","HQ reports Mikael smiled at his phone for no reason.","Chocolate Emergency confirms supplies are 'fine, mostly'.","Sources say Lizzy is winning. Again."])}}},
+  viral:{e:"🔥",tag:"VIRAL MOMENT",run(){
+    const p=humanPost();if(!p)return EVENTS.breaking.run();
+    p.viral=true;Store.savePost(p).catch(()=>{});
+    shuffle(bots()).forEach((u,i)=>setTimeout(()=>communityReact(p.id,u.id),i*450));
+    return{headline:userOf(p.userId).name+"'s photo is going viral. The whole community is talking.",postId:p.id};
+  }},
+  mystery:{e:"👀",tag:"MYSTERY VIEWER",run(){
+    const [a,b]=shuffle(bots()).slice(0,2);
+    return{headline:"A mystery viewer checked "+userOf(state.activeUser).name+"'s profile 6 times. Suspects: @"+a.username+", @"+b.username+". Allegedly."};
+  }},
+  mikael:{e:"💗",tag:"MIKAEL SURPRISE",run(){
+    const p=state.posts.find(x=>x.userId==="lizzy");
+    if(p){communityReact(p.id,"mikael");}
+    return{headline:"Mikael left Lizzy a surprise. He says it was 'nothing'. It was not nothing.",postId:p&&p.id};
+  }},
+  bowling:{e:"🎳",tag:"BOWLING CHALLENGE",run(){
+    botPost("bowlingfederation","🎳 CHALLENGE ISSUED: Lizzy vs Mikael. Rematch date TBD. Gutter balls will be mocked. #BowlingQueen");
+    return{headline:"Lizzy has challenged Mikael to another bowling match. The Federation is 'watching closely'."};
+  }},
+  bomb:{e:"😂",tag:"COMMENT BOMB",run(){
+    const p=humanPost();if(!p)return EVENTS.breaking.run();
+    shuffle(bots().filter(u=>u.comments)).slice(0,5).forEach((u,i)=>setTimeout(()=>{
+      const c={id:uid(),userId:u.id,text:pick(u.comments),createdAt:Date.now(),likes:[],parentId:null};
+      p.comments.push(c);notifyComment(p,c);Store.savePost(p).catch(()=>{});render(true);renderSheet();
+    },i*600));
+    return{headline:"The comment section on "+userOf(p.userId).name+"'s post has erupted. 5 comments in seconds.",postId:p.id};
+  }},
+  classified:{e:"🕵️",tag:"CLASSIFIED POST",run(){
+    botPost("mikaelhq","🕵️ CLASSIFIED: ██████ ████ ██ Lizzy ██████. Clearance required.",{classified:true});
+    return{headline:"Mikael HQ has filed a classified post. Clearance level: Lizzy."};
+  }}
+};
+function runEvent(kind){
+  const ev=EVENTS[kind]||EVENTS[pick(Object.keys(EVENTS))],r=ev.run()||{};
+  pushNews(ev.e,ev.tag,r.headline,r.postId);
+  CONFIG.humans.forEach(u=>notify({to:u,from:"system",kind:"event",emoji:ev.e,text:ev.tag+": "+r.headline,postId:r.postId||null}));
+  toast(ev.e+" "+r.headline);
+  state.lastEvent=Date.now();Store.setMeta("event-last",state.lastEvent).catch(()=>{});
+}
+function startEvents(){
+  setInterval(()=>{
+    if(document.hidden||state.sheet)return;
+    if(Date.now()-state.lastEvent>CONFIG.eventGapMin*6e4&&Math.random()<.5)runEvent();
+  },40000);
+}
+
+/* ----- On This Day ----- */
+function memories(){
+  const now=new Date(),out=[];
+  state.posts.filter(p=>CONFIG.humans.includes(p.userId)).forEach(p=>{
+    const d=new Date(p.createdAt),yrs=now.getFullYear()-d.getFullYear(),days=Math.floor((now-p.createdAt)/864e5);
+    if(yrs>=1&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate())out.push({label:yrs+(yrs>1?" years":" year")+" ago",post:p});
+    else if([7,30,90].includes(days))out.push({label:days===7?"1 week ago":days===30?"1 month ago":"3 months ago",post:p});
+  });
+  CONFIG.memories.forEach(m=>{if(m.month===now.getMonth()+1&&m.day===now.getDate())out.push({label:m.year?(now.getFullYear()-m.year)+" years ago":"Today",text:m.text})});
+  return out;
+}
+const memCard=m=>`<div class="memCard" ${m.post?`data-open="${m.post.id}"`:""}>${m.post?`<img src="${m.post.image}" alt="">`:""}<div><div class="memTag">💗 ON THIS DAY · ${m.label}</div><p>${esc(m.post?(m.post.caption||"A photo from "+userOf(m.post.userId).name):m.text)}</p></div></div>`;
+function homeExtras(){
+  const top=state.news[0],mem=memories().slice(0,2);
+  return `<a class="newsBanner" href="#news"><span>📰</span><div><b>MizzyGram News</b><small>${top?esc(top.headline):"Nothing breaking. Yet."}</small></div></a>${mem.map(memCard).join("")}`;
+}
+
+/* =====================================================================
    Views
    ===================================================================== */
 function postCard(p){
@@ -719,7 +826,7 @@ function postCard(p){
       <button class="uname" data-user="${u.id}">${esc(u.username)}</button>
       <time datetime="${new Date(p.createdAt).toISOString()}">${ago(p.createdAt)}</time>
     </header>
-    <div class="photo" data-dbl>${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
+    <div class="photo ${p.classified&&!p.declassified?"classified":""}" data-dbl>${p.classified&&!p.declassified?`<button class="declass" data-declassify="${p.id}">🕵️ CLASSIFIED — tap to declassify</button>`:""}${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
     <div class="actions">
       <div class="likeWrap">
         <button class="act ${mineReact?"on":""}" data-like data-id="${p.id}" aria-pressed="${!!mineReact}" aria-label="${mineReact?"Remove reaction":"Like (hold for more reactions)"}">${mineReact?`<span class="reactEmoji">${reactionOf(mineReact).emoji}</span>`:I.heart}</button>
@@ -756,7 +863,7 @@ function storiesBar(){
 
 const renderers={
   home(){
-    const bar=storiesBar();
+    const bar=storiesBar()+homeExtras();
     if(!state.posts.length)return bar+emptyState(I.photo,"Nothing here yet","Your feed is empty. Share the first photo in Our World.",'<a class="btn primary" href="#post">Post a photo</a>');
     return bar+state.posts.map(postCard).join("");
   },
@@ -793,6 +900,19 @@ const renderers={
     list.forEach(n=>{const g=n.createdAt>=day?"Today":n.createdAt>day-6*864e5?"This week":"Earlier";if(g!==last){html+=`<div class="sectionLabel">${g}</div>`;last=g}html+=notifRow(n)});
     return `<h1 class="pageTitle">Notifications</h1>${chips}${html||emptyState(I.heart,"All quiet","Nothing here yet.")}`;
   },
+  news(){
+    const mem=memories();
+    return `<div class="hashHead"><a class="backLink" href="#home" aria-label="Back to Home">${I.back}</a><h1 class="pageTitle">📰 MizzyGram News</h1></div>
+      <div class="newsTools"><button class="btn ghost sm" data-event-now>🎲 Trigger an event</button><a class="btn ghost sm" href="#achievements">🏆 Achievements</a></div>
+      ${mem.length?`<div class="sectionLabel">On this day</div>${mem.map(memCard).join("")}`:""}
+      <div class="sectionLabel">Latest</div>${state.news.map(newsCard).join("")||emptyState(I.grid,"No news yet","Stay tuned.")}`;
+  },
+  achievements(){
+    const have=state.rewards[state.activeUser]||[],all=Object.entries(REWARDS).filter(([id])=>id!=="welcome");
+    return `<div class="hashHead"><a class="backLink" href="#profile" aria-label="Back to profile">${I.back}</a><h1 class="pageTitle">Achievements</h1></div>
+      <p class="hashCount">${all.filter(([id])=>have.includes(id)).length} of ${all.length} unlocked</p>
+      <div class="achGrid">${all.map(([id,r])=>{const on=have.includes(id);return `<div class="ach ${on?"on":""}"><span>${on?r[0]:"🔒"}</span><b>${esc(r[1])}</b><small>${esc(r[2])}</small></div>`}).join("")}</div>`;
+  },
   saved(){
     const u=state.activeUser,sv=savedOf(u),col=state.savedCol;
     if(!col){
@@ -820,8 +940,9 @@ const renderers={
         <h1 class="pName">${esc(u.name)}${u.bot?' <span class="botTag">bot</span>':""}</h1>
         <div class="pUser">@${esc(u.username)}</div>
         <p class="pBio">${esc(u.bio)}</p>
+        ${(state.rewards[viewing]||[]).filter(x=>x!=="welcome").length?`<p class="pBadges" title="Achievements">${state.rewards[viewing].filter(x=>x!=="welcome").map(x=>REWARDS[x][0]).join(" ")}</p>`:""}
         ${isMe
-          ?`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button>`
+          ?`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button><a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
       ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
@@ -829,7 +950,7 @@ const renderers={
   }
 };
 
-const tile=p=>`<button class="tile" data-open="${p.id}" aria-label="Open photo${p.caption?": "+esc(p.caption.slice(0,60)):""}"><img src="${p.image}" alt=""></button>`;
+const tile=p=>`<button class="tile ${p.classified&&!p.declassified?"blur":""}" data-open="${p.id}" aria-label="Open photo${p.caption?": "+esc(p.caption.slice(0,60)):""}"><img src="${p.image}" alt=""></button>`;
 
 /* ---------- render + routing ---------- */
 function render(keepScroll){
@@ -891,6 +1012,7 @@ function bindCompose(){
       await Store.savePost(post);
       state.posts.push(post);newestFirst();
       award(state.activeUser,"first_post");
+      pushNews("📸","NEW POST",userOf(state.activeUser).name+" posts a new photo. The app is \"coping\".",post.id);
       state.pending=null;
       toast("Posted 💗");
       location.hash="#home";
@@ -1186,6 +1308,7 @@ document.addEventListener("keydown",e=>{
 
 /* ---------- click handling ---------- */
 function handlePostClick(e){
+  const dc=e.target.closest("[data-declassify]");if(dc)return declassify(dc.dataset.declassify);
   const art=e.target.closest("[data-id]");
   if(e.target.closest("[data-like]")&&art){
     if(longPressed){longPressed=false;return}
@@ -1198,6 +1321,7 @@ function handlePostClick(e){
   if(e.target.closest("[data-reactions]")){const btn=e.target.closest("[data-reactions]");return openSheet({type:"reactions",id:btn.dataset.reactions})}
 }
 $("view").addEventListener("click",e=>{
+  if(e.target.closest("[data-event-now]"))return runEvent();
   const nb=e.target.closest("[data-notif]");
   if(nb){const n=state.notifs.find(x=>x.id===nb.dataset.notif);if(!n)return;
     if(n.kind==="follow")return goProfile(n.from);
@@ -1265,9 +1389,12 @@ function migratePost(p){
     state.rewards=await Store.getMeta("rewards",{});
     state.trendDone=await Store.getMeta("trend-done",[]);
     for(const u of CONFIG.humans){const v=await Store.getMeta("saved:"+u,null);if(v)state.saved[u]=v}
+    state.news=await Store.getMeta("news",[]);
+    state.lastEvent=await Store.getMeta("event-last",Date.now());
+    await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();
+  route();startEvents();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();

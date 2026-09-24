@@ -1,0 +1,25 @@
+MIZZYGRAM — PHASE 6 (Make It Part Of Your World)
+=================================================
+UPDATED FILES (replace at the ROOT of the repo): mizzygram.js, mizzygram.css
+Nothing else touched. Same single-device storage. Hard refresh after deploy.
+
+1. MIZZYGRAM NEWS
+   Home now has a "MizzyGram News" banner (latest headline) -> #news feed of fake
+   headlines (seeded + generated from real activity: new posts, trending,
+   achievements, events). Tap a headline with a post to open it.
+2. RANDOM EVENTS (every ~3+ min while the app is open, 50% chance per check)
+   🚨 Breaking News · 🔥 Viral Moment (community piles onto a post) ·
+   👀 Mystery Viewer · 💗 Mikael Surprise (he reacts/comments on Lizzy's latest post) ·
+   🎳 Bowling Challenge (Bowling Federation posts) · 😂 Comment Bomb (5 comments) ·
+   🕵️ Classified Post (blurred until you tap to declassify).
+   Each also lands in News + Notifications (new 🚨 Events filter) + a toast.
+   The News page has a "Trigger an event" button for testing.
+   Tune: CONFIG.eventGapMin in mizzygram.js.
+3. ON THIS DAY
+   Home + News show posts from 1 week / 1 month / 3 months / same date in earlier years.
+   Add your own real memories in CONFIG.memories, e.g.
+     {month:9,day:24,year:2025,text:"Something happened between Mikael and Lizzy..."}
+4. SOCIAL ACHIEVEMENTS
+   #achievements page (Profile -> 🏆 Achievements): 🌱 First Post, ❤️ 10 Likes,
+   🔥 Trending, 🚀 Viral, 💬 Conversation Starter, 🎳 Bowling Influencer.
+   Unlocked ones also show as emoji under the bio. Edit REWARDS to change them.
