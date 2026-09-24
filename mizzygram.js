@@ -623,6 +623,136 @@ const CONFIG={
         "Told a story about my ex-wife today. Twelve minutes long. No one asked. Everyone listened."
       ],
       comments:["This is sweet, really.","Reminds me of my grandkids, in a good way.","Nice. Very nice.","This made my whole day a little better.","I liked this. A lot, actually."]
+    },
+
+    /* ---- High School Musical / East High cast — post at random, never all on the same day (see seedHSMIfNeeded / startHSMPosts) ---- */
+    troy:{
+      id:"troy",username:"troy",name:"Troy Bolton",bot:true,favReaction:"fire",
+      avatar:tileAvatar("🏀","#ea580c","#7c2d12"),
+      bio:"East High Wildcats, #14.\nBasketball. Singing. Occasionally both at once.",
+      tile:["🏀","#ea580c","#7c2d12"],
+      posts:[
+        "Nailed free throws all practice today. Coach (aka Dad) still found something to critique. Love that for me.",
+        "Got called to the principal's office today for singing in the hallway. Worth it.",
+        "Team huddle got weirdly emotional today. Wildcats > everything.",
+        "Practiced a callback and free throws in the same afternoon. We contain multitudes.",
+        "Someone said I can't be both an athlete and a singer. I said watch me.",
+        "Dad benched me for showing up late. Fair. Still think about it every day.",
+        "Locker room pep talk got out of hand today. Somehow ended in a full harmony. Standard Tuesday."
+      ],
+      comments:["Wildcats forever, this is everything.","Okay MVP behavior, love to see it.","This deserves a callback of its own.","Get it, Wildcat.","This is exactly why you're team captain."]
+    },
+    gabriella:{
+      id:"gabriella",username:"gabriella",name:"Gabriella Montez",bot:true,favReaction:"love",
+      avatar:tileAvatar("🔬","#0284c7","#0c2d48"),
+      bio:"East High, new girl.\nScholastic Decathlon captain. Secretly loves the spotlight too.",
+      tile:["🔬","#0284c7","#0c2d48"],
+      posts:[
+        "Scholastic Decathlon practice ran late again. Worth it, we're basically unstoppable now.",
+        "Someone told me I don't 'seem like the type' to sing. I've stopped explaining myself to people like that.",
+        "New school, new locker, same old habit of reading three books at once.",
+        "Practiced a duet today. My voice cracked once. We're not discussing it further.",
+        "Chemistry test today. Also emotionally, apparently. It's been a week.",
+        "Moving around growing up meant I learned to make friends fast. Still nervous every single time.",
+        "Studying and singing in the same afternoon. Balance is a skill. I'm working on it."
+      ],
+      comments:["This is so sweet, honestly.","You're so talented, in every possible category.","This deserves an A+ and a standing ovation.","I love this so much, no notes.","Okay this is really lovely."]
+    },
+    sharpay:{
+      id:"sharpay",username:"sharpay",name:"Sharpay Evans",bot:true,favReaction:"attitude",
+      avatar:tileAvatar("👑","#f43f5e","#831843"),
+      bio:"East High Drama Club, star of every show (obviously).\nPink is a state of mind.",
+      tile:["👑","#f43f5e","#831843"],
+      posts:[
+        "Rehearsed my solo in the mirror for two hours today. It was flawless. As expected.",
+        "Someone auditioned for MY role today. Bold. Wrong, but bold.",
+        "Wore three outfit changes to school today. It's called main character energy, look it up.",
+        "The spotlight and I have a very special relationship. It knows where to find me.",
+        "Ryan and I choreographed a new number. It's iconic. I already know it's iconic.",
+        "Demanded a callback and got one. Some call it entitled. I call it accurate casting.",
+        "Pink is a state of mind, not just a color. I live there."
+      ],
+      comments:["This is star quality, obviously.","I would cast this immediately.","Iconic. Simply iconic.","This deserves the spotlight, and I don't say that about just anything.","Fabulous. Full stop."]
+    },
+    ryan:{
+      id:"ryan",username:"ryan",name:"Ryan Evans",bot:true,favReaction:"cute",
+      avatar:tileAvatar("🎩","#eab308","#78350f"),
+      bio:"East High Drama Club, choreographer.\nHats. Jazz hands. The occasional solo.",
+      tile:["🎩","#eab308","#78350f"],
+      posts:[
+        "Choreographed a new number today. It has jazz hands. It has a hat trick. It has everything.",
+        "Sharpay and I disagreed about the number again. We compromised. Mostly she won.",
+        "Found the perfect hat for the number today. This changes everything.",
+        "Practiced tap for three hours. My feet are tired. My spirit is thriving.",
+        "Someone complimented my scarf today. Finally, someone gets it.",
+        "Working on a solo that isn't just backup to Sharpay's solo. Wish me luck. Send hats.",
+        "Choreography meeting ran long today. Worth it, we found the perfect eight-count."
+      ],
+      comments:["This has real star potential, I mean that.","Love the energy on this, truly.","This deserves its own spotlight moment.","Okay, this is really good, genuinely.","I would workshop this into a whole number."]
+    },
+    chad:{
+      id:"chad",username:"chad",name:"Chad Danforth",bot:true,favReaction:"funny",
+      avatar:tileAvatar("🎧","#dc2626","#450a0a"),
+      bio:"East High Wildcats.\nBasketball first. Musical theater, reluctantly, second.",
+      tile:["🎧","#dc2626","#450a0a"],
+      posts:[
+        "Told Troy for the hundredth time: basketball and singing can coexist. I've come around. Slowly.",
+        "Practiced free throws until the gym closed. Some habits die hard. This one won't die at all.",
+        "Got roped into the musical again. Still complaining. Still showing up.",
+        "Taylor explained something to me using a chart today. I understood none of it. Loved every second.",
+        "Team scrimmage today got competitive fast. As it should.",
+        "Wore my jersey to the audition. Statement piece. Also just laundry day.",
+        "Someone questioned my hip-hop knowledge today. Foolish decision on their part."
+      ],
+      comments:["Let's go, this is the move.","Okay this actually kind of slaps, not mad about it.","Solid, real solid.","This deserves a fist bump, at minimum.","I see it. I respect it."]
+    },
+    taylor:{
+      id:"taylor",username:"taylor",name:"Taylor McKessie",bot:true,favReaction:"suspicious",
+      avatar:tileAvatar("📊","#0d9488","#134e4a"),
+      bio:"East High Scholastic Decathlon captain.\nCharts for everything. Skeptical of jocks, mostly.",
+      tile:["📊","#0d9488","#134e4a"],
+      posts:[
+        "Organized the whole Decathlon schedule today. It's color-coded. It's flawless. It's a system.",
+        "Explained to Chad, again, why questioning the status quo matters. Slow but steady progress.",
+        "Studied for six hours straight today. Worth every minute. Ask me anything about mitochondria.",
+        "Started a new club today. It has a mission statement. It has bylaws. It has ambition.",
+        "Someone underestimated the Decathlon team today. Big mistake. We remember everything.",
+        "Made a chart to explain my feelings today. It helped. Charts always help.",
+        "Gabriella and I studied for hours and somehow still had energy to overthink everything else too."
+      ],
+      comments:["This is thoroughly impressive, well done.","I have a chart that would explain exactly why I love this.","This deserves an award, genuinely.","Smart and well executed, as always.","This checks every box. Impressive."]
+    },
+    kelsi:{
+      id:"kelsi",username:"kelsi",name:"Kelsi Nielsen",bot:true,favReaction:"love",
+      avatar:tileAvatar("🎹","#8b5cf6","#312e81"),
+      bio:"East High Drama Club, composer & pianist.\nWrote your favorite number. Still learning to say so.",
+      tile:["🎹","#8b5cf6","#312e81"],
+      posts:[
+        "Finished a new song today. No one's heard it yet. Terrified. Also proud.",
+        "Sat at the piano for four hours straight. Lost track of time completely. No regrets.",
+        "Someone actually asked to hear one of my songs today instead of just using it. Big day.",
+        "Wrote a whole arrangement in one sitting. My hands are tired. My heart is full.",
+        "Quietly watched rehearsal from the piano today. Best seat in the house, honestly.",
+        "Changed one note in the bridge and somehow the whole song feels different now. Music is wild.",
+        "Someone finally learned my last name today. Small victories."
+      ],
+      comments:["This melody is stuck in my head, in the best way.","This deserves way more credit, truly.","So talented, quietly incredible.","This is beautiful, I mean that.","I would listen to this on repeat."]
+    },
+    zeke:{
+      id:"zeke",username:"zeke",name:"Zeke Baylor",bot:true,favReaction:"chocolate",
+      avatar:tileAvatar("🧁","#f59e0b","#78350f"),
+      bio:"East High Wildcats, power forward.\nSecretly the best baker in school. Not so secretly anymore.",
+      tile:["🧁","#f59e0b","#78350f"],
+      posts:[
+        "Baked a batch of crème brûlée before practice today. Priorities, but also dessert.",
+        "Brought cupcakes to practice today. Coach pretended not to notice. Coach had three.",
+        "Tried a new soufflé recipe today. It rose. I nearly cried in the kitchen.",
+        "Someone was surprised I bake. I was surprised they were surprised. We contain multitudes, people.",
+        "Made cookies for the whole team today. Still waiting for a certain someone to notice. Someday.",
+        "Practiced dunks and pastry technique in the same day. Balance.",
+        "New dessert idea in the works. Highly classified. Will reveal at the next bake sale."
+      ],
+      comments:["Okay these desserts look incredible, no notes.","I would try literally anything you baked, all of it.","This deserves its own bake sale.","So good, genuinely impressed every time.","This is elite level baking, respectfully."]
     }
   },
   reactions:[
@@ -1461,6 +1591,34 @@ function startB99Posts(){
   },5*60000);
 }
 
+/* ---------- High School Musical cast: random, staggered posting (same pattern as the other casts) ---------- */
+const HSM_IDS=["troy","gabriella","sharpay","ryan","chad","taylor","kelsi","zeke"];
+const hsmBots=()=>HSM_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+async function seedHSMIfNeeded(){
+  if(await Store.getMeta("npc-seed-hsm-v1",false))return;
+  try{await Store.setMeta("npc-seed-hsm-v1",true)}catch{}
+  const now=Date.now();
+  for(const u of hsmBots()){
+    if(Math.random()<0.3)continue;
+    const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
+    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
+function startHSMPosts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    for(const u of hsmBots()){
+      const lastPost=state.posts.find(p=>p.userId===u.id);
+      const lastAt=lastPost?lastPost.createdAt:0;
+      const minGapHours=16+Math.random()*24;
+      if(Date.now()-lastAt<minGapHours*36e5)continue;
+      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+    }
+  },5*60000);
+}
+
 /* =====================================================================
    Views
    ===================================================================== */
@@ -2024,6 +2182,7 @@ function migratePost(p){
     await seedOfficeIfNeeded();
     await seedGilmoreIfNeeded();
     await seedB99IfNeeded();
+    await seedHSMIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
@@ -2048,7 +2207,7 @@ function migratePost(p){
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();
