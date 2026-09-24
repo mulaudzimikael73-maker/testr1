@@ -1,10 +1,13 @@
 (()=>{"use strict";
 
 /* =====================================================================
-   MizzyGram — Phase 7 (Mikael HQ bridge)
+   MizzyGram — Phase 8 (in-app profile editing)
    Everything is stored in this browser (IndexedDB) for now.
-   To change a user's username / bio / picture / personality, edit
-   CONFIG below. To act as Mikael instead of Lizzy, use the "Switch to
+   Name / bio / profile picture can now be changed in-app from the
+   Profile tab ("✏️ Edit Profile", own profile only) — saved to
+   Store's "profile-overrides" meta key and merged onto CONFIG.users
+   at boot. Username and personality still require editing CONFIG
+   below. To act as Mikael instead of Lizzy, use the "Switch to
    Mikael" button on the Profile tab (own profile).
    ===================================================================== */
 
@@ -1273,6 +1276,20 @@ function deleteCollection(id){
   persistSaved();closeSheet(true);
   if(location.hash==="#saved")render(false);else location.hash="#saved";
 }
+async function submitEditProfile(){
+  const uidKey=state.activeUser,u=userOf(uidKey),err=$("epErr");
+  const name=$("epName").value.trim(),bio=$("epBio").value.trim();
+  if(!name){err.textContent="Name can't be empty.";return}
+  const avatar=(state.sheet&&state.sheet.avatar)||u.avatar;
+  const overrides=await Store.getMeta("profile-overrides",{});
+  overrides[uidKey]={name,bio,avatar};
+  try{await Store.setMeta("profile-overrides",overrides)}
+  catch{err.textContent="Couldn't save — your browser may be out of space.";return}
+  Object.assign(CONFIG.users[uidKey],{name,bio,avatar});
+  closeSheet(true);
+  toast("Profile updated ✏️");
+  render(true);
+}
 
 /* ----- sharing ----- */
 function sendShare(){
@@ -1750,7 +1767,7 @@ const renderers={
         <p class="pBio">${esc(u.bio)}</p>
         ${(state.rewards[viewing]||[]).filter(x=>x!=="welcome").length?`<p class="pBadges" title="Achievements">${state.rewards[viewing].filter(x=>x!=="welcome").map(x=>REWARDS[x][0]).join(" ")}</p>`:""}
         ${isMe
-          ?`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button><a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
+          ?`<button class="btn primary block" data-edit-profile>✏️ Edit Profile</button><button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button><a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
       ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
@@ -1972,7 +1989,7 @@ function closeSheet(silent){
 function renderSheet(force){
   const el=$("sheet"),s=state.sheet;
   if(!s){el.hidden=true;return}
-  if(!force&&["story","share","storyCompose","colForm"].includes(s.type)&&el.dataset.type===s.type)return; // don't rebuild while typing / mid-story
+  if(!force&&["story","share","storyCompose","colForm","editProfile"].includes(s.type)&&el.dataset.type===s.type)return; // don't rebuild while typing / mid-story
   el.hidden=false;el.dataset.type=s.type;
 
   if(s.type==="post"){
@@ -2058,6 +2075,37 @@ function renderSheet(force){
       ${c?`<button class="colRow danger" data-col-del="${c.id}"><span>🗑️</span><b>Delete collection</b></button>`:""}</div>`;
     $("colName").focus();
 
+  }else if(s.type==="editProfile"){
+    const u=userOf(state.activeUser);
+    const name=s.name??u.name,bio=s.bio??u.bio,avatar=s.avatar||u.avatar;
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Edit profile"><div class="sheetHead"><h2>Edit profile</h2><button class="act" data-close aria-label="Close">${I.close}</button></div>
+      <div class="sheetScroll">
+        <form class="cForm editProfileForm" id="editProfileForm">
+          <label class="epAvaPick"><img src="${esc(avatar)}" alt="Profile picture preview"><input type="file" id="epAvaInput" accept="image/*" aria-label="Choose a new profile picture"><span>Change photo</span></label>
+          <label class="lbl" for="epName">Name</label>
+          <input id="epName" maxlength="40" value="${esc(name)}" placeholder="Your name" autocomplete="off">
+          <label class="lbl" for="epBio">Bio</label>
+          <textarea id="epBio" maxlength="150" placeholder="Write a bio…">${esc(bio)}</textarea>
+          <div class="count" id="epCount">${bio.length}/150</div>
+          <div class="err" id="epErr" role="alert"></div>
+          <button class="btn primary block" type="submit">Save</button>
+        </form>
+      </div></div>`;
+    $("epName").focus();
+    $("epBio").addEventListener("input",()=>{$("epCount").textContent=`${$("epBio").value.length}/150`});
+    $("epAvaInput").addEventListener("change",async()=>{
+      const f=$("epAvaInput").files&&$("epAvaInput").files[0];if(!f)return;
+      const err=$("epErr");err.textContent="";
+      try{
+        const image=await prepareImage(f);
+        // capture whatever's currently typed so the rebuild below doesn't lose it
+        state.sheet.name=$("epName").value;
+        state.sheet.bio=$("epBio").value;
+        state.sheet.avatar=image;
+        renderSheet(true);
+      }catch(e){err.textContent=e.message}
+    });
+
   }else if(s.type==="share"){
     const p=state.posts.find(x=>x.id===s.id);if(!p){closeSheet();return}
     const targets=[...CONFIG.humans.filter(h=>h!==state.activeUser),...Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id)];
@@ -2101,6 +2149,7 @@ $("sheet").addEventListener("click",e=>{
 $("sheet").addEventListener("submit",async e=>{
   e.preventDefault();
   if(e.target.id==="colForm")return submitColForm();
+  if(e.target.id==="editProfileForm")return submitEditProfile();
   const s=state.sheet;if(!s||s.type!=="comments")return;
   const inp=$("cInput"),text=inp.value.trim();if(!text)return;
   inp.value="";
@@ -2149,6 +2198,8 @@ $("view").addEventListener("click",e=>{
   if(followBtn)return toggleFollow(followBtn.dataset.follow);
   const switchBtn=e.target.closest("[data-switch]");
   if(switchBtn)return switchUser(switchBtn.dataset.switch);
+  const editProfileBtn=e.target.closest("[data-edit-profile]");
+  if(editProfileBtn)return openSheet({type:"editProfile"});
   const userBtn=e.target.closest("[data-user]");
   if(userBtn)return goProfile(userBtn.dataset.user);
   handlePostClick(e);
@@ -2206,6 +2257,10 @@ function migratePost(p){
     state.lastEvent=await Store.getMeta("event-last",Date.now());
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
+    const profileOverrides=await Store.getMeta("profile-overrides",{});
+    for(const uidKey in profileOverrides){
+      if(CONFIG.users[uidKey])Object.assign(CONFIG.users[uidKey],profileOverrides[uidKey]);
+    }
   }catch{}
   route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");

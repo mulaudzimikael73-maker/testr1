@@ -446,3 +446,17 @@ button.uname:hover{text-decoration:underline}
 /* Phase 7 */
 .postHead .mood{padding:2px 8px;border-radius:999px;background:var(--blush);color:var(--soft);font-size:11px;font-weight:700}
 .pinTag{font-size:11px;font-weight:700;color:var(--violet)}
+
+/* Phase 8 — Edit Profile */
+.editProfileForm{flex-direction:column;align-items:stretch;gap:12px;padding:16px;border-top:none}
+.epAvaPick{position:relative;width:94px;height:94px;margin:0 auto 4px;border-radius:50%;cursor:pointer;display:block}
+.epAvaPick img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid var(--paper);background:var(--grad)}
+.epAvaPick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border-radius:50%}
+.epAvaPick:focus-within{outline:3px solid var(--violet);outline-offset:2px;border-radius:50%}
+.epAvaPick span{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:700;color:#fff;background:var(--ink);padding:3px 9px;border-radius:999px;pointer-events:none}
+.editProfileForm .lbl{font-weight:700;font-size:14px}
+.editProfileForm input:not(.epAvaPick input){height:44px;padding:0 14px;font:inherit;color:var(--ink);border:1.5px solid var(--line);border-radius:14px;background:#fff}
+.editProfileForm input:not(.epAvaPick input):focus{outline:3px solid #b23fd655;border-color:var(--violet)}
+.editProfileForm textarea{width:100%;min-height:90px;resize:vertical;padding:13px 14px;font:inherit;color:var(--ink);border:1.5px solid var(--line);border-radius:16px;background:#fff}
+.editProfileForm textarea:focus{outline:3px solid #b23fd655;border-color:var(--violet)}
+.editProfileForm .count{margin-top:-6px}
