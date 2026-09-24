@@ -319,6 +319,174 @@ const CONFIG={
         "If anyone's looking for me between 2 and 4pm, I'm not real during those hours. Try later."
       ],
       comments:["This speaks to me on a level I choose not to examine.","I have seen things that make this look normal. This still ranks high.","Posting this to the website. Don't ask which section.","I don't know what this means but I believe it.","This is the realest thing I've seen all week, and I've seen some things."]
+    },
+
+    /* ---- Gilmore Girls / Stars Hollow cast — post at random, never all on the same day (see seedGilmoreIfNeeded / startGilmorePosts) ---- */
+    lorelai:{
+      id:"lorelai",username:"lorelai",name:"Lorelai Gilmore",bot:true,favReaction:"funny",
+      avatar:tileAvatar("☕","#d97b3f","#7a3b12"),
+      bio:"Innkeeper, Stars Hollow. Coffee is a love language.\nRaising Rory one Pop-Tart at a time.",
+      tile:["☕","#d97b3f","#7a3b12"],
+      posts:[
+        "Coffee IV drip when? Asking for science.",
+        "Told Michel to smile at a guest today. He looked personally offended by the request.",
+        "Rory and I watched three movies and ate a family-sized bag of Twizzlers. Balanced dinner, really.",
+        "Had a whole conversation with my mother that lasted four minutes and somehow ruined my entire week.",
+        "Pop-Tarts count as a food group. I don't make the rules. Okay, I made this specific rule.",
+        "Booked a full house at the inn today. Michel complained the exact right amount.",
+        "Talked so fast at the diner today Luke made me repeat the whole order. Worth it for the eye roll."
+      ],
+      comments:["Okay this is adorable, add it to the pile of things I'm obsessed with.","I would trade a week of coffee for this, and that's saying a lot.","This deserves its own Friday night dinner discussion. The good kind.","Rory, back me up, this is amazing.","Be right there, just let me finish my coffee first."]
+    },
+    rory:{
+      id:"rory",username:"rory",name:"Rory Gilmore",bot:true,favReaction:"love",
+      avatar:tileAvatar("📚","#7ec4cf","#1d4e57"),
+      bio:"Stars Hollow High. Aspiring journalist.\nCurrently three books behind on my own list.",
+      tile:["📚","#7ec4cf","#1d4e57"],
+      posts:[
+        "Finished another book today. Adding it to the list. The list is very long.",
+        "Working on an article for the school paper. Trying to make deadlines sound dramatic. They are dramatic.",
+        "Mom and I had another movie night. I regret nothing, including the sugar crash.",
+        "Spent the afternoon at the library. Yes, on purpose. Yes, I had fun.",
+        "Trying to figure out my future one book at a time. Mostly it's working.",
+        "Coffee run with Mom turned into a two-hour conversation about literally everything."
+      ],
+      comments:["This is exactly the kind of thing I'd write about.","Okay, adding this to my mental list of great things.","This deserves a footnote in somebody's memoir.","I love this, no further commentary needed. Okay, some commentary.","Reading this twice, just to be sure."]
+    },
+    luke:{
+      id:"luke",username:"luke",name:"Luke Danes",bot:true,
+      avatar:tileAvatar("🪵","#3e4a3d","#141a13"),
+      bio:"Luke's Diner. Coffee, in moderation (mine, not yours).\nFlannel isn't a trend, it's a lifestyle.",
+      tile:["🪵","#3e4a3d","#141a13"],
+      posts:[
+        "Told someone their fourth coffee refill was their last for the day. They did not listen. I gave them a fifth anyway.",
+        "Fixed the diner sign again. It keeps falling. I keep fixing it. This is apparently my life now.",
+        "Closed early today. Needed the quiet. Didn't get it. Someone knocked anyway.",
+        "Someone asked for a decaf today. I do not carry decaf. On principle.",
+        "Renovated a booth. No one noticed. I noticed. That's enough.",
+        "Turns out flannel is 'in' again, according to someone. I've been in this the whole time."
+      ],
+      comments:["Fine. It's good. Don't let it go to your head.","Didn't say anything, just refilled your coffee. That's the compliment.","Alright, this one's actually pretty good.","Not gonna lie, I smiled a little at this.","Noted. Moving on."]
+    },
+    emily:{
+      id:"emily",username:"emily",name:"Emily Gilmore",bot:true,favReaction:"attitude",
+      avatar:tileAvatar("💎","#b5b8c1","#2c2f36"),
+      bio:"Hartford. Friday night dinner starts promptly at seven.\nStandards are not optional.",
+      tile:["💎","#b5b8c1","#2c2f36"],
+      posts:[
+        "Hosted another dinner party. The centerpiece alone took three hours to approve.",
+        "Fired the maid again. Will rehire her by Thursday. This is a system, not a scandal.",
+        "Friday night dinner starts promptly at seven. Promptly. I do mean promptly.",
+        "Attended a benefit luncheon today. The company was tolerable. The dessert was not.",
+        "Richard rearranged his study again. I've allowed it. This time.",
+        "Someone at the club questioned my seating chart. I did not dignify it with a response."
+      ],
+      comments:["Well. I suppose this is acceptable.","This is lovely, dear, truly.","I'll allow this, this once.","This would look marvelous framed in the sitting room.","Well done. I mean that sincerely, for once."]
+    },
+    richard:{
+      id:"richard",username:"richard",name:"Richard Gilmore",bot:true,
+      avatar:tileAvatar("🥃","#5c4433","#2a1d14"),
+      bio:"Insurance, Hartford. Scotch, always.\nStories about the war available upon request.",
+      tile:["🥃","#5c4433","#2a1d14"],
+      posts:[
+        "Spent the evening with a good scotch and a bad business report. Balanced out nicely.",
+        "Told a story about the war at dinner tonight. Got through the whole thing before anyone interrupted. A record.",
+        "Reorganized my study again. Found three books I forgot I owned. Excellent evening.",
+        "Attended a very long meeting today. Said very little. Said it well.",
+        "Emily rearranged the good china. I have accepted my fate.",
+        "Debated business strategy over cigars tonight. Won, obviously."
+      ],
+      comments:["Quite right. Well done.","A fine effort, all things considered.","This deserves recognition. Formally, if possible.","I'm impressed, and I don't say that often.","Good show."]
+    },
+    sookie:{
+      id:"sookie",username:"sookie",name:"Sookie St. James",bot:true,favReaction:"chocolate",
+      avatar:tileAvatar("🍳","#ffcf4d","#b5450c"),
+      bio:"Head chef, the Inn. Occasional kitchen injuries.\nEverything's better with butter.",
+      tile:["🍳","#ffcf4d","#b5450c"],
+      posts:[
+        "Burned dinner tonight. Twice. Still ate it. Still delicious. I have no explanation.",
+        "Tried a new recipe today. Kitchen looked like a crime scene. Worth it.",
+        "Cut my finger again. Third time this week. Kept cooking anyway.",
+        "Made a soufflé that didn't collapse! I may actually cry about this.",
+        "Jackson brought vegetables again. I turned them into something amazing. Obviously.",
+        "Spent four hours on a menu that will be eaten in four minutes. Worth every second."
+      ],
+      comments:["Okay this made me SO happy, I might cry.","I love this more than I love a perfect soufflé, and that's saying something.","This deserves its own tasting menu.","I'm obsessed, genuinely obsessed.","This is the best thing I've seen all week, no contest."]
+    },
+    michel:{
+      id:"michel",username:"michel",name:"Michel Gerard",bot:true,favReaction:"suspicious",
+      avatar:tileAvatar("🛎️","#4a4a5a","#101018"),
+      bio:"Concierge, the Inn. I did not choose hospitality, hospitality chose me.\nI am unavailable to discuss it further.",
+      tile:["🛎️","#4a4a5a","#101018"],
+      posts:[
+        "A guest asked me for directions today. I gave them. Correctly. I am still recovering from the ordeal.",
+        "Someone tried to check in early. I explained, calmly, why that is not possible. I was very calm.",
+        "I answered the phone eleven times today. Eleven. I counted. I always count.",
+        "Lorelai asked me to smile more. I smiled once. She said it looked threatening. I am aware.",
+        "A guest complained about the pillows. The pillows are fine. The guest is the problem.",
+        "I organized the front desk perfectly today. No one appreciated it. As usual."
+      ],
+      comments:["I suppose this is tolerable.","Fine. It is fine. I said what I said.","This is acceptable, barely.","I did not want to like this. I like this.","I will allow this one time."]
+    },
+    paris:{
+      id:"paris",username:"paris",name:"Paris Geller",bot:true,favReaction:"fire",
+      avatar:tileAvatar("🎯","#b91c1c","#450a0a"),
+      bio:"Chilton. Future somebody important.\nEleven extracurriculars and counting.",
+      tile:["🎯","#b91c1c","#450a0a"],
+      posts:[
+        "Reorganized my study schedule for the third time today. This one is final. Probably.",
+        "Got a 98 on the exam. Unacceptable. Where were the other two points.",
+        "Debated someone in class today. Won. Obviously. Did anyone expect otherwise.",
+        "Made a five-year plan. Then a ten-year plan. Then panicked about both.",
+        "Someone questioned my extracurricular list. I have eleven activities. Eleven is not enough.",
+        "Pulled an all-nighter for a paper due in two weeks. Efficiency is a myth I've chosen to ignore."
+      ],
+      comments:["This is acceptable work. High praise, coming from me.","I have notes, but overall — fine.","This better be on your college application.","I'm annoyed I didn't think of this first.","Fine. FINE. This is good."]
+    },
+    lane:{
+      id:"lane",username:"lane",name:"Lane Kim",bot:true,favReaction:"fire",
+      avatar:tileAvatar("🥁","#d946ef","#581c87"),
+      bio:"Stars Hollow. Drummer, in secret.\nCD collection hidden, ambitions not.",
+      tile:["🥁","#d946ef","#581c87"],
+      posts:[
+        "Hid three new CDs in the ceiling tile today. The collection grows. Mama must never know.",
+        "Practiced drums in the garage for two hours. My arms are dead. Worth it.",
+        "Told Mama I was at a study group. I was at a show. I regret nothing. I fear everything.",
+        "Started a new band today. We have a name. We do not have a drummer. Wait, I'm the drummer.",
+        "Snuck a rock magazine into a Bible cover again. Smooth as always.",
+        "Had the best conversation with Rory today about absolutely nothing and everything."
+      ],
+      comments:["Okay this is so good, hiding this in my secret binder of great things.","I'm playing this on repeat in my head now.","This deserves its own mixtape.","Love this, don't tell Mama I said that.","This is officially my favorite thing today."]
+    },
+    jess:{
+      id:"jess",username:"jess",name:"Jess Mariano",bot:true,
+      avatar:tileAvatar("🖤","#3f3f46","#09090b"),
+      bio:"Stars Hollow, allegedly. Reader.\nSarcasm is a love language too.",
+      tile:["🖤","#3f3f46","#09090b"],
+      posts:[
+        "Read a book today that everyone said I wouldn't like. I liked it. Didn't tell anyone.",
+        "Fixed something at the diner without being asked. Uncle Luke looked suspicious. Fair.",
+        "Skipped a class today. Learned more from the book I read instead. Don't tell anyone that either.",
+        "Someone asked what I was thinking about. I said nothing. That was a lie.",
+        "Wrote something today. Threw it away. Might've kept a copy. Might not have.",
+        "Had one decent conversation today. Ruined it immediately with a comment. Typical."
+      ],
+      comments:["Didn't expect to like this. I like this.","This is better than most things I've read this week.","Not bad.","Okay, that's actually kind of great.","Wasn't going to comment. Here I am, commenting."]
+    },
+    kirk:{
+      id:"kirk",username:"kirk",name:"Kirk Gleason",bot:true,favReaction:"funny",
+      avatar:tileAvatar("🎬","#34d399","#065f46"),
+      bio:"Stars Hollow. Currently between fourteen jobs.\nNew business venture launching any minute now.",
+      tile:["🎬","#34d399","#065f46"],
+      posts:[
+        "Started a new business today. It failed by lunch. Starting another one tomorrow.",
+        "Tried a new invention today. It did not work as intended. Filing a patent anyway.",
+        "Took on my fourteenth job this month. Still figuring out which one pays.",
+        "Made a short film starring myself. Premiere is Thursday. Refreshments will be provided by me.",
+        "Walked my pig today. He walked me, actually. It's a partnership.",
+        "Applied for a job I am extremely unqualified for. Confidence is 90% of the process."
+      ],
+      comments:["This is exactly the kind of quality content this town needs.","I have several follow-up questions, all supportive.","Adding this to my scrapbook of favorite moments.","This deserves a spot in the town festival.","I don't fully understand it, but I fully support it."]
     }
   },
   reactions:[
@@ -1101,6 +1269,34 @@ function startOfficePosts(){
   },5*60000);
 }
 
+/* ---------- Gilmore Girls cast: random, staggered posting (same pattern as the Office cast) ---------- */
+const GILMORE_IDS=["lorelai","rory","luke","emily","richard","sookie","michel","paris","lane","jess","kirk"];
+const gilmoreBots=()=>GILMORE_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+async function seedGilmoreIfNeeded(){
+  if(await Store.getMeta("npc-seed-gilmore-v1",false))return;
+  try{await Store.setMeta("npc-seed-gilmore-v1",true)}catch{}
+  const now=Date.now();
+  for(const u of gilmoreBots()){
+    if(Math.random()<0.3)continue;
+    const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
+    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
+function startGilmorePosts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    for(const u of gilmoreBots()){
+      const lastPost=state.posts.find(p=>p.userId===u.id);
+      const lastAt=lastPost?lastPost.createdAt:0;
+      const minGapHours=16+Math.random()*24;
+      if(Date.now()-lastAt<minGapHours*36e5)continue;
+      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+    }
+  },5*60000);
+}
+
 /* =====================================================================
    Views
    ===================================================================== */
@@ -1662,6 +1858,7 @@ function migratePost(p){
     await seedCommunityIfNeeded();
     await seedPresidentIfNeeded();
     await seedOfficeIfNeeded();
+    await seedGilmoreIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
@@ -1686,7 +1883,7 @@ function migratePost(p){
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();
