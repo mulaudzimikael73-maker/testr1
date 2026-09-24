@@ -137,6 +137,188 @@ const CONFIG={
         "🎖️ PRESIDENTIAL PARDON: Granted to whoever ate the last chocolate. This time only."
       ],
       comments:["The President has reviewed this post and approves it.","This has been entered into the national record.","A motion to declare this post a national treasure has passed.","The administration is proud of you both."]
+    },
+
+    /* ---- The Office cast — post at random, never all on the same day (see seedOfficeIfNeeded / startOfficePosts) ---- */
+    michael:{
+      id:"michael",username:"michael",name:"Michael Scott",bot:true,favReaction:"funny",
+      avatar:tileAvatar("🏆","#f2b705","#c2410c"),
+      bio:"Regional Manager, Dunder Mifflin Scranton. World's Best Boss (self-appointed).\nHere to make everyone my best friend.",
+      tile:["🏆","#f2b705","#c2410c"],
+      posts:[
+        "Just closed a huge deal. Or thought about closing one. Basically the same thing. #WorldsBestBoss",
+        "Had an amazing idea for the office today. HR said no. Typical.",
+        "Remember: I'm not their boss, I'm their friend first. Boss second. Probably entertainer third.",
+        "Ordered pretzels for the whole office. This is what leadership looks like.",
+        "Sometimes I start a sentence and I don't even know where it's going. I just hope I find it along the way.",
+        "Gave an inspiring speech today. No one clapped. Their loss.",
+        "Declared today a surprise half-day. Corporate is going to be SO mad. Worth it.",
+        "That's what she said. (Had to.)"
+      ],
+      comments:["This is the best thing I've ever seen and I've seen a lot of things.","I'm not crying, you're crying.","Can we frame this? I want to frame this.","This deserves a round of applause. *starts clapping alone*","This is why I love this office. This exact thing right here."]
+    },
+    jim:{
+      id:"jim",username:"jim",name:"Jim Halpert",bot:true,favReaction:"funny",
+      avatar:tileAvatar("😏","#38bdf8","#1e3a5f"),
+      bio:"Sales, Dunder Mifflin Scranton.\nProfessional prankster. Camera guy's best friend.",
+      tile:["😏","#38bdf8","#1e3a5f"],
+      posts:[
+        "Put Dwight's stapler in jello again. He deserved it. He always deserves it.",
+        "Someone left their phone unlocked near me today. Let's just say their contacts look... different now.",
+        "Faxed myself a message from the future. It said 'stop.' I did not stop.",
+        "Pretty sure Dwight thinks I'm part of a secret counter-espionage unit. Not correcting him.",
+        "Had a great day. Didn't do a lot of work. Balance.",
+        "Moved every item on Dwight's desk two inches to the left. He hasn't noticed yet. It's been three days.",
+        "Sometimes I just look directly at the camera. You know why."
+      ],
+      comments:["This is objectively hilarious and I will not be taking questions.","Ten out of ten, would prank again.","Screenshotting this for later.","I have never related to anything more.","This is why I love this app."]
+    },
+    pam:{
+      id:"pam",username:"pam",name:"Pam Beesly",bot:true,favReaction:"cute",
+      avatar:tileAvatar("🎨","#f7b6d2","#a3355c"),
+      bio:"Receptionist & artist, Dunder Mifflin Scranton.\nSketching my way through the day.",
+      tile:["🎨","#f7b6d2","#a3355c"],
+      posts:[
+        "Sketched something during lunch today. Small victories.",
+        "Front desk was quiet enough today to actually finish a drawing. Miracle.",
+        "Someone brought donuts to the office and for once it wasn't a bribe. I think.",
+        "Working on a new piece. Might actually finish this one.",
+        "Best part of today: five uninterrupted minutes with my sketchbook.",
+        "Pitched an office art show idea. We'll see if it goes anywhere. It won't. But I pitched it.",
+        "Some days the front desk feels like the best seat in the house for people-watching."
+      ],
+      comments:["This made my whole day, honestly.","So talented, not even surprised.","Okay this is really sweet.","I love this so much.","This deserves way more attention."]
+    },
+    dwight:{
+      id:"dwight",username:"dwight",name:"Dwight Schrute",bot:true,favReaction:"fire",
+      avatar:tileAvatar("🌾","#6b8e23","#2f3d17"),
+      bio:"Assistant to the Regional Manager* (*self-declared). Schrute Farms beet co-owner.\nAlways prepared. Always alert.",
+      tile:["🌾","#6b8e23","#2f3d17"],
+      posts:[
+        "Reminder: I am equally skilled in combat and accounting. Plan accordingly.",
+        "Harvested a record beet crop this weekend. Do not ask me how. It is a farming secret.",
+        "Identity theft is not a joke. Millions of families suffer every year.",
+        "Conducted a surprise fire drill today. Evacuation time: unacceptable. Training continues.",
+        "Schrute Farms bed and breakfast now offers a haunted corn maze experience. Screaming included, free of charge.",
+        "I do not have a bunkmate. I have a battle buddy.",
+        "Today I identified three security vulnerabilities in this building. I will not be disclosing them. For security reasons.",
+        "Beets. Bears. Battlestar Galactica. In that order."
+      ],
+      comments:["This post has been noted in my personal files.","Impressive. Not as impressive as a beet harvest, but impressive.","I award this post zero demerits.","False. But entertaining.","I have seen many things. This ranks in my top twenty."]
+    },
+    oscar:{
+      id:"oscar",username:"oscar",name:"Oscar Martinez",bot:true,favReaction:"suspicious",
+      avatar:tileAvatar("🧮","#64748b","#1e293b"),
+      bio:"Senior Accountant, Dunder Mifflin Scranton.\nSomeone has to fact-check this office.",
+      tile:["🧮","#64748b","#1e293b"],
+      posts:[
+        "Actually, that statistic everyone's repeating today is incorrect. I checked.",
+        "Reviewed the quarterly numbers. They are, shockingly, numbers.",
+        "Explained a basic financial concept to the office again. It did not go well.",
+        "Corrected someone's grammar in a memo today. You're welcome, everyone.",
+        "The break room coffee situation has become a genuine liability. Someone should address this.",
+        "I would just like to point out that I was right about this three weeks ago.",
+        "Spent my lunch actually reading the terms and conditions. No regrets."
+      ],
+      comments:["Technically accurate, I'll allow it.","This is correct, and I appreciate that.","I have several notes but overall, fine.","Well, that's one way to phrase it.","I fact-checked this. It checks out."]
+    },
+    angela:{
+      id:"angela",username:"angela",name:"Angela Martin",bot:true,favReaction:"attitude",
+      avatar:tileAvatar("🐱","#b98cce","#4a235a"),
+      bio:"Head of Accounting, Dunder Mifflin Scranton. Senior Committee member.\nCats > people, most days.",
+      tile:["🐱","#b98cce","#4a235a"],
+      posts:[
+        "Sprinkles did something adorable this morning and I will not be elaborating further.",
+        "The break room has once again failed to meet basic standards of cleanliness. Noted for the file.",
+        "Party Planning Committee has ruled: no more surprise celebrations without proper notice.",
+        "Some of us take punctuality seriously. Some of us should learn from that.",
+        "Added another photo to the cat wall. It's not excessive. It's organized appreciation.",
+        "I do not gossip. I simply retain accurate information about others.",
+        "A moment of judgment-free silence for anyone who brought a scented candle into this office. Just kidding. Judging."
+      ],
+      comments:["This is acceptable, I suppose.","Noted. Filed accordingly.","I have mixed feelings, mostly positive.","This meets my standards, which is rare.","Fine. This is fine."]
+    },
+    stanley:{
+      id:"stanley",username:"stanley",name:"Stanley Hudson",bot:true,
+      avatar:tileAvatar("🥨","#a97142","#4a2e1a"),
+      bio:"Sales, Dunder Mifflin Scranton.\nHere for the paycheck. Here for pretzel day. Here for very little else.",
+      tile:["🥨","#a97142","#4a2e1a"],
+      posts:[
+        "Did the crossword during a meeting today. Finished it before the meeting ended. Not a coincidence.",
+        "It's not pretzel day. Every day without pretzel day is a day I'm counting down.",
+        "Someone asked for my opinion in a meeting today. I did not have one prepared. Or interest.",
+        "Four hours until I can go home. Not that I'm counting. I am counting.",
+        "Did not raise my voice today. Did not lower it either. Remained exactly the same.",
+        "My vacation home requires my full attention starting Friday at 5:01pm sharp.",
+        "Someone tried to get me excited about a new initiative today. Bold strategy."
+      ],
+      comments:["Fine.","Didn't hate it.","Sure.","I'd rate this a solid, acceptable post.","Not bad. Not that I was invested."]
+    },
+    toby:{
+      id:"toby",username:"toby",name:"Toby Flenderson",bot:true,
+      avatar:tileAvatar("😔","#93a5b1","#37474f"),
+      bio:"Human Resources, Dunder Mifflin Scranton.\nJust trying to keep things fair around here.",
+      tile:["😔","#93a5b1","#37474f"],
+      posts:[
+        "Had to file another incident report today. No one reads these. I still write them carefully.",
+        "Reminder: HR complaints can be submitted anonymously. Please use this option. Please use it kindly.",
+        "Sometimes I wonder what my life would look like somewhere else. Costa Rica, maybe.",
+        "Organized the sensitivity training materials again. Attendance was, as always, reluctant.",
+        "No one said good morning to me today. I counted. It's fine. I'm fine.",
+        "Filed the paperwork correctly this time. Small wins.",
+        "I just think if people talked to each other more, half these complaints wouldn't happen. But what do I know."
+      ],
+      comments:["This is nice. Genuinely nice.","I don't say this a lot, but I liked this.","This actually made me smile a little today.","Good for you. Really.","I don't get a lot of nice moments here, so — thanks for this one."]
+    },
+    kelly:{
+      id:"kelly",username:"kelly",name:"Kelly Kapoor",bot:true,favReaction:"cute",
+      avatar:tileAvatar("💅","#ff69b4","#c2185b"),
+      bio:"Customer Service Rep, Dunder Mifflin Scranton.\nOpinions on everything, feelings about everyone.",
+      tile:["💅","#ff69b4","#c2185b"],
+      posts:[
+        "Okay so a LOT happened today and I need to tell literally everyone about it right now.",
+        "Someone didn't text me back in nine minutes and I have several theories.",
+        "New shoes, new mood, new me (for today, we'll see about tomorrow).",
+        "I watched three reality shows during lunch and I have STRONG opinions about all of them.",
+        "Started a group chat about something and it immediately spiraled and honestly? Iconic.",
+        "Nobody asked but I'm going to explain my whole day anyway.",
+        "Told the whole office about my weekend in full detail whether they wanted it or not."
+      ],
+      comments:["OMG obsessed with this, no notes.","Wait this is actually SO good.","I need everyone to see this immediately.","I have so many feelings about this post.","This is my new favorite thing, don't ask me why."]
+    },
+    kevin:{
+      id:"kevin",username:"kevin",name:"Kevin Malone",bot:true,favReaction:"chocolate",
+      avatar:tileAvatar("🌶️","#e25822","#7a1f00"),
+      bio:"Accounting, Dunder Mifflin Scranton.\nChili enthusiast. Drummer. Smarter than people think.",
+      tile:["🌶️","#e25822","#7a1f00"],
+      posts:[
+        "Made a big batch of chili this weekend. It's a whole process. Worth it.",
+        "Had a thought today that turned out to be right. Wrote it down so I'd remember it happened.",
+        "Practiced drums for two hours straight. My neighbors have not filed a complaint. Yet.",
+        "Simplified a spreadsheet today by combining a bunch of cells into one. Oscar didn't love that.",
+        "Thinking about chili again. It's been four hours.",
+        "Found money in my other pants. Best kind of day.",
+        "Explained a complicated accounting thing perfectly on the first try. No one believed me."
+      ],
+      comments:["Ha. That's a good one.","I like this a lot, in a simple way.","This made me hungry for some reason.","Solid post. Very solid.","Yeah. I liked that."]
+    },
+    creed:{
+      id:"creed",username:"creed",name:"Creed Bratton",bot:true,favReaction:"suspicious",
+      avatar:tileAvatar("🎭","#5c5470","#1a1625"),
+      bio:"??? Quality Assurance, probably. Dunder Mifflin Scranton.\nMultiple names. Zero explanations.\nwww.creedthoughts.gov.www/creedthoughts",
+      tile:["🎭","#5c5470","#1a1625"],
+      posts:[
+        "Slept in the warehouse again. Best decision I've made all decade. Or the worst. Hard to say from in here.",
+        "New post up on creedthoughts.gov.www/creedthoughts. Do not read it out loud in a public place.",
+        "I've had this ID for eleven years and none of the names on it are mine. Working as intended.",
+        "Someone asked me my age today. I gave them a number. It felt right in the moment.",
+        "Found a tooth in my desk drawer. Not concerned. Filed it under 'personal effects.'",
+        "I don't dream anymore. I just wait.",
+        "Cashed a check today that I don't remember writing. Banks are so trusting. It's honestly beautiful.",
+        "New theory dropping soon on the website. It involves the moon. It involves me. It involves both of us, together.",
+        "If anyone's looking for me between 2 and 4pm, I'm not real during those hours. Try later."
+      ],
+      comments:["This speaks to me on a level I choose not to examine.","I have seen things that make this look normal. This still ranks high.","Posting this to the website. Don't ask which section.","I don't know what this means but I believe it.","This is the realest thing I've seen all week, and I've seen some things."]
     }
   },
   reactions:[
@@ -887,6 +1069,38 @@ async function seedPresidentIfNeeded(){
   newestFirst();
 }
 
+/* ---------- The Office cast: random, staggered posting ----------
+   Each character posts occasionally and independently, never all on
+   the same day. seedOfficeIfNeeded gives a handful of them a post
+   right away so the feed isn't empty; startOfficePosts keeps it going
+   forever after, checked every few minutes with low odds per check. */
+const OFFICE_IDS=["michael","jim","pam","dwight","oscar","angela","stanley","toby","kelly","kevin","creed"];
+const officeBots=()=>OFFICE_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+async function seedOfficeIfNeeded(){
+  if(await Store.getMeta("npc-seed-office-v1",false))return;
+  try{await Store.setMeta("npc-seed-office-v1",true)}catch{}
+  const now=Date.now();
+  for(const u of officeBots()){
+    if(Math.random()<0.3)continue; // not everyone shows up on day one either
+    const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
+    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
+function startOfficePosts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    for(const u of officeBots()){
+      const lastPost=state.posts.find(p=>p.userId===u.id);
+      const lastAt=lastPost?lastPost.createdAt:0;
+      const minGapHours=16+Math.random()*24; // each character waits at least ~16-40h between posts
+      if(Date.now()-lastAt<minGapHours*36e5)continue;
+      if(Math.random()<0.012)botPost(u.id,pick(u.posts)); // small per-check odds keeps posting rare & staggered
+    }
+  },5*60000);
+}
+
 /* =====================================================================
    Views
    ===================================================================== */
@@ -1447,6 +1661,7 @@ function migratePost(p){
     state.posts=(await Store.allPosts()).map(migratePost);newestFirst();
     await seedCommunityIfNeeded();
     await seedPresidentIfNeeded();
+    await seedOfficeIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
@@ -1471,7 +1686,7 @@ function migratePost(p){
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
   }catch{}
-  route();startEvents();startHQ();
+  route();startEvents();startHQ();startOfficePosts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();
