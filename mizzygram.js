@@ -62,7 +62,7 @@ const CONFIG={
       posts:[
         "📋 SYSTEM STATUS: All servers green. Mikael's attention: 100% allocated to Lizzy.",
         "🔧 MAINTENANCE NOTICE: HQ chessboard has been reset. Reason: Lizzy won again.",
-        "📈 QUARTERLY REPORT: Letters received from Lizzy this month — all of them. Letters replied to — also all of them."
+        "📈 QUARTERLY REPORT: Letters received from Lizzy this month — all of them. Letters replied to — also all of them. #MrPerfect"
       ],
       comments:["Filed under: reasons HQ exists.","Logging this as a Priority One update.","HQ approves this post. Unanimously.","Forwarding this straight to Mikael's desk."]
     },
@@ -74,7 +74,7 @@ const CONFIG={
       posts:[
         "💻 BOOT LOG: Lizzy is online. All systems say 'good.'",
         "🔔 NOTIFICATION: 1 new adorable moment detected. No further action needed, just admire it.",
-        "🛠️ UPDATE PATCH v2.0: Added more reasons to smile. Bug fixes: none needed, she's perfect as is."
+        "🛠️ UPDATE PATCH v2.0: Added more reasons to smile. Bug fixes: none needed, she's perfect as is. #MizzyGram"
       ],
       comments:["Logged. Cuteness levels rising.","System says: 😍","Running diagnostics… conclusion: iconic.","Saving this to permanent memory."]
     },
@@ -85,7 +85,7 @@ const CONFIG={
       tile:["🎳","#ffb84c","#e8317f"],
       posts:[
         "🎳 BREAKING: Someone rolled a gutter ball and we are still recovering emotionally.",
-        "🏆 ANNOUNCEMENT: The Bowling Federation officially declares today a Strike Day. Act accordingly.",
+        "🏆 ANNOUNCEMENT: The Bowling Federation officially declares today a Strike Day. Act accordingly. #BowlingQueen",
         "📢 REMINDER: Bowling shoes are not a fashion statement. We don't make the rules. Actually we do."
       ],
       comments:["This deserves a 300 score. Perfect game.","STRIKE. That's a strike right there.","The Federation has reviewed this post. Verdict: excellent.","10/10, would high-five."]
@@ -120,8 +120,8 @@ const CONFIG={
       bio:"Covering the Lizzy & Mikael beat, 24 hours a day.\nUnverified sources. Fully biased. Front page always.",
       tile:["📰","#c9c9d6","#4a4a5a"],
       posts:[
-        "📰 BREAKING: Local girl posts photo, entire app agrees it's the best one yet.",
-        "🗞️ EXCLUSIVE: Sources confirm Mikael has, once again, been left speechless.",
+        "📰 BREAKING: Local girl posts photo, entire app agrees it's the best one yet. #LittleMissAttitude",
+        "🗞️ EXCLUSIVE: Sources confirm Mikael has, once again, been left speechless. #MrPerfect",
         "📸 FRONT PAGE: MizzyGram's most-followed story continues to develop. Stay tuned."
       ],
       comments:["This is going on the front page. No debate.","Sources confirm: adorable. Printing tomorrow's headline now.","Breaking news just dropped and it's this post.","Exclusive coverage incoming. This is huge."]
@@ -156,7 +156,8 @@ const I={
   search:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
   grid:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>',
-  send:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>'
+  send:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>'
 };
 
 /* =====================================================================
@@ -216,9 +217,11 @@ const state={
   activeUser:CONFIG.me,   // who is "using" the app right now (lizzy or mikael)
   profileUser:null,       // whose profile is currently open (null = activeUser's own)
   replyTo:null,           // {id,username} of the comment being replied to
-  seenStories:new Set()   // story ids the active user has already opened
+  seenStories:new Set(),  // story ids the active user has already opened
+  exploreQuery:"",        // current text in the Explore search box
+  hashtag:""              // tag currently being viewed on the #hashtag page
 };
-const VIEWS=["home","explore","post","notifications","profile"];
+const VIEWS=["home","explore","post","notifications","profile","hashtag"];
 const userOf=id=>CONFIG.users[id]||{username:"unknown",name:"Unknown",avatar:""};
 const newestFirst=()=>state.posts.sort((a,b)=>b.createdAt-a.createdAt);
 const reactionOf=id=>CONFIG.reactions.find(r=>r.id===id);
@@ -348,7 +351,7 @@ async function communityReact(postId,userId){
 
 /* ---------- one-time seeding of the fictional accounts' posts + stories ---------- */
 async function seedCommunityIfNeeded(){
-  const seeded=await Store.getMeta("npc-seed-v1",false);
+  const seeded=await Store.getMeta("npc-seed-v2",false);
   if(seeded)return;
   const now=Date.now();let t=now-1000*60*60*24*6;
   for(const u of Object.values(CONFIG.users)){
@@ -363,7 +366,7 @@ async function seedCommunityIfNeeded(){
     }
   }
   newestFirst();
-  try{await Store.setMeta("npc-seed-v1",true)}catch{}
+  try{await Store.setMeta("npc-seed-v2",true)}catch{}
 }
 async function seedStoriesIfNeeded(){
   const seeded=await Store.getMeta("story-seed-v1",false);
@@ -380,6 +383,103 @@ async function seedStoriesIfNeeded(){
   try{await Store.setMeta("story-seed-v1",true)}catch{}
 }
 
+/* ---------- hashtags ---------- */
+function extractTags(caption){
+  const m=String(caption||"").match(/#(\w+)/g)||[];
+  return [...new Set(m.map(t=>t.slice(1).toLowerCase()))];
+}
+function linkifyCaption(text){
+  return esc(text).replace(/(^|[^\w#])#(\w+)/g,(m,pre,tag)=>`${pre}<a class="tag" href="#hashtag/${encodeURIComponent(tag.toLowerCase())}">#${tag}</a>`);
+}
+function hashtagDirectory(){
+  const dir={};
+  state.posts.forEach(p=>{
+    extractTags(p.caption).forEach(tag=>{
+      if(!dir[tag])dir[tag]={tag,count:0};
+      dir[tag].count++;
+    });
+  });
+  return dir;
+}
+
+/* ---------- explore: trending / popular / suggestions / search ---------- */
+const engagementScore=p=>totalReactions(p)+p.comments.length;
+function trendingPosts(n){
+  const now=Date.now();
+  return state.posts
+    .map(p=>({p,score:engagementScore(p)/Math.max(1,(now-p.createdAt)/86400000+1)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,n).map(x=>x.p);
+}
+function popularPosts(n){
+  return [...state.posts].filter(p=>totalReactions(p)>0).sort((a,b)=>totalReactions(b)-totalReactions(a)).slice(0,n);
+}
+function suggestedAccounts(n){
+  return shuffle(Object.values(CONFIG.users).filter(u=>u.id!==state.activeUser&&!isFollowing(state.activeUser,u.id))).slice(0,n);
+}
+let badgeCache=null;
+function trendingBadges(){
+  const now=Date.now();
+  const scored=state.posts.map(p=>({
+    id:p.id,
+    trend:engagementScore(p)/Math.max(1,(now-p.createdAt)/86400000+1),
+    liked:(reactionCounts(p).find(r=>r.id==="love")||{count:0}).count,
+    commented:p.comments.length,
+    reacted:totalReactions(p)
+  }));
+  const top=key=>[...scored].filter(s=>s[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,3).map(s=>s.id);
+  return{trend:new Set(top("trend")),liked:new Set(top("liked")),commented:new Set(top("commented")),reacted:new Set(top("reacted"))};
+}
+function getBadges(){return badgeCache||(badgeCache=trendingBadges())}
+function badgeFor(id){
+  const b=getBadges();
+  if(b.trend.has(id))return{cls:"trend",label:"🔥 Trending"};
+  if(b.liked.has(id))return{cls:"liked",label:"❤️ Most liked"};
+  if(b.commented.has(id))return{cls:"commented",label:"💬 Most commented"};
+  if(b.reacted.has(id))return{cls:"reacted",label:"😂 Most reacted"};
+  return null;
+}
+function searchUsers(q){return Object.values(CONFIG.users).filter(u=>u.username.toLowerCase().includes(q)||u.name.toLowerCase().includes(q))}
+function searchHashtags(q){return Object.values(hashtagDirectory()).filter(h=>h.tag.includes(q)).sort((a,b)=>b.count-a.count)}
+function searchPosts(q){return state.posts.filter(p=>(p.caption||"").toLowerCase().includes(q))}
+function accountChip(u){
+  const isMe=u.id===state.activeUser;
+  return `<div class="chipCard">
+    <button class="chipUser" data-user="${u.id}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><small>@${esc(u.username)}</small></button>
+    ${isMe?"":`<button class="btn ${isFollowing(state.activeUser,u.id)?"ghost":"primary"} sm" data-follow="${u.id}">${isFollowing(state.activeUser,u.id)?"Following":"Follow"}</button>`}
+  </div>`;
+}
+function tileScroll(label,posts){
+  return posts.length?`<div class="sectionLabel">${label}</div><div class="tileScroll">${posts.map(tile).join("")}</div>`:"";
+}
+function defaultExploreHTML(){
+  if(!state.posts.length)return emptyState(I.search,"Nothing to explore","When photos get posted, they'll show up here.");
+  const suggested=suggestedAccounts(8);
+  return tileScroll("🔥 Trending",trendingPosts(6))
+    +tileScroll("❤️ Popular",popularPosts(6))
+    +(suggested.length?`<div class="sectionLabel">Suggested accounts</div><div class="chipScroll">${suggested.map(accountChip).join("")}</div>`:"")
+    +`<div class="sectionLabel">Recent</div><div class="grid">${state.posts.slice(0,24).map(tile).join("")}</div>`;
+}
+function searchResultsHTML(q){
+  const users=searchUsers(q),tags=searchHashtags(q),posts=searchPosts(q);
+  if(!users.length&&!tags.length&&!posts.length)return emptyState(I.search,"No results",`Nothing matches "${esc(q)}" yet.`);
+  let html="";
+  if(users.length)html+=`<div class="sectionLabel">Accounts</div><div class="chipScroll">${users.map(accountChip).join("")}</div>`;
+  if(tags.length)html+=`<div class="sectionLabel">Hashtags</div><div class="tagRow">${tags.map(h=>`<a class="tagChip" href="#hashtag/${encodeURIComponent(h.tag)}">#${esc(h.tag)}<span>${h.count}</span></a>`).join("")}</div>`;
+  if(posts.length)html+=`<div class="sectionLabel">Posts</div><div class="grid">${posts.map(tile).join("")}</div>`;
+  return html;
+}
+function renderExploreResults(){
+  const host=$("exploreResults");if(!host)return;
+  const q=state.exploreQuery.trim().toLowerCase();
+  host.innerHTML=q?searchResultsHTML(q):defaultExploreHTML();
+}
+function bindExplore(){
+  const inp=$("exploreSearch");if(!inp)return;
+  inp.value=state.exploreQuery;
+  inp.addEventListener("input",()=>{state.exploreQuery=inp.value;renderExploreResults()});
+  renderExploreResults();
+}
+
 /* =====================================================================
    Views
    ===================================================================== */
@@ -388,13 +488,14 @@ function postCard(p){
   const n=p.comments.length;
   const alt=p.caption?`Photo by ${u.username}: ${p.caption.slice(0,100)}`:`Photo by ${u.username}`;
   const groups=reactionCounts(p).slice(0,3).map(g=>g.emoji).join("");
+  const badge=badgeFor(p.id);
   return `<article class="post" data-id="${p.id}">
     <header class="postHead">
       <button class="ava" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
       <button class="uname" data-user="${u.id}">${esc(u.username)}</button>
       <time datetime="${new Date(p.createdAt).toISOString()}">${ago(p.createdAt)}</time>
     </header>
-    <div class="photo" data-dbl><img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
+    <div class="photo" data-dbl>${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
     <div class="actions">
       <div class="likeWrap">
         <button class="act ${mineReact?"on":""}" data-like data-id="${p.id}" aria-pressed="${!!mineReact}" aria-label="${mineReact?"Remove reaction":"Like (hold for more reactions)"}">${mineReact?`<span class="reactEmoji">${reactionOf(mineReact).emoji}</span>`:I.heart}</button>
@@ -402,7 +503,7 @@ function postCard(p){
       <button class="act" data-comment aria-label="Comment">${I.comment}</button>
     </div>
     ${total?`<button class="likes" data-reactions="${p.id}">${groups} ${total} ${total===1?"reaction":"reactions"}</button>`:""}
-    ${p.caption?`<div class="cap"><b>${esc(u.username)}</b>${esc(p.caption)}</div>`:""}
+    ${p.caption?`<div class="cap"><b>${esc(u.username)}</b>${linkifyCaption(p.caption)}</div>`:""}
     ${n?`<button class="viewC" data-comment>View ${n===1?"1 comment":`all ${n} comments`}</button>`:""}
   </article>`;
 }
@@ -432,8 +533,16 @@ const renderers={
     return bar+state.posts.map(postCard).join("");
   },
   explore(){
-    if(!state.posts.length)return emptyState(I.search,"Nothing to explore","When photos get posted, they'll show up here.");
-    return `<h1 class="pageTitle">Explore</h1><div class="grid">${state.posts.map(tile).join("")}</div>`;
+    return `<h1 class="pageTitle">Explore</h1>
+      <div class="searchBar"><span class="searchIcon" aria-hidden="true">${I.search}</span><input id="exploreSearch" type="search" placeholder="Search accounts, #hashtags, or posts" aria-label="Search MizzyGram"></div>
+      <div id="exploreResults"></div>`;
+  },
+  hashtag(){
+    const tag=state.hashtag||"";
+    const posts=state.posts.filter(p=>extractTags(p.caption).includes(tag));
+    return `<div class="hashHead"><a class="backLink" href="#explore" aria-label="Back to Explore">${I.back}</a><h1 class="pageTitle">#${esc(tag)}</h1></div>
+      <p class="hashCount">${posts.length} post${posts.length===1?"":"s"}</p>
+      ${posts.length?`<div class="grid">${posts.map(tile).join("")}</div>`:emptyState(I.search,"No posts yet",`Nothing's been tagged #${esc(tag)} yet.`)}`;
   },
   post(){
     const pend=state.pending;
@@ -483,17 +592,27 @@ const tile=p=>`<button class="tile" data-open="${p.id}" aria-label="Open photo${
 
 /* ---------- render + routing ---------- */
 function render(keepScroll){
+  badgeCache=null;
   const v=$("view"),top=v.scrollTop;
   v.innerHTML=renderers[state.view]();
   v.scrollTop=keepScroll?top:0;
   document.querySelectorAll(".bottom a").forEach(a=>{
-    if(a.dataset.view===state.view)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
+    const forThis=a.dataset.view===state.view||(a.dataset.view==="explore"&&state.view==="hashtag");
+    if(forThis)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   });
   if(state.view==="post")bindCompose();
+  if(state.view==="explore")bindExplore();
 }
 function route(){
-  const h=(location.hash||"#home").slice(1);
-  state.view=VIEWS.includes(h)?h:"home";
+  const raw=(location.hash||"#home").slice(1);
+  const slash=raw.indexOf("/");
+  const base=slash<0?raw:raw.slice(0,slash);
+  if(base==="hashtag"){
+    state.view="hashtag";
+    state.hashtag=decodeURIComponent(slash<0?"":raw.slice(slash+1)).toLowerCase();
+  }else{
+    state.view=VIEWS.includes(base)?base:"home";
+  }
   closeSheet(true);closeReactPicker();
   render(false);
 }

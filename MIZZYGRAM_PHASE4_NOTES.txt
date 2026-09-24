@@ -1,0 +1,67 @@
+MIZZYGRAM — PHASE 4 (Explore, Search, Hashtags, Trending)
+============================================================
+
+UPDATED FILES (replace the existing ones at the ROOT of the repo):
+  mizzygram.js
+  mizzygram.css
+
+Nothing else was touched. Same single-device storage as before.
+
+IMPORTANT: the community accounts' seed posts changed slightly (a few
+now include hashtags), so this update bumps the seed version and will
+quietly re-seed their posts once on first load. Anything Lizzy or
+Mikael actually posted is untouched — only the fictional accounts'
+starter posts refresh.
+
+WHAT'S NEW
+
+1. Explore, rebuilt.
+   Open the Explore tab (the search icon) and you'll now see:
+     🔥 Trending   — posts with the most reactions + comments recently,
+                     weighted so new activity outranks old activity
+     ❤️ Popular    — posts with the most reactions of all time
+     Suggested accounts — accounts you don't already follow, with a
+                     one-tap Follow button right there
+     Recent        — the plain chronological grid, like before
+
+2. Search.
+   There's a search box at the top of Explore now. Type anything and
+   it searches, live, across:
+     Accounts   — by username or display name
+     Hashtags   — by tag text, with how many posts use it
+     Posts      — by caption text
+   Clear the box to go back to the Trending/Popular/Suggested/Recent
+   view.
+
+3. Hashtags.
+   Any #hashtag typed into a caption is now a real, clickable tag —
+   in the feed, in Explore search results, everywhere. Tapping one
+   opens a dedicated page (#hashtag/tagname) showing every post that
+   uses it. A few example tags are already seeded into the community
+   accounts' posts so there's something to click right away:
+     #BowlingQueen         (Bowling Federation)
+     #MizzyGram            (LizzyOS)
+     #MrPerfect             (Mikael HQ, Micky's Daily News)
+     #LittleMissAttitude     (Micky's Daily News)
+   Add your own any time — just type # + a word in a caption.
+
+4. Trending badges.
+   Posts that top a category get a small badge on the photo itself:
+     🔥 Trending          — top 3 by recent engagement velocity
+     ❤️ Most liked        — top 3 by ❤️ Love reactions specifically
+     💬 Most commented    — top 3 by comment count
+     😂 Most reacted      — top 3 by total reactions of any kind
+   A post only shows one badge (its highest-priority one, in the
+   order above) so the photo doesn't get cluttered.
+
+EDIT / TUNE
+  Open mizzygram.js:
+    - trendingPosts() / popularPosts() — change how many posts show,
+      or the scoring math (currently: reactions + comments, divided
+      by how many days old the post is, so it decays over time)
+    - trendingBadges() — change how many posts qualify per badge
+      (currently top 3 each)
+    - suggestedAccounts() — currently a random shuffle of everyone
+      you don't follow; change the pool or make it smarter later
+
+After GitHub Pages deploys, hard refresh (Ctrl+Shift+R).

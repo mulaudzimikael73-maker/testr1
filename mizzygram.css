@@ -289,3 +289,51 @@ button.uname:hover{text-decoration:underline}
 .svZone{position:absolute;top:64px;bottom:0;width:38%;border:0;background:none;cursor:pointer;padding:0}
 .svZone.left{left:0}
 .svZone.right{right:0}
+
+/* =====================================================================
+   Phase 4 — Explore, Search, Hashtags, Trending
+   ===================================================================== */
+
+/* search bar */
+.searchBar{position:relative;margin:0 16px 14px}
+.searchIcon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--soft);pointer-events:none}
+.searchIcon svg{width:100%;height:100%}
+#exploreSearch{width:100%;height:44px;padding:0 14px 0 38px;font:inherit;color:var(--ink);
+  border:1.5px solid var(--line);border-radius:999px;background:#fff;-webkit-appearance:none;appearance:none}
+#exploreSearch:focus{outline:3px solid #b23fd655;border-color:var(--violet)}
+#exploreSearch::-webkit-search-cancel-button{-webkit-appearance:none}
+
+/* section rows */
+.sectionLabel{padding:16px 16px 8px;font:400 16px/1 var(--display)}
+.tileScroll{display:flex;gap:8px;padding:0 16px;overflow-x:auto}
+.tileScroll .tile{flex:none;width:130px;height:130px;border-radius:14px}
+.chipScroll{display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto}
+.chipCard{flex:none;width:150px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.chipUser{display:flex;flex-direction:column;align-items:flex-start;gap:6px;border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit;width:100%}
+.chipUser .ava.sm{width:38px;height:38px}
+.chipUser b{font-size:13px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chipUser small{color:var(--soft);font-weight:400;font-size:12px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chipCard .btn.sm{width:100%}
+
+/* trending badges on a post's photo */
+.postBadge{position:absolute;left:10px;top:10px;z-index:2;font-size:12px;font-weight:700;color:#fff;
+  padding:5px 10px;border-radius:999px;background:#2a1030b3;backdrop-filter:blur(4px)}
+.postBadge.trend{background:linear-gradient(135deg,#ff6a3d,#e8317f)}
+.postBadge.liked{background:linear-gradient(135deg,#e8317f,#b23fd6)}
+.postBadge.commented{background:linear-gradient(135deg,#7a35dc,#3a7bd5)}
+.postBadge.reacted{background:linear-gradient(135deg,#ffb84c,#e8317f)}
+
+/* hashtags */
+.tag{color:var(--violet);font-weight:700;text-decoration:none}
+.tag:hover{text-decoration:underline}
+.tagRow{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 4px}
+.tagChip{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--blush);
+  color:var(--ink);font-weight:700;font-size:13px;text-decoration:none}
+.tagChip span{color:var(--soft);font-weight:400}
+.hashHead{display:flex;align-items:center;gap:6px;padding-top:4px}
+.hashHead .pageTitle{padding-left:4px}
+.backLink{display:grid;place-items:center;width:40px;height:40px;margin-left:8px;border-radius:50%;color:inherit}
+.backLink:hover{background:var(--blush)}
+.backLink svg{width:22px;height:22px}
+.hashCount{margin:0;padding:0 16px 6px;color:var(--soft);font-size:13px}
