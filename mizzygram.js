@@ -957,6 +957,10 @@ const Store=(()=>{
       if(!persistent){const i=mem.posts.findIndex(x=>x.id===p.id);i<0?mem.posts.push(p):mem.posts[i]=p;return}
       await run("posts","readwrite",s=>s.put(p));
     },
+    async deletePost(id){
+      if(!persistent){mem.posts=mem.posts.filter(x=>x.id!==id);return}
+      await run("posts","readwrite",s=>s.delete(id));
+    },
     async allStories(){return persistent?(await run("stories","readonly",s=>s.getAll()))||[]:[...mem.stories]},
     async saveStory(s){
       if(!persistent){const i=mem.stories.findIndex(x=>x.id===s.id);i<0?mem.stories.push(s):mem.stories[i]=s;return}
@@ -2019,7 +2023,7 @@ function storiesBar(){
 const INFLUENCER_CAMPAIGNS=[
   {id:"potato",title:"Premium Potato Partnership",brand:"Potato Industries",kind:"photo",payout:35,bonus:"+ one potato",hashtag:"#PotatoPartnerLizzy",instructions:"Post a serious sponsored photo holding one potato like it has completely transformed your lifestyle."},
   {id:"tapwater",title:"Tap Water Takeover",brand:"Municipal Hydration Co.",kind:"video",payout:22,bonus:"+ hydration exposure",hashtag:"#TapWaterTakeover",instructions:"Film a dramatic brand-deal video for ordinary tap water. Explain why this particular glass is clearly premium."},
-  {id:"spoon",title:"Luxury Spoon Campaign",brand:"Global Spoon Luxury Group",kind:"photo",payout:89,bonus:"",hashtag:"#LuxurySpoonEra",instructions:"Photograph a random spoon like it costs R4,999. The caption must treat it as an elite status symbol."},
+  {id:"spoon",title:"Luxury Spoon Campaign",brand:"Global Spoon Luxury Group",kind:"photo",payout:89,bonus:"",hashtag:"#LuxurySpoonEra",instructions:"Photograph a random spoon like it costs 4,999 MB. The caption must treat it as an elite status symbol."},
   {id:"toiletpaper",title:"Competitor Toilet Paper Apology",brand:"Soft Decisions Paper Co.",kind:"either",payout:47,bonus:"+ forgiveness pending",hashtag:"#ToiletPaperApology",instructions:"Post a public apology after being 'caught' using a competitor's toilet paper. Be unnecessarily emotional."},
   {id:"air",title:"Premium Air Ambassador",brand:"Premium Air Ltd",kind:"video",payout:18,bonus:"+ oxygen",hashtag:"#PremiumAirPartner",instructions:"Advertise air. Explain with total confidence why sponsored air is superior to the free version."},
   {id:"ice",title:"Luxury Ice Cubes",brand:"Micky Premium Ice Cubes",kind:"photo",payout:64,bonus:"+ 2 cubes",hashtag:"#MickysLuxuryIce",instructions:"Take a glamorous product photo of ordinary ice cubes and present them as an exclusive luxury drop."},
@@ -2069,7 +2073,7 @@ const INFLUENCER_CAMPAIGNS=[
   {id:"ultimate",title:"Ultimate Influencer Nonsense",brand:"MizzyGram Premium Campaigns",kind:"video",payout:195,bonus:"+ maximum exposure",hashtag:"#UltimateInfluencerNonsense",instructions:"Produce the most unnecessarily dramatic 30-second sponsored advert possible for a completely useless product and insist it changed your life."}
 ];
 const campaignOf=id=>INFLUENCER_CAMPAIGNS.find(c=>c.id===id);
-const money=n=>{n=Number(n||0);return(n<0?"-R":"R")+Math.abs(n).toFixed(2).replace(/\.00$/,"")};
+const money=n=>{n=Number(n||0);return(n<0?"-":"")+Math.abs(n).toFixed(2).replace(/\.00$/,"" )+" MB"};
 function localDateKey(d=new Date()){return[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
 function influencerWeekKey(d=new Date()){
   const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()),day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return localDateKey(x);
@@ -2082,50 +2086,37 @@ function weeklyCampaignIds(key){
   return out;
 }
 function persistInfluencer(){return Store.setMeta("influencer-state-v1",state.influencer).catch(()=>{})}
-function persistBank(){return Store.setMeta("bank-of-micky-v1",state.bank).catch(()=>{})}
-async function ensureInfluencerWeek(){
-  const key=influencerWeekKey();
-  if(state.influencer.weekKey===key&&state.influencer.active?.length===4)return;
-  if(state.influencer.active?.length){const expiredAt=Date.now();for(const a of state.influencer.active){state.influencer.history.unshift({...a,status:a.status==="paid"?"paid":"expired",expiredAt})}}
-  state.influencer.weekKey=key;
-  state.influencer.active=weeklyCampaignIds(key).map(id=>({campaignId:id,status:"available",assignedAt:Date.now(),paidAt:null,postId:null}));
-  state.influencer.history=(state.influencer.history||[]).slice(0,40);
-  await persistInfluencer();
+const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBV1";
+const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsV2";
+function localBankRead(key,fallback){
+  try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}
 }
-async function bankTransaction(amount,description,kind="general",meta={}){
-  amount=Number(amount)||0;if(!amount)return null;
-  if(amount<0&&state.bank.balance+amount<0)return null;
-  state.bank.balance=Math.round((Number(state.bank.balance||0)+amount)*100)/100;
-  const tx={id:uid(),at:Date.now(),amount,description,kind,balanceAfter:state.bank.balance,...meta};
-  state.bank.transactions.unshift(tx);state.bank.transactions=state.bank.transactions.slice(0,200);
-  await persistBank();
-  if(!state.booting)notify({to:"lizzy",from:"bankofmicky",kind:"bank",text:(amount>0?"💸 ":"💳 ")+description+" "+(amount>0?"+":"")+money(amount),key:"bank:"+tx.id});
+function creditInternetBank(amount,description,meta={}){
+  amount=Math.round((Number(amount)||0)*100)/100;if(amount<=0)return null;
+  const oldBalance=Number(localBankRead(INTERNET_BANK_CREATOR_KEY,0))||0;
+  const balance=Math.round((oldBalance+amount)*100)/100;
+  const ledger=localBankRead(INTERNET_BANK_LEDGER_KEY,[]);
+  const tx={id:"mizzy-"+uid(),at:Date.now(),amount,description,kind:"influencer",currency:"MB",balanceAfter:balance,...meta};
+  localStorage.setItem(INTERNET_BANK_CREATOR_KEY,JSON.stringify(balance));
+  localStorage.setItem(INTERNET_BANK_LEDGER_KEY,JSON.stringify([tx,...(Array.isArray(ledger)?ledger:[])].slice(0,250)));
+  window.dispatchEvent(new Event("bankOfMickyUpdated"));
   return tx;
 }
-const BANK_RANDOM_CREDITS=[
-  [10,"Good Behaviour Bonus"],[25,"Main Character Allowance"],[7,"Looking Fabulous Credit"],[18,"Compensation for Waking Up Early"],[30,"Mikael Appreciation Dividend"],[12,"We Found Money Behind the Sofa"]
-];
-const BANK_RANDOM_CHARGES=[
-  [12,"Emotional Damage Fee"],[8,"Administrative Nonsense"],[22,"Chocolate Emergency"],[6.5,"Existing While Expensive"],[15,"Premium Gossip Subscription"],[3.99,"Breathing Fee"],[9,"You Know What You Did Fee"]
-];
-async function bankRandomDailyIfNeeded(){
-  const day=localDateKey(),key="bank-random-check:"+day;if(await Store.getMeta(key,false))return;await Store.setMeta(key,true);
-  const roll=socialHash("bank:"+day)%100;
-  if(roll<28){const [amt,desc]=BANK_RANDOM_CREDITS[socialHash(day+":credit")%BANK_RANDOM_CREDITS.length];await bankTransaction(amt,desc,"bonus")}
-  else if(roll<48&&state.bank.balance>0){const choices=BANK_RANDOM_CHARGES.filter(([amt])=>amt<=state.bank.balance);if(choices.length){const [amt,desc]=choices[socialHash(day+":charge")%choices.length];await bankTransaction(-amt,desc,"charge")}}
+async function migrateLegacyMizzyBankIfNeeded(){
+  if(await Store.getMeta("bank-to-internet-migrated-v1",false))return;
+  const legacy=await Store.getMeta("bank-of-micky-v1",null);
+  const amount=Math.round((Number(legacy?.balance)||0)*100)/100;
+  if(amount>0)creditInternetBank(amount,"Legacy MizzyGram balance transferred",{kind:"migration"});
+  await Store.setMeta("bank-to-internet-migrated-v1",true);
 }
 function campaignKindLabel(k){return k==="photo"?"📸 PHOTO":k==="video"?"🎬 VIDEO":"📸/🎬 PHOTO OR VIDEO"}
 function campaignCard(a){
   const c=campaignOf(a.campaignId);if(!c)return"";const done=a.status==="paid",expired=a.status==="expired";
-  return `<article class="campaignCard ${done?"paid":expired?"expired":""}"><div class="campaignTop"><span class="campaignType">${campaignKindLabel(c.kind)}</span><b>${money(c.payout)}</b></div><h4>${esc(c.title)}</h4><small>${esc(c.brand)}</small><p>${esc(c.instructions)}</p><div class="campaignHash">${esc(c.hashtag)}</div>${c.bonus?`<em>${esc(c.bonus)}</em>`:""}<div class="campaignStatus">${done?"✅ COMPLETED · PAYMENT SENT":expired?"⌛ EXPIRED":"● AVAILABLE THIS WEEK"}</div></article>`;
+  return `<article class="campaignCard ${done?"paid":expired?"expired":""}"><div class="campaignTop"><span class="campaignType">${campaignKindLabel(c.kind)}</span><b>${money(c.payout)}</b></div><h4>${esc(c.title)}</h4><small>${esc(c.brand)}</small><p>${esc(c.instructions)}</p><div class="campaignHash">${esc(c.hashtag)}</div>${c.bonus?`<em>${esc(c.bonus)}</em>`:""}<div class="campaignStatus">${done?"✅ COMPLETED":expired?"⌛ EXPIRED":"● AVAILABLE THIS WEEK"}</div></article>`;
 }
 function monetiseHTML(){
   const active=state.influencer.active||[],history=(state.influencer.history||[]).slice(0,5);
-  return `<section class="monetise"><div class="monetiseHead"><div><span>CREATOR PROGRAMME</span><h3>Monetise Account</h3></div><strong>${money(state.influencer.earnings||0)}<small>Total earned</small></strong></div><p class="monetiseIntro">Complete any job by publishing the required photo/video with its exact campaign hashtag. Payment is automatic. New jobs arrive every Monday.</p><div class="campaignGrid">${active.map(campaignCard).join("")}</div>${history.length?`<details class="campaignHistory"><summary>Previous jobs</summary>${history.map(a=>{const c=campaignOf(a.campaignId);return c?`<div><span>${a.status==="paid"?"✅":"⌛"} ${esc(c.title)}</span><b>${a.status==="paid"?money(c.payout):"Expired"}</b></div>`:""}).join("")}</details>`:""}</section>`;
-}
-function bankMiniHTML(){
-  const recent=(state.bank.transactions||[]).slice(0,4);
-  return `<section class="bankMini"><div class="bankMiniHead"><div><span>BANK OF MICKY</span><h3>${money(state.bank.balance)}</h3><small>Available balance</small></div><a class="btn ghost sm" href="#bank">Transactions</a></div>${recent.length?`<div class="miniTx">${recent.map(t=>`<div><span>${esc(t.description)}</span><b class="${t.amount>=0?"credit":"debit"}">${t.amount>=0?"+":""}${money(t.amount)}</b></div>`).join("")}</div>`:`<p class="bankEmpty">No transactions yet. Complete an influencer job and the money lands here automatically.</p>`}</section>`;
+  return `<section class="monetise"><div class="monetiseHead"><div><span>CREATOR PROGRAMME</span><h3>Monetise Account</h3></div><strong>${money(state.influencer.earnings||0)}<small>Total earned</small></strong></div><p class="monetiseIntro">Complete any job by publishing the required photo/video with its exact campaign hashtag. New jobs arrive every Monday.</p><div class="campaignGrid">${active.map(campaignCard).join("")}</div>${history.length?`<details class="campaignHistory"><summary>Previous jobs</summary>${history.map(a=>{const c=campaignOf(a.campaignId);return c?`<div><span>${a.status==="paid"?"✅":"⌛"} ${esc(c.title)}</span><b>${a.status==="paid"?money(c.payout):"Expired"}</b></div>`:""}).join("")}</details>`:""}</section>`;
 }
 async function checkInfluencerPost(post){
   if(post.userId!=="lizzy"||!post.caption)return null;await ensureInfluencerWeek();
@@ -2136,8 +2127,8 @@ async function checkInfluencerPost(post){
     const ok=c.kind==="either"||c.kind===post.mediaType;
     if(!ok){toast(`Campaign found — ${c.title} needs a ${c.kind} post.`);return{matched:true,paid:false}}
     a.status="paid";a.paidAt=Date.now();a.postId=post.id;state.influencer.earnings=Math.round((Number(state.influencer.earnings||0)+c.payout)*100)/100;
-    await persistInfluencer();await bankTransaction(c.payout,`${c.brand} paid your ${c.title} campaign`,"influencer",{campaignId:c.id,postId:post.id});
-    toast(`💸 ${c.brand} paid you ${money(c.payout)}!`);return{matched:true,paid:true,campaign:c};
+    await persistInfluencer();creditInternetBank(c.payout,`${c.brand} · ${c.title}`,{campaignId:c.id,postId:post.id});
+    toast("✅ Campaign completed.");return{matched:true,paid:true,campaign:c};
   }
   return null;
 }
@@ -2195,10 +2186,6 @@ const renderers={
       <p class="hashCount">${all.filter(([id])=>have.includes(id)).length} of ${all.length} unlocked</p>
       <div class="achGrid">${all.map(([id,r])=>{const on=have.includes(id);return `<div class="ach ${on?"on":""}"><span>${on?r[0]:"🔒"}</span><b>${esc(r[1])}</b><small>${esc(r[2])}</small></div>`}).join("")}</div>`;
   },
-  bank(){
-    const tx=state.bank.transactions||[];
-    return `<div class="hashHead"><a class="backLink" href="#profile" aria-label="Back to profile">${I.back}</a><h1 class="pageTitle">🏦 Bank of Micky</h1></div><section class="bankHero"><span>AVAILABLE BALANCE</span><strong>${money(state.bank.balance)}</strong><small>Private Banking · Definitely Regulated™</small></section><div class="sectionLabel">Transaction history</div>${tx.length?`<div class="bankTxList">${tx.map(t=>`<div class="bankTx"><span class="txIcon">${t.amount>=0?"↙":"↗"}</span><div><b>${esc(t.description)}</b><small>${new Date(t.at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})} · Balance ${money(t.balanceAfter)}</small></div><strong class="${t.amount>=0?"credit":"debit"}">${t.amount>=0?"+":""}${money(t.amount)}</strong></div>`).join("")}</div>`:`<div class="bankEmpty big">No transactions yet. Your first influencer payment will appear here automatically.</div>`}`;
-  },
   saved(){
     const u=state.activeUser,sv=savedOf(u),col=state.savedCol;
     if(!col){
@@ -2231,8 +2218,8 @@ const renderers={
           ?`<button class="btn primary block" data-edit-profile>✏️ Edit Profile</button>${other==="mikael"?"":`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button>`}<a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
-      ${isMe&&viewing==="lizzy"?monetiseHTML()+bankMiniHTML():""}
-      ${viewing==="bankofmicky"&&state.activeUser==="lizzy"?`<div class="bankProfileLink"><a class="btn primary block" href="#bank">🏦 Open Bank of Micky</a></div>`:""}
+      ${isMe&&viewing==="lizzy"?monetiseHTML():""}
+      
       ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
       ${mine.length?`<div class="grid">${mine.map(tile).join("")}</div>`:`<div class="gridEmpty">No posts yet.</div>`}`;
   }
@@ -2698,6 +2685,42 @@ function migratePost(p){
   return p;
 }
 
+/* ---------- automatic bot-post cleanup ----------
+   Bot feed posts live for 14 days, then quietly disappear so MizzyGram
+   stays fresh. Lizzy and Mikael's own posts are never removed here. */
+const BOT_POST_RETENTION_MS=14*24*60*60*1000;
+async function cleanupOldBotPosts(){
+  const cutoff=Date.now()-BOT_POST_RETENTION_MS;
+  const expired=state.posts.filter(p=>{
+    const u=CONFIG.users[p.userId];
+    return !!(u&&u.bot&&!CONFIG.humans.includes(p.userId)&&p.createdAt<cutoff);
+  });
+  if(!expired.length)return 0;
+  const ids=new Set(expired.map(p=>p.id));
+  state.posts=state.posts.filter(p=>!ids.has(p.id));
+  for(const p of expired){try{await Store.deletePost(p.id)}catch{}}
+  for(const uidKey of CONFIG.humans){
+    const sv=state.saved&&state.saved[uidKey];
+    if(sv&&sv.items){
+      for(const id of ids)delete sv.items[id];
+      try{await Store.setMeta("saved:"+uidKey,sv)}catch{}
+    }
+  }
+  if(Array.isArray(state.notifs)){
+    state.notifs=state.notifs.filter(n=>!n.postId||!ids.has(n.postId));
+    try{await Store.setMeta("notifs",state.notifs)}catch{}
+  }
+  if(Array.isArray(state.news)){
+    state.news=state.news.filter(n=>!n.postId||!ids.has(n.postId));
+    try{await Store.setMeta("news",state.news)}catch{}
+  }
+  newestFirst();
+  return expired.length;
+}
+function startBotPostCleanup(){
+  setInterval(()=>{if(!document.hidden)cleanupOldBotPosts().catch(()=>{})},6*60*60*1000);
+}
+
 /* ---------- boot ---------- */
 (async function boot(){
   await Store.init();
@@ -2734,15 +2757,14 @@ function migratePost(p){
     state.influencer={weekKey:"",active:[],history:[],earnings:0,...(await Store.getMeta("influencer-state-v1",{}))};
     state.influencer.active=Array.isArray(state.influencer.active)?state.influencer.active:[];
     state.influencer.history=Array.isArray(state.influencer.history)?state.influencer.history:[];
-    state.bank={balance:0,transactions:[],...(await Store.getMeta("bank-of-micky-v1",{}))};
-    state.bank.transactions=Array.isArray(state.bank.transactions)?state.bank.transactions:[];
     await ensureInfluencerWeek();
-    await bankRandomDailyIfNeeded();
+    await migrateLegacyMizzyBankIfNeeded();
     state.rewards=await Store.getMeta("rewards",{});
     state.trendDone=await Store.getMeta("trend-done",[]);
     for(const u of CONFIG.humans){const v=await Store.getMeta("saved:"+u,null);if(v)state.saved[u]=v}
     state.news=await Store.getMeta("news",[]);
     state.lastEvent=await Store.getMeta("event-last",Date.now());
+    await cleanupOldBotPosts();
     await seedNewsIfNeeded();
     await seedNotifsIfNeeded();
     const profileOverrides=await Store.getMeta("profile-overrides",{});
@@ -2750,7 +2772,7 @@ function migratePost(p){
       if(CONFIG.users[uidKey])Object.assign(CONFIG.users[uidKey],profileOverrides[uidKey]);
     }
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();startPublicBotStories();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();startPublicBotStories();startBotPostCleanup();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();

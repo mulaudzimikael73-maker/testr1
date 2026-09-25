@@ -4687,3 +4687,12 @@ body[data-personality="Agent Yelizaveta"]:not(.mikaelTakeoverActive)::after{
     .personalityCards,.personalityEffects{grid-template-columns:1fr}
     .personalityCards button{min-height:0}
 }
+
+/* Bank of Micky — creator earnings + unified transaction history */
+.bankGrid{grid-template-columns:repeat(3,1fr)}
+.bankMiniCard.creatorCash{background:linear-gradient(135deg,rgba(238,196,108,.18),rgba(255,255,255,.08));border:1px solid rgba(238,196,108,.25)}
+.bankHistory{margin-top:14px;padding:14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
+.bankHistoryHead{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:8px}.bankHistoryHead h3{margin:0}.bankHistoryHead small{opacity:.6;text-align:right}
+.bankHistoryRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid rgba(255,255,255,.08)}
+.bankHistoryIcon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.09);font-weight:900}.bankHistoryRow b{display:block;font-size:12px}.bankHistoryRow small{display:block;opacity:.58;font-size:10px;margin-top:2px}.bankHistoryRow strong{font-size:12px;white-space:nowrap}.bankCredit{color:#8ee5ae}.bankDebit{color:#ff9d9d}.bankHistoryEmpty{padding:18px;text-align:center;opacity:.55}
+@media(max-width:650px){.bankGrid{grid-template-columns:1fr}.bankHistoryHead{align-items:flex-start;flex-direction:column}.bankHistoryHead small{text-align:left}.bankHistoryRow{grid-template-columns:30px minmax(0,1fr) auto}}

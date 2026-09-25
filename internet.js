@@ -33,12 +33,37 @@ const BANK_PASSWORD="MRPERFECT";
 const BANK_WALLET_KEY="lizzyMickyBucsV1";
 const BANK_STATE_KEY="lizzyMickyBankV1";
 const BANK_WEEK=7*24*60*60*1000;
+const BANK_CREATOR_KEY="bankOfMickyCreatorMBV1";
+const BANK_LEDGER_KEY="bankOfMickyTransactionsV2";
+const BANK_RANDOM_DAY_KEY="bankOfMickyRandomActivityDayV1";
+const BANK_RANDOM_CREDITS=[[10,"Good Behaviour Bonus"],[25,"Main Character Allowance"],[7,"Looking Fabulous Credit"],[18,"Compensation for Waking Up Early"],[30,"Mikael Appreciation Dividend"],[12,"Money Found Behind the Sofa"]];
+const BANK_RANDOM_CHARGES=[[12,"Emotional Damage Fee"],[8,"Administrative Nonsense"],[22,"Chocolate Emergency"],[6.5,"Existing While Expensive"],[15,"Premium Gossip Subscription"],[3.99,"Breathing Fee"],[9,"You Know What You Did Fee"]];
 
 function bankRead(key,fallback){
  try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw)}
  catch(e){return fallback}
 }
 function bankWrite(key,value){localStorage.setItem(key,JSON.stringify(value))}
+function bankCreatorBalance(){return Number(bankRead(BANK_CREATOR_KEY,0))||0}
+function bankLedger(){const x=bankRead(BANK_LEDGER_KEY,[]);return Array.isArray(x)?x:[]}
+function bankEsc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function bankMoney(n){return (Math.round((Number(n)||0)*100)/100).toFixed(2).replace(/\.00$/,"" )+" MB"}
+function bankRecord(tx){const ledger=bankLedger();ledger.unshift({id:"bank-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),at:Date.now(),...tx});bankWrite(BANK_LEDGER_KEY,ledger.slice(0,250))}
+function bankCreatorTransaction(amount,description,kind="general"){
+ amount=Math.round((Number(amount)||0)*100)/100;if(!amount)return false;
+ const old=bankCreatorBalance();if(amount<0&&old+amount<0)return false;
+ const balance=Math.round((old+amount)*100)/100;bankWrite(BANK_CREATOR_KEY,balance);
+ bankRecord({amount,description,kind,currency:"MB",balanceAfter:balance});return true;
+}
+function bankLogMB(amount,description,balanceAfter){bankRecord({amount,description,kind:"mickybucs",currency:"MB",balanceAfter:Number(balanceAfter)||0})}
+function bankMaybeRandomActivity(){
+ const d=new Date(),day=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+ if(bankRead(BANK_RANDOM_DAY_KEY,"")===day)return;
+ bankWrite(BANK_RANDOM_DAY_KEY,day);
+ const roll=fnv1aSeed("bank-random|"+day)%100;
+ if(roll<22){const x=BANK_RANDOM_CREDITS[fnv1aSeed(day+"|credit")%BANK_RANDOM_CREDITS.length];bankCreatorTransaction(x[0],x[1],"bonus")}
+ else if(roll<44){const bal=bankCreatorBalance(),choices=BANK_RANDOM_CHARGES.filter(x=>x[0]<=bal);if(choices.length){const x=choices[fnv1aSeed(day+"|charge")%choices.length];bankCreatorTransaction(-x[0],x[1],"charge")}}
+}
 function bankWallet(){return Number(bankRead(BANK_WALLET_KEY,0))||0}
 function bankSetWallet(n){
  bankWrite(BANK_WALLET_KEY,Math.max(0,Number(n)||0));
@@ -91,14 +116,22 @@ function bankBonusText(s){
  return "🎉 Your +5 MB weekly savings bonus is ready.";
 }
 function bankDashboard(message=""){
- const s=bankState(),w=bankWallet();
+ bankMaybeRandomActivity();
+ const s=bankState(),w=bankWallet(),creator=bankCreatorBalance(),tx=bankLedger();
+ const txHtml=tx.length?tx.map(x=>{
+   const amount=Number(x.amount)||0;
+   const amt=`${amount>=0?"+":""}${(Math.round(amount*100)/100).toFixed(2).replace(/\.00$/,"" )} MB`;
+   const bal=x.balanceAfter==null?"":` · Balance ${(Math.round((Number(x.balanceAfter)||0)*100)/100).toFixed(2).replace(/\.00$/,"" )} MB`;
+   return `<div class="bankHistoryRow"><span class="bankHistoryIcon">${amount>=0?"↙":"↗"}</span><div><b>${bankEsc(x.description||"Bank transaction")}</b><small>${new Date(x.at||Date.now()).toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"})}${bal}</small></div><strong class="${amount>=0?"bankCredit":"bankDebit"}">${amt}</strong></div>`;
+ }).join(""):`<div class="bankHistoryEmpty">No transactions yet.</div>`;
  $("browserPage").innerHTML=`<div class="bankSite">
  <div class="bankSiteHeader"><div><small>BANK OF MICKY</small><h2>Good day, Lizzy 👋</h2></div><button id="bankLogout" type="button">Log Out</button></div>
  <div class="bankAccountCard"><small>AVAILABLE MICKY BUCS</small><div class="bankBigBalance">${w} <span>MB</span></div><div class="bankAccountNo">Everyday Wallet • **** 0002</div></div>
- <div class="bankGrid"><div class="bankMiniCard"><small>SAVINGS</small><strong>${s.savings} MB</strong><span>Bank of Micky Savings</span></div><div class="bankMiniCard"><small>WEEKLY BONUS</small><strong>+5 MB</strong><span>${bankBonusText(s)}</span></div></div>
+ <div class="bankGrid"><div class="bankMiniCard creatorCash"><small>INFLUENCER EARNINGS</small><strong>${bankMoney(creator)}</strong><span>MizzyGram Creator Account</span></div><div class="bankMiniCard"><small>SAVINGS</small><strong>${s.savings} MB</strong><span>Bank of Micky Savings</span></div><div class="bankMiniCard"><small>WEEKLY BONUS</small><strong>+5 MB</strong><span>${bankBonusText(s)}</span></div></div>
  <div class="bankActions"><button type="button" data-web-bank="deposit">↓ Deposit 5 MB</button><button type="button" data-web-bank="withdraw">↑ Withdraw 5 MB</button><button type="button" data-web-bank="bonus">🎁 Claim Weekly Bonus</button></div>
  ${message?`<div class="bankWebStatus">${message}</div>`:""}
- <div class="bankRules"><b>How savings work</b><p>Move 5 MB at a time between your wallet and savings. Keep at least 15 MB saved for 7 days to qualify for the +5 MB weekly bonus.</p></div></div>`;
+ <div class="bankRules"><b>How savings work</b><p>Move 5 MB at a time between your wallet and savings. Keep at least 15 MB saved for 7 days to qualify for the +5 MB weekly bonus. MizzyGram creator payments land in your separate Influencer Earnings account above.</p></div>
+ <div class="bankHistory"><div class="bankHistoryHead"><h3>Transaction History</h3><small>Bank activity, creator payments and suspicious fees</small></div>${txHtml}</div></div>`;
 }
 async function bankAction(action){
  let s=bankState(),w=bankWallet();
@@ -106,7 +139,7 @@ async function bankAction(action){
    if(w<5)return bankDashboard("😭 You need at least 5 MB in your wallet to deposit.");
    w-=5;s.savings+=5;
    if(s.savings>=15&&!s.qualifyingSince)s.qualifyingSince=Date.now();
-   bankSetWallet(w);bankSave(s);
+   bankSetWallet(w);bankSave(s);bankLogMB(-5,"Transfer to savings",w);
    bankDashboard("✅ 5 MB deposited into savings.");
    bankNotify("Deposit",`5 MB\nWallet: ${w} MB\nSavings: ${s.savings} MB`);
    return;
@@ -115,7 +148,7 @@ async function bankAction(action){
    if(s.savings<5)return bankDashboard("😭 You need at least 5 MB in savings to withdraw.");
    s.savings-=5;w+=5;
    if(s.savings<15)s.qualifyingSince=null;
-   bankSetWallet(w);bankSave(s);
+   bankSetWallet(w);bankSave(s);bankLogMB(5,"Withdrawal from savings",w);
    bankDashboard("✅ 5 MB withdrawn back to your wallet.");
    bankNotify("Withdrawal",`5 MB\nWallet: ${w} MB\nSavings: ${s.savings} MB`);
    return;
@@ -125,7 +158,7 @@ async function bankAction(action){
      return bankDashboard("🔒 Keep at least 15 MB saved for 7 days before claiming the bonus.");
    if(s.lastBonus&&Date.now()-Number(s.lastBonus)<BANK_WEEK)
      return bankDashboard("⏳ This week's savings bonus has already been claimed.");
-   s.lastBonus=Date.now();w+=2;bankSave(s);bankSetWallet(w);
+   s.lastBonus=Date.now();w+=5;bankSave(s);bankSetWallet(w);bankLogMB(5,"Weekly savings bonus",w);
    bankDashboard("🎉 Weekly savings bonus claimed: +5 MB!");
    bankNotify("Weekly bonus claimed",`+5 MB\nWallet: ${w} MB\nSavings: ${s.savings} MB`);
  }
@@ -382,7 +415,7 @@ const NEWS_TICKER=[
  "MICKY'S FINANCIAL ADVICE: SAVE FIRST, SPEND LATER. LIZZY'S ADVICE: MIND YOUR BUSINESS.",
  "BREAKING: LIZZY HAS CHECKED HER BANK BALANCE. SHE WILL NOT BE TAKING QUESTIONS.",
  "THE BANK HAS LOST TRACK OF HOW MANY PAIRS OF SHOES LIZZY OWNS.",
- "MICKY'S EMERGENCY FUND: R500. LIZZY'S EMERGENCY: \"I NEED THESE.\"",
+ "MICKY'S EMERGENCY FUND: 500 MB. LIZZY'S EMERGENCY: \"I NEED THESE.\"",
  "BANK OFFICIALS CONCLUDE: LIZZY MAY NOT BE FINANCIALLY RESPONSIBLE, BUT SHE IS VERY GOOD FOR THE ECONOMY.",
  "MICKY'S BANK HAS INTRODUCED A NEW ACCOUNT: CHEQUE, SAVINGS & LIZZY'S SHOPPING FUND.",
  "FINANCIAL MARKETS RALLY AFTER LIZZY PROMISES NOT TO SHOP TODAY.",
