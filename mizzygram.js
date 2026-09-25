@@ -7,8 +7,10 @@
    Profile tab ("✏️ Edit Profile", own profile only) — saved to
    Store's "profile-overrides" meta key and merged onto CONFIG.users
    at boot. Username and personality still require editing CONFIG
-   below. To act as Mikael instead of Lizzy, use the "Switch to
-   Mikael" button on the Profile tab (own profile).
+   below. Lizzy can no longer switch into Mikael's account from the
+   Profile tab — that direction of the switcher is disabled in both
+   the UI (button hidden) and switchUser() itself. Mikael switching
+   to Lizzy's account is unaffected.
    ===================================================================== */
 
 /* ---------- tiny generators for the fictional accounts' art ----------
@@ -779,6 +781,24 @@ const CONFIG={
   storyBgs:["linear-gradient(135deg,#ff4d9a,#7a35dc)","linear-gradient(135deg,#ffb84c,#e8317f)","linear-gradient(135deg,#3a7bd5,#7a35dc)","linear-gradient(135deg,#2f8f5b,#123322)","linear-gradient(135deg,#8a5a2c,#3a220f)","linear-gradient(135deg,#3a3a55,#0e0410)"]
 };
 
+/* ---------- matching cartoon art for the TV-character fake accounts ---------- */
+const TV_CARTOON_COUNTS={"michael":9,"jim":9,"pam":9,"dwight":9,"oscar":9,"angela":9,"stanley":9,"toby":9,"kelly":9,"kevin":9,"creed":9,"lorelai":13,"rory":13,"luke":13,"emily":13,"richard":13,"sookie":13,"michel":13,"paris":13,"lane":13,"jess":13,"kirk":13,"jake":15,"amy":15,"rosa":15,"terry":15,"holt":15,"boyle":15,"gina":15,"hitchcock":15,"scully":15,"troy":14,"gabriella":14,"sharpay":14,"ryan":14,"chad":14,"taylor":14,"kelsi":14,"zeke":14};
+const TV_CARTOON_POST_CHANCE=.6;
+for(const [id,count] of Object.entries(TV_CARTOON_COUNTS)){
+  const u=CONFIG.users[id];if(!u)continue;
+  u.cartoonDir=`assets/mizzygram/characters/${id}`;
+  u.cartoonCount=count;
+  u.avatar=`${u.cartoonDir}/1.webp`;
+}
+function cartoonImageFor(u,chance=TV_CARTOON_POST_CHANCE){
+  if(!u||!u.cartoonCount||Math.random()>=chance)return null;
+  const n=1+Math.floor(Math.random()*u.cartoonCount);
+  return `${u.cartoonDir}/${n}.webp`;
+}
+function botImageFor(u,caption,chance=TV_CARTOON_POST_CHANCE){
+  return cartoonImageFor(u,chance)||cardImage(caption,u.tile[0],u.tile[1],u.tile[2]);
+}
+
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -893,6 +913,7 @@ async function toggleFollow(targetId){
   render(true);renderSheet();
 }
 async function switchUser(id){
+  if(id==="mikael")return; // Lizzy can no longer switch into Mikael's account
   if(!CONFIG.users[id]||id===state.activeUser)return;
   state.activeUser=id;state.profileUser=null;state.replyTo=null;
   try{await Store.setMeta("active-user",id)}catch{}
@@ -997,7 +1018,7 @@ async function seedCommunityIfNeeded(){
     if(!u.posts)continue;
     for(const caption of u.posts){
       t+=1000*60*60*(5+Math.random()*19);
-      const image=u.bot?cardImage(caption,u.tile[0],u.tile[1],u.tile[2]):null;
+      const image=u.bot?botImageFor(u,caption):null;
       if(!image)continue; // (human seed posts need a real photo, so they're skipped here)
       const post={id:uid(),userId:u.id,image,caption,createdAt:Math.min(t,now-60000),reactions:{},comments:[],communityScheduled:true};
       state.posts.push(post);
@@ -1382,7 +1403,7 @@ async function seedNewsIfNeeded(){
   persistNews();await Store.setMeta("news-seed-v1",true);
 }
 async function botPost(userId,caption,extra){
-  const u=CONFIG.users[userId],post={id:uid(),userId,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:true,...extra};
+  const u=CONFIG.users[userId],post={id:uid(),userId,image:botImageFor(u,caption),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:true,...extra};
   state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
   render(true);return post;
 }
@@ -1534,7 +1555,7 @@ async function seedOfficeIfNeeded(){
   for(const u of officeBots()){
     if(Math.random()<0.3)continue; // not everyone shows up on day one either
     const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
-    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
@@ -1562,7 +1583,7 @@ async function seedGilmoreIfNeeded(){
   for(const u of gilmoreBots()){
     if(Math.random()<0.3)continue;
     const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
-    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
@@ -1590,7 +1611,7 @@ async function seedB99IfNeeded(){
   for(const u of b99Bots()){
     if(Math.random()<0.3)continue;
     const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
-    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
@@ -1618,7 +1639,7 @@ async function seedHSMIfNeeded(){
   for(const u of hsmBots()){
     if(Math.random()<0.3)continue;
     const caption=pick(u.posts),hoursAgo=2+Math.random()*90;
-    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
@@ -1634,6 +1655,27 @@ function startHSMPosts(){
       if(Math.random()<0.012)botPost(u.id,pick(u.posts));
     }
   },5*60000);
+}
+
+
+/* ---------- one-time cartoon-photo sampler for existing MizzyGram installs ----------
+   Older browser databases already have the text-card seeds marked complete.
+   This adds only a small handful of matching character-photo posts so the
+   new behaviour is visible immediately without flooding the feed. */
+async function seedTvCartoonPostsIfNeeded(){
+  if(await Store.getMeta("npc-cartoon-seed-v1",false))return;
+  try{await Store.setMeta("npc-cartoon-seed-v1",true)}catch{}
+  const casts=[OFFICE_IDS,GILMORE_IDS,B99_IDS,HSM_IDS],now=Date.now();
+  for(const ids of casts){
+    const chosen=shuffle(ids.map(id=>CONFIG.users[id]).filter(u=>u&&u.cartoonCount)).slice(0,2);
+    for(const u of chosen){
+      const caption=pick(u.posts),image=cartoonImageFor(u,1);
+      const hoursAgo=6+Math.random()*84;
+      const post={id:uid(),userId:u.id,image,caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+      state.posts.push(post);try{await Store.savePost(post)}catch{}
+    }
+  }
+  newestFirst();
 }
 
 /* =====================================================================
@@ -1767,7 +1809,7 @@ const renderers={
         <p class="pBio">${esc(u.bio)}</p>
         ${(state.rewards[viewing]||[]).filter(x=>x!=="welcome").length?`<p class="pBadges" title="Achievements">${state.rewards[viewing].filter(x=>x!=="welcome").map(x=>REWARDS[x][0]).join(" ")}</p>`:""}
         ${isMe
-          ?`<button class="btn primary block" data-edit-profile>✏️ Edit Profile</button><button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button><a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
+          ?`<button class="btn primary block" data-edit-profile>✏️ Edit Profile</button>${other==="mikael"?"":`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button>`}<a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
       ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
@@ -2234,6 +2276,7 @@ function migratePost(p){
     await seedGilmoreIfNeeded();
     await seedB99IfNeeded();
     await seedHSMIfNeeded();
+    await seedTvCartoonPostsIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
