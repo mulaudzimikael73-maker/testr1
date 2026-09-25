@@ -842,6 +842,8 @@ const CONFIG={
   ],
   maxImage:1080,      // longest side of an uploaded photo, in px
   quality:.85,        // JPEG quality
+  maxVideoSeconds:30, // feed videos are limited to 30 seconds
+  maxVideoBytes:100*1024*1024, // 100 MB local-browser safety limit
   maxCaption:500,
   maxComment:300,
   eventGapMin:3,      // minimum minutes between random events
@@ -853,6 +855,7 @@ const CONFIG={
 
 /* ---------- matching cartoon art for the TV-character fake accounts ---------- */
 const TV_CARTOON_COUNTS={"michael":9,"jim":9,"pam":9,"dwight":9,"oscar":9,"angela":9,"stanley":9,"toby":9,"kelly":9,"kevin":9,"creed":9,"lorelai":13,"rory":13,"luke":13,"emily":13,"richard":13,"sookie":13,"michel":13,"paris":13,"lane":13,"jess":13,"kirk":13,"jake":15,"amy":15,"rosa":15,"terry":15,"holt":15,"boyle":15,"gina":15,"hitchcock":15,"scully":15,"troy":14,"gabriella":14,"sharpay":14,"ryan":14,"chad":14,"taylor":14,"kelsi":14,"zeke":14};
+const ENTERTAINMENT_MEDIA_COUNTS={bonang:10,msaki:8,sjava:7,jabulilemajola:7,jesseclegg:8,raye:8,sunelmusician:7,dave:7,jcole:7,maleh:8,yebba:6,muzi:7,onedirection:6,micasa:8,liquideep:8};
 const TV_CARTOON_POST_CHANCE=.6;
 for(const [id,count] of Object.entries(TV_CARTOON_COUNTS)){
   const u=CONFIG.users[id];if(!u)continue;
@@ -860,13 +863,28 @@ for(const [id,count] of Object.entries(TV_CARTOON_COUNTS)){
   u.cartoonCount=count;
   u.avatar=`${u.cartoonDir}/1.webp`;
 }
+for(const [id,count] of Object.entries(ENTERTAINMENT_MEDIA_COUNTS)){
+  const u=CONFIG.users[id];if(!u)continue;
+  u.mediaDir=`assets/mizzygram/entertainment/${id}`;
+  u.mediaCount=count;
+  u.avatar=`${u.mediaDir}/1.webp`;
+  u.feedMediaChance=id==="bonang"?.82:.64;
+  u.storyMediaChance=id==="bonang"?.94:.74;
+}
 function cartoonImageFor(u,chance=TV_CARTOON_POST_CHANCE){
   if(!u||!u.cartoonCount||Math.random()>=chance)return null;
   const n=1+Math.floor(Math.random()*u.cartoonCount);
   return `${u.cartoonDir}/${n}.webp`;
 }
+function mediaImageFor(u,chance){
+  if(!u||!u.mediaCount)return null;
+  const odds=chance==null?(u.feedMediaChance??0):chance;
+  if(Math.random()>=odds)return null;
+  const n=1+Math.floor(Math.random()*u.mediaCount);
+  return `${u.mediaDir}/${n}.webp`;
+}
 function botImageFor(u,caption,chance=TV_CARTOON_POST_CHANCE){
-  return cartoonImageFor(u,chance)||cardImage(caption,u.tile[0],u.tile[1],u.tile[2]);
+  return mediaImageFor(u)||cartoonImageFor(u,chance)||cardImage(caption,u.tile[0],u.tile[1],u.tile[2]);
 }
 
 const $=id=>document.getElementById(id);
@@ -874,6 +892,22 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const verifiedMark=u=>u&&u.verified&&u.id!=="lizzy"&&u.id!=="mikael"?'<span class="verifiedBadge" title="Verified" aria-label="Verified">✓</span>':"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const socialHash=s=>{let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+const CELEB_FOLLOWER_BASE={msaki:486000,sjava:2100000,jabulilemajola:146000,jesseclegg:218000,raye:3900000,sunelmusician:970000,dave:5300000,jcole:9800000,maleh:164000,yebba:1850000,muzi:420000,onedirection:28600000,micasa:610000,liquideep:285000,bonang:5600000,disney:38800000};
+const MOVIE_FOLLOWER_BASE={horrorreels:742000,comedyclub:619000,romanceframe:521000,dramadaily:438000,meetcutemovies:688000};
+function setupBotSocialStats(){
+  for(const [id,u] of Object.entries(CONFIG.users)){
+    if(!u.bot)continue;
+    if(CELEB_FOLLOWER_BASE[id])u.followerBase=CELEB_FOLLOWER_BASE[id];
+    else if(MOVIE_FOLLOWER_BASE[id])u.followerBase=MOVIE_FOLLOWER_BASE[id];
+    else if(TV_CARTOON_COUNTS[id])u.followerBase=180000+(socialHash(id)%2300000);
+    else if(u.public||u.verified)u.followerBase=55000+(socialHash(id)%760000);
+    else u.followerBase=8000+(socialHash(id)%82000);
+    u.followingBase=18+(socialHash(id+":following")%420);
+  }
+}
+setupBotSocialStats();
+const formatCount=n=>n>=1000000?(n/1000000).toFixed(n>=10000000?1:2).replace(/\.0+$/,"")+"M":n>=1000?(n/1000).toFixed(n>=100000?0:1).replace(/\.0$/,"")+"K":String(n);
 
 /* ---------- icons ---------- */
 const I={
@@ -957,19 +991,32 @@ const reactionOf=id=>CONFIG.reactions.find(r=>r.id===id);
 const otherHuman=id=>CONFIG.humans.find(h=>h!==id);
 
 /* ---------- follow graph: { userId: Set(userIds they follow) } ---------- */
+function enrichBotFollowGraph(g){
+  const botIds=Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id);
+  for(const id of botIds){
+    g[id]=g[id]||new Set();
+    g[id].add("lizzy");g[id].add("mikael");
+    const wanted=6+(socialHash(id+":peers")%11);
+    for(let i=0;i<wanted;i++){
+      const target=botIds[socialHash(id+":"+i)%botIds.length];
+      if(target!==id)g[id].add(target);
+    }
+  }
+  return g;
+}
 function followGraphDefault(){
-  const g={lizzy:new Set(),mikael:new Set(["lizzy"])}; // Mikael already follows Lizzy by default 💗
-  Object.values(CONFIG.users).forEach(u=>{
-    if(!u.bot)return;
-    g[u.id]=new Set(["lizzy","mikael"]); // every fictional account already follows both of you
-  });
-  if(g.thedailygobshite)g.thedailygobshite=new Set(Object.keys(CONFIG.users).filter(id=>id!=="thedailygobshite")); // paparazzi — follows literally everyone
+  const g={lizzy:new Set(),mikael:new Set(["lizzy"])};
+  Object.values(CONFIG.users).forEach(u=>{if(u.bot)g[u.id]=new Set()});
+  enrichBotFollowGraph(g);
+  if(g.thedailygobshite)g.thedailygobshite=new Set(Object.keys(CONFIG.users).filter(id=>id!=="thedailygobshite"));
   return g;
 }
 let followGraph=followGraphDefault();
 const isFollowing=(a,b)=>!!(followGraph[a]&&followGraph[a].has(b));
 const followingOf=id=>[...(followGraph[id]||[])];
 const followersOf=id=>Object.keys(CONFIG.users).filter(u=>followGraph[u]&&followGraph[u].has(id));
+const followerCountFor=id=>(CONFIG.users[id]?.followerBase||0)+followersOf(id).length;
+const followingCountFor=id=>(CONFIG.users[id]?.followingBase||0)+followingOf(id).length;
 async function saveFollowGraph(){
   const plain={};for(const k in followGraph)plain[k]=[...followGraph[k]];
   try{await Store.setMeta("follow-graph",plain)}catch{}
@@ -1034,6 +1081,40 @@ function prepareImage(file){
   });
 }
 
+function prepareVideo(file){
+  return new Promise((resolve,reject)=>{
+    if(!file||!/^video\//.test(file.type))return reject(new Error("Please choose a video file."));
+    if(file.size>CONFIG.maxVideoBytes)return reject(new Error("That video is too large. Keep it under 100 MB."));
+    const preview=URL.createObjectURL(file),v=document.createElement("video");
+    v.preload="metadata";v.muted=true;v.playsInline=true;
+    v.onloadedmetadata=()=>{
+      const duration=Number(v.duration);
+      if(!Number.isFinite(duration)||duration<=0){URL.revokeObjectURL(preview);return reject(new Error("Couldn't read that video's duration."))}
+      if(duration>CONFIG.maxVideoSeconds+.05){URL.revokeObjectURL(preview);return reject(new Error(`Videos can be up to ${CONFIG.maxVideoSeconds} seconds. This one is ${Math.ceil(duration)} seconds.`))}
+      resolve({video:file,preview,duration,videoType:file.type||"video/mp4"});
+    };
+    v.onerror=()=>{URL.revokeObjectURL(preview);reject(new Error("Couldn't read that video. Try MP4, MOV or WebM."))};
+    v.src=preview;
+  });
+}
+const videoObjectUrls=new Map();
+function videoSrc(p){
+  if(!p||!p.video)return "";
+  if(typeof p.video==="string")return p.video;
+  let url=videoObjectUrls.get(p.id);
+  if(!url){url=URL.createObjectURL(p.video);videoObjectUrls.set(p.id,url)}
+  return url;
+}
+function postMediaHTML(p,where="feed"){
+  if(p.mediaType==="video"&&p.video){
+    const src=esc(videoSrc(p));
+    if(where==="tile"||where==="cover")return `<video src="${src}" muted playsinline preload="metadata" aria-label="Video post"></video><span class="videoBadge" aria-hidden="true">▶</span>`;
+    return `<video src="${src}" controls playsinline preload="metadata" aria-label="Video post"></video>`;
+  }
+  return `<img src="${esc(p.image||"")}" alt="">`;
+}
+window.addEventListener("beforeunload",()=>{for(const u of videoObjectUrls.values())URL.revokeObjectURL(u)});
+
 /* ---------- reactions helpers ---------- */
 function reactionCounts(p){
   const buckets={};
@@ -1084,14 +1165,13 @@ async function communityReact(postId,userId){
 async function seedCommunityIfNeeded(){
   const seeded=await Store.getMeta("npc-seed-v2",false);
   if(seeded)return;
-  const now=Date.now();let t=now-1000*60*60*24*6;
-  for(const u of Object.values(CONFIG.users)){
-    if(!u.posts)continue;
-    for(const caption of u.posts){
-      t+=1000*60*60*(5+Math.random()*19);
-      const image=u.bot?botImageFor(u,caption):null;
-      if(!image)continue; // (human seed posts need a real photo, so they're skipped here)
-      const post={id:uid(),userId:u.id,image,caption,createdAt:Math.min(t,now-60000),reactions:{},comments:[],communityScheduled:true};
+  const now=Date.now(),users=Object.values(CONFIG.users).filter(u=>u.bot&&u.posts?.length);
+  for(const [i,u] of users.entries()){
+    const captions=shuffle([...u.posts]).slice(0,2);
+    for(const [j,caption] of captions.entries()){
+      const daysAgo=8+((i*7+j*16)%42)+Math.random()*3;
+      const image=botImageFor(u,caption);
+      const post={id:uid(),userId:u.id,image,caption,createdAt:now-daysAgo*864e5,reactions:{},comments:[],communityScheduled:true};
       state.posts.push(post);
       try{await Store.savePost(post)}catch{}
     }
@@ -1398,7 +1478,9 @@ function sendShare(){
 }
 async function shareToStory(){
   const p=state.posts.find(x=>x.id===state.sheet.id);if(!p)return;
-  if(await publishStory({kind:"photo",image:p.image,caption:"📌 @"+userOf(p.userId).username+(p.caption?": "+p.caption.slice(0,80):""),duration:6000}))closeSheet();
+  const mention="📌 @"+userOf(p.userId).username+(p.caption?": "+p.caption.slice(0,80):"");
+  const payload=p.mediaType==="video"?{kind:"text",text:"🎬 "+mention,bg:2,duration:6000}:{kind:"photo",image:p.image,caption:mention,duration:6000};
+  if(await publishStory(payload))closeSheet();
 }
 
 /* ----- stories: create / react / community ----- */
@@ -1473,9 +1555,13 @@ async function seedNewsIfNeeded(){
   ].forEach(([e,t,l,ago_])=>state.news.push({id:uid(),emoji:e,tag:t,headline:l,postId:null,createdAt:Date.now()-ago_*h}));
   persistNews();await Store.setMeta("news-seed-v1",true);
 }
-async function botPost(userId,caption,extra){
-  const u=CONFIG.users[userId],post={id:uid(),userId,image:botImageFor(u,caption),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:true,...extra};
+async function botPost(userId,caption,extra={}){
+  const u=CONFIG.users[userId];if(!u)return null;
+  if(u.bot&&!extra.force&&typeof canScheduleFeedPost==="function"&&!canScheduleFeedPost(userId))return null;
+  const post={id:uid(),userId,image:botImageFor(u,caption),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:false,...extra};
+  delete post.force;
   state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
+  scheduleCommunityReactions(post);
   render(true);return post;
 }
 async function declassify(id){
@@ -1544,7 +1630,7 @@ function memories(){
   CONFIG.memories.forEach(m=>{if(m.month===now.getMonth()+1&&m.day===now.getDate())out.push({label:m.year?(now.getFullYear()-m.year)+" years ago":"Today",text:m.text})});
   return out;
 }
-const memCard=m=>`<div class="memCard" ${m.post?`data-open="${m.post.id}"`:""}>${m.post?`<img src="${m.post.image}" alt="">`:""}<div><div class="memTag">💗 ON THIS DAY · ${m.label}</div><p>${esc(m.post?(m.post.caption||"A photo from "+userOf(m.post.userId).name):m.text)}</p></div></div>`;
+const memCard=m=>`<div class="memCard" ${m.post?`data-open="${m.post.id}"`:""}>${m.post?postMediaHTML(m.post,"cover"):""}<div><div class="memTag">💗 ON THIS DAY · ${m.label}</div><p>${esc(m.post?(m.post.caption||"A photo from "+userOf(m.post.userId).name):m.text)}</p></div></div>`;
 function homeExtras(){
   const top=state.news[0],mem=memories().slice(0,2);
   return `<a class="newsBanner" href="#news"><span>📰</span><div><b>MizzyGram News</b><small>${top?esc(top.headline):"Nothing breaking. Yet."}</small></div></a>${mem.map(memCard).join("")}`;
@@ -1617,6 +1703,37 @@ async function seedPresidentIfNeeded(){
    the same day. seedOfficeIfNeeded gives a handful of them a post
    right away so the feed isn't empty; startOfficePosts keeps it going
    forever after, checked every few minutes with low odds per check. */
+const FEED_MAX_POSTS_PER_30_DAYS=3;
+function latestPostAt(userId){const p=state.posts.find(x=>x.userId===userId);return p?p.createdAt:0}
+function latestStoryAt(userId){let newest=0;for(const st of state.stories){if(st.userId===userId&&st.createdAt>newest)newest=st.createdAt}return newest}
+function recentPostCount(userId,days=30,now=Date.now()){const cutoff=now-days*864e5;let n=0;for(const p of state.posts){if(p.userId===userId&&p.createdAt>=cutoff)n++}return n}
+function canScheduleFeedPost(userId,now=Date.now()){
+  const u=CONFIG.users[userId]||{};
+  if(recentPostCount(userId,30,now)>=FEED_MAX_POSTS_PER_30_DAYS)return false;
+  const last=latestPostAt(userId),gap=(u.minFeedGapHours||216)*36e5;
+  return !last||now-last>=gap;
+}
+function canScheduleStory(userId,now=Date.now()){
+  const u=CONFIG.users[userId]||{};
+  const last=latestStoryAt(userId),gap=(u.minStoryGapHours||60)*36e5;
+  return !last||now-last>=gap;
+}
+function storyCaptionText(txt,max=110){
+  return String(txt||"").replace(/\s+#\w+/g,"").replace(/\s+/g," ").trim().slice(0,max);
+}
+async function botStory(userId,caption,opts={}){
+  const u=CONFIG.users[userId];if(!u)return null;
+  const img=(opts.forceImage?mediaImageFor(u,1):mediaImageFor(u,u.storyMediaChance))||(u.cartoonCount&&Math.random()<.45?cartoonImageFor(u,1):null);
+  const common={id:uid(),userId,createdAt:Date.now(),reactions:{},viewers:{},duration:opts.duration||6500};
+  const st=img
+    ?{...common,kind:"photo",image:img,caption:storyCaptionText(caption||pick(u.posts||[""]))}
+    :{...common,kind:"text",text:storyCaptionText(caption||pick(u.posts||[""])),bg:opts.bg??Math.floor(Math.random()*CONFIG.storyBgs.length)};
+  state.stories.push(st);
+  try{await Store.saveStory(st)}catch{}
+  scheduleStoryCommunity(st);
+  return st;
+}
+
 const OFFICE_IDS=["michael","jim","pam","dwight","oscar","angela","stanley","toby","kelly","kevin","creed"];
 const officeBots=()=>OFFICE_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
 async function seedOfficeIfNeeded(){
@@ -1635,11 +1752,8 @@ function startOfficePosts(){
   setInterval(()=>{
     if(document.hidden)return;
     for(const u of officeBots()){
-      const lastPost=state.posts.find(p=>p.userId===u.id);
-      const lastAt=lastPost?lastPost.createdAt:0;
-      const minGapHours=16+Math.random()*24; // each character waits at least ~16-40h between posts
-      if(Date.now()-lastAt<minGapHours*36e5)continue;
-      if(Math.random()<0.012)botPost(u.id,pick(u.posts)); // small per-check odds keeps posting rare & staggered
+      if(!canScheduleFeedPost(u.id))continue;
+      if(Math.random()<0.0009)botPost(u.id,pick(u.posts));
     }
   },5*60000);
 }
@@ -1663,11 +1777,8 @@ function startGilmorePosts(){
   setInterval(()=>{
     if(document.hidden)return;
     for(const u of gilmoreBots()){
-      const lastPost=state.posts.find(p=>p.userId===u.id);
-      const lastAt=lastPost?lastPost.createdAt:0;
-      const minGapHours=16+Math.random()*24;
-      if(Date.now()-lastAt<minGapHours*36e5)continue;
-      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+      if(!canScheduleFeedPost(u.id))continue;
+      if(Math.random()<0.0009)botPost(u.id,pick(u.posts));
     }
   },5*60000);
 }
@@ -1691,11 +1802,8 @@ function startB99Posts(){
   setInterval(()=>{
     if(document.hidden)return;
     for(const u of b99Bots()){
-      const lastPost=state.posts.find(p=>p.userId===u.id);
-      const lastAt=lastPost?lastPost.createdAt:0;
-      const minGapHours=16+Math.random()*24;
-      if(Date.now()-lastAt<minGapHours*36e5)continue;
-      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+      if(!canScheduleFeedPost(u.id))continue;
+      if(Math.random()<0.0009)botPost(u.id,pick(u.posts));
     }
   },5*60000);
 }
@@ -1719,11 +1827,8 @@ function startHSMPosts(){
   setInterval(()=>{
     if(document.hidden)return;
     for(const u of hsmBots()){
-      const lastPost=state.posts.find(p=>p.userId===u.id);
-      const lastAt=lastPost?lastPost.createdAt:0;
-      const minGapHours=16+Math.random()*24;
-      if(Date.now()-lastAt<minGapHours*36e5)continue;
-      if(Math.random()<0.012)botPost(u.id,pick(u.posts));
+      if(!canScheduleFeedPost(u.id))continue;
+      if(Math.random()<0.0009)botPost(u.id,pick(u.posts));
     }
   },5*60000);
 }
@@ -1733,13 +1838,16 @@ function startHSMPosts(){
 const MOVIE_IDS=["horrorreels","comedyclub","romanceframe","dramadaily","meetcutemovies"];
 const CELEB_IDS=["msaki","sjava","jabulilemajola","jesseclegg","raye","sunelmusician","dave","jcole","maleh","yebba","muzi","onedirection","micasa","liquideep","bonang","disney"];
 const entertainmentBots=()=>CELEB_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+[...OFFICE_IDS,...GILMORE_IDS,...B99_IDS,...HSM_IDS].forEach(id=>{const u=CONFIG.users[id];if(u){u.minFeedGapHours=u.minFeedGapHours||216;u.minStoryGapHours=u.minStoryGapHours||96}});
+MOVIE_IDS.forEach(id=>{const u=CONFIG.users[id];if(u){u.minFeedGapHours=240;u.minStoryGapHours=30}});
+CELEB_IDS.forEach(id=>{const u=CONFIG.users[id];if(u){u.minFeedGapHours=id==="disney"?216:240;u.minStoryGapHours=id==="bonang"?36:id==="disney"?24:60}});
 function liveTimedPosts(u,now=Date.now()){
   return (u.timedPosts||[]).filter(x=>!x.from||now>=Date.parse(x.from)).filter(x=>!x.until||now<=Date.parse(x.until));
 }
 function pickAccountPost(u){
   const timed=liveTimedPosts(u);
   if(timed.length&&Math.random()<.68)return pick(timed).text;
-  return pick(u.posts||timed.map(x=>x.text));
+  return pick((u.posts&&u.posts.length)?u.posts:timed.map(x=>x.text));
 }
 async function seedEntertainmentIfNeeded(){
   if(await Store.getMeta("npc-seed-entertainment-v1",false))return;
@@ -1747,34 +1855,70 @@ async function seedEntertainmentIfNeeded(){
   const now=Date.now(),ids=[...MOVIE_IDS,...CELEB_IDS];
   for(const [i,id] of ids.entries()){
     const u=CONFIG.users[id];if(!u||state.posts.some(p=>p.userId===id))continue;
-    const caption=pickAccountPost(u),hoursAgo=2+(i*9)%150+Math.random()*8;
+    const caption=pickAccountPost(u),hoursAgo=8+(i*13)%220+Math.random()*12;
     const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
 }
-async function dailyMoviePostIfNeeded(){
+async function seedEntertainmentStoriesIfNeeded(){
+  if(await Store.getMeta("story-seed-entertainment-v1",false))return;
+  const ids=["bonang","disney",MOVIE_IDS[Math.floor(Date.now()/864e5)%MOVIE_IDS.length],"msaki"];
+  for(const id of ids){const u=CONFIG.users[id];if(u)await botStory(id,pickAccountPost(u),{forceImage:!!u.mediaCount})}
+  await Store.setMeta("story-seed-entertainment-v1",true);
+}
+async function dailyMovieStoryIfNeeded(){
   const d=new Date(),dateKey=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
-  const key="movie-daily-v1:"+dateKey;if(await Store.getMeta(key,false))return;
+  const key="movie-daily-story-v1:"+dateKey;if(await Store.getMeta(key,false))return;
   const dayNo=Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);
   const id=MOVIE_IDS[((dayNo%MOVIE_IDS.length)+MOVIE_IDS.length)%MOVIE_IDS.length],u=CONFIG.users[id];
   if(!u)return;
-  const caption=pickAccountPost(u),post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:Date.now()-60000,reactions:{},comments:[],communityScheduled:true};
-  state.posts.push(post);newestFirst();try{await Store.savePost(post);await Store.setMeta(key,true)}catch{}
+  await botStory(u.id,pickAccountPost(u),{duration:7000});
+  try{await Store.setMeta(key,true)}catch{}
 }
 function startEntertainmentPosts(){
   setInterval(()=>{
     if(document.hidden)return;
-    dailyMoviePostIfNeeded().catch(()=>{});
-    for(const u of entertainmentBots()){
-      const lastPost=state.posts.find(p=>p.userId===u.id),lastAt=lastPost?lastPost.createdAt:0;
-      const minGapHours=20+Math.random()*34;
-      if(Date.now()-lastAt<minGapHours*36e5)continue;
-      if(Math.random()<0.008)botPost(u.id,pickAccountPost(u));
+    dailyMovieStoryIfNeeded().catch(()=>{});
+    for(const u of [...MOVIE_IDS.map(id=>CONFIG.users[id]).filter(Boolean),...entertainmentBots()]){
+      if(canScheduleFeedPost(u.id)&&Math.random()<0.0012)botPost(u.id,pickAccountPost(u));
+      if(canScheduleStory(u.id)&&Math.random()<(MOVIE_IDS.includes(u.id)?.006:.0032))botStory(u.id,pickAccountPost(u),{forceImage:!!u.mediaCount}).catch(()=>{});
     }
-  },8*60000);
+  },15*60000);
 }
 
+async function seedBotEngagementIfNeeded(){
+  if(await Store.getMeta("bot-engagement-seed-v1",false))return;
+  const botIds=Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id);
+  for(const p of state.posts.filter(p=>CONFIG.users[p.userId]?.bot).slice(0,48)){
+    const pool=botIds.filter(id=>id!==p.userId);
+    const n=2+(socialHash(p.id)%5);
+    for(let i=0;i<n;i++){
+      const id=pool[socialHash(p.id+":"+i)%pool.length],u=CONFIG.users[id];
+      if(!p.reactions[id])p.reactions[id]=weightedReaction(u);
+      if(i<2&&u.comments?.length&&(socialHash(p.id+":c:"+i)%100)<45){
+        p.comments.push({id:uid(),userId:id,text:u.comments[socialHash(p.id+":txt:"+i)%u.comments.length],createdAt:Math.min(Date.now()-60000,p.createdAt+(i+1)*37e5),likes:[],parentId:null});
+      }
+    }
+    try{await Store.savePost(p)}catch{}
+  }
+  await Store.setMeta("bot-engagement-seed-v1",true);
+}
+function startPublicBotStories(){
+  const ids=[...OFFICE_IDS,...GILMORE_IDS,...B99_IDS,...HSM_IDS,...MOVIE_IDS,...CELEB_IDS];
+  setInterval(()=>{
+    if(document.hidden)return;
+    const candidates=shuffle(ids.map(id=>CONFIG.users[id]).filter(Boolean));
+    for(const u of candidates.slice(0,8)){
+      if(!canScheduleStory(u.id))continue;
+      if(Math.random()<0.025){
+        const caption=MOVIE_IDS.includes(u.id)||CELEB_IDS.includes(u.id)?pickAccountPost(u):pick(u.posts);
+        botStory(u.id,caption,{forceImage:!!u.mediaCount}).catch(()=>{});
+        break;
+      }
+    }
+  },30*60000);
+}
 
 /* ---------- one-time cartoon-photo sampler for existing MizzyGram installs ----------
    Older browser databases already have the text-card seeds marked complete.
@@ -1787,6 +1931,7 @@ async function seedTvCartoonPostsIfNeeded(){
   for(const ids of casts){
     const chosen=shuffle(ids.map(id=>CONFIG.users[id]).filter(u=>u&&u.cartoonCount)).slice(0,2);
     for(const u of chosen){
+      if(recentPostCount(u.id,30)>=FEED_MAX_POSTS_PER_30_DAYS)continue;
       const caption=pick(u.posts),image=cartoonImageFor(u,1);
       const hoursAgo=6+Math.random()*84;
       const post={id:uid(),userId:u.id,image,caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
@@ -1802,7 +1947,7 @@ async function seedTvCartoonPostsIfNeeded(){
 function postCard(p){
   const u=userOf(p.userId),mineReact=p.reactions[state.activeUser],total=totalReactions(p);
   const n=p.comments.length;
-  const alt=p.caption?`Photo by ${u.username}: ${p.caption.slice(0,100)}`:`Photo by ${u.username}`;
+  const alt=p.caption?`${p.mediaType==="video"?"Video":"Photo"} by ${u.username}: ${p.caption.slice(0,100)}`:`${p.mediaType==="video"?"Video":"Photo"} by ${u.username}`;
   const groups=reactionCounts(p).slice(0,3).map(g=>g.emoji).join("");
   const badge=badgeFor(p.id),saved=isSaved(state.activeUser,p.id);
   return `<article class="post" data-id="${p.id}">
@@ -1811,7 +1956,7 @@ function postCard(p){
       <button class="uname" data-user="${u.id}">${esc(u.username)}${verifiedMark(u)}</button>${p.mood?`<small class="mood">${esc(p.mood)}</small>`:""}${p.audience==="lizzy"?`<small class="mood">💗 just for Lizzy</small>`:""}
       <time datetime="${new Date(p.createdAt).toISOString()}">${ago(p.createdAt)}</time>
     </header>
-    <div class="photo ${p.classified&&!p.declassified?"classified":""}" data-dbl>${p.classified&&!p.declassified?`<button class="declass" data-declassify="${p.id}">🕵️ CLASSIFIED — tap to declassify</button>`:""}${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
+    <div class="photo ${p.mediaType==="video"?"videoPost":""} ${p.classified&&!p.declassified?"classified":""}" ${p.mediaType==="video"?"":"data-dbl"}>${p.classified&&!p.declassified?`<button class="declass" data-declassify="${p.id}">🕵️ CLASSIFIED — tap to declassify</button>`:""}${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}${p.mediaType==="video"?postMediaHTML(p):`<img src="${p.image}" alt="${esc(alt)}">`}<span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
     <div class="actions">
       <div class="likeWrap">
         <button class="act ${mineReact?"on":""}" data-like data-id="${p.id}" aria-pressed="${!!mineReact}" aria-label="${mineReact?"Remove reaction":"Like (hold for more reactions)"}">${mineReact?`<span class="reactEmoji">${reactionOf(mineReact).emoji}</span>`:I.heart}</button>
@@ -1866,10 +2011,11 @@ const renderers={
   },
   post(){
     const pend=state.pending;
+    const preview=pend?(pend.mediaType==="video"?`<video src="${esc(pend.preview)}" muted autoplay loop playsinline aria-label="Selected video preview"></video><span class="videoLimit">${Math.ceil(pend.duration||0)}s / ${CONFIG.maxVideoSeconds}s</span>`:`<img src="${pend.image}" alt="Selected photo preview">`):`<span class="dropHint">${I.photo}<b>Choose a photo or video</b><span>Videos can be up to ${CONFIG.maxVideoSeconds} seconds</span></span>`;
     return `<form class="compose" id="composeForm" novalidate>
       <label class="drop">
-        <input type="file" id="photoInput" accept="image/*" aria-label="Choose a photo">
-        ${pend?`<img src="${pend.image}" alt="Selected photo preview">`:`<span class="dropHint">${I.photo}<b>Choose a photo</b><span>Tap to pick one from your device</span></span>`}
+        <input type="file" id="mediaInput" accept="image/*,video/*" aria-label="Choose a photo or video">
+        ${preview}
       </label>
       <label class="lbl" for="caption">Caption</label>
       <textarea id="caption" maxlength="${CONFIG.maxCaption}" placeholder="Write a caption…">${esc(pend?pend.caption:"")}</textarea>
@@ -1901,7 +2047,7 @@ const renderers={
   saved(){
     const u=state.activeUser,sv=savedOf(u),col=state.savedCol;
     if(!col){
-      const tl=(id,emoji,name)=>{const ps=savedPosts(u,id),c=ps[0];return `<a class="colTile" href="#saved/${encodeURIComponent(id)}"><span class="colCover">${c?`<img src="${c.image}" alt="">`:`<em>${emoji}</em>`}</span><b>${emoji} ${esc(name)}</b><small>${ps.length} post${ps.length===1?"":"s"}</small></a>`};
+      const tl=(id,emoji,name)=>{const ps=savedPosts(u,id),c=ps[0];return `<a class="colTile" href="#saved/${encodeURIComponent(id)}"><span class="colCover">${c?postMediaHTML(c,"cover"):`<em>${emoji}</em>`}</span><b>${emoji} ${esc(name)}</b><small>${ps.length} post${ps.length===1?"":"s"}</small></a>`};
       return `<div class="hashHead"><a class="backLink" href="#profile" aria-label="Back to profile">${I.back}</a><h1 class="pageTitle">Saved</h1></div><div class="colGrid">${tl("all","🔖","All posts")}${sv.cols.map(c=>tl(c.id,c.emoji,c.name)).join("")}<button class="colTile" data-colform><span class="colCover"><em>＋</em></span><b>New collection</b></button></div>`;
     }
     const c=sv.cols.find(x=>x.id===col),ps=savedPosts(u,col);
@@ -1911,14 +2057,14 @@ const renderers={
     const viewing=state.profileUser||state.activeUser;
     const u=userOf(viewing),isMe=viewing===state.activeUser;
     const mine=state.posts.filter(p=>p.userId===viewing);
-    const followers=followersOf(viewing).length,following=followingOf(viewing).length;
+    const followers=followerCountFor(viewing),following=followingCountFor(viewing);
     const other=otherHuman(state.activeUser);
     return `<section class="pHead">
         <div class="pAva"><img src="${esc(u.avatar)}" alt="${esc(u.name)}'s profile picture"></div>
         <div class="stats">
           <div><b>${mine.length}</b><span>Posts</span></div>
-          <button class="statBtn" data-stat="followers" data-stat-user="${viewing}"><b>${followers}</b><span>Followers</span></button>
-          <button class="statBtn" data-stat="following" data-stat-user="${viewing}"><b>${following}</b><span>Following</span></button>
+          <button class="statBtn" data-stat="followers" data-stat-user="${viewing}"><b>${formatCount(followers)}</b><span>Followers</span></button>
+          <button class="statBtn" data-stat="following" data-stat-user="${viewing}"><b>${formatCount(following)}</b><span>Following</span></button>
         </div>
       </section>
       <section class="pInfo">
@@ -1935,7 +2081,7 @@ const renderers={
   }
 };
 
-const tile=p=>`<button class="tile ${p.classified&&!p.declassified?"blur":""}" data-open="${p.id}" aria-label="Open photo${p.caption?": "+esc(p.caption.slice(0,60)):""}"><img src="${p.image}" alt=""></button>`;
+const tile=p=>`<button class="tile ${p.mediaType==="video"?"videoTile":""} ${p.classified&&!p.declassified?"blur":""}" data-open="${p.id}" aria-label="Open ${p.mediaType==="video"?"video":"photo"}${p.caption?": "+esc(p.caption.slice(0,60)):""}">${postMediaHTML(p,"tile")}</button>`;
 
 /* ---------- render + routing ---------- */
 function render(keepScroll){
@@ -1976,30 +2122,40 @@ document.querySelector('.bottom a[data-view="profile"]').addEventListener("click
 
 /* ---------- create post ---------- */
 function bindCompose(){
-  const input=$("photoInput"),cap=$("caption"),count=$("capCount"),err=$("postErr"),btn=$("shareBtn");
+  const input=$("mediaInput"),cap=$("caption"),count=$("capCount"),err=$("postErr"),btn=$("shareBtn");
   const upd=()=>{count.textContent=`${cap.value.length}/${CONFIG.maxCaption}`;if(state.pending)state.pending.caption=cap.value};
   upd();cap.addEventListener("input",upd);
   input.addEventListener("change",async()=>{
     err.textContent="";
     const f=input.files&&input.files[0];if(!f)return;
+    if(state.pending&&state.pending.preview)URL.revokeObjectURL(state.pending.preview);
     try{
-      const image=await prepareImage(f);
-      state.pending={image,caption:cap.value};
+      if(/^video\//.test(f.type)){
+        const v=await prepareVideo(f);
+        state.pending={mediaType:"video",video:v.video,videoType:v.videoType,duration:v.duration,preview:v.preview,caption:cap.value};
+      }else if(/^image\//.test(f.type)){
+        const image=await prepareImage(f);
+        state.pending={mediaType:"photo",image,caption:cap.value};
+      }else throw new Error("Choose a photo or video file.");
       render(true);$("caption").focus();
-    }catch(e){err.textContent=e.message}
+    }catch(e){state.pending=null;err.textContent=e.message;btn.disabled=true}
   });
   $("composeForm").addEventListener("submit",async e=>{
     e.preventDefault();
     if(!state.pending)return;
     btn.disabled=true;err.textContent="";
-    const post={id:uid(),userId:state.activeUser,image:state.pending.image,caption:cap.value.trim(),createdAt:Date.now(),reactions:{},comments:[]};
+    const isVideo=state.pending.mediaType==="video";
+    const post={id:uid(),userId:state.activeUser,mediaType:isVideo?"video":"photo",caption:cap.value.trim(),createdAt:Date.now(),reactions:{},comments:[]};
+    if(isVideo){post.video=state.pending.video;post.videoType=state.pending.videoType;post.duration=state.pending.duration}
+    else post.image=state.pending.image;
     try{
       await Store.savePost(post);
       state.posts.push(post);newestFirst();
       award(state.activeUser,"first_post");
-      pushNews("📸","NEW POST",userOf(state.activeUser).name+" posts a new photo. The app is \"coping\".",post.id);
+      pushNews(isVideo?"🎬":"📸","NEW POST",userOf(state.activeUser).name+` posts a new ${isVideo?"video":"photo"}. The app is "coping".`,post.id);
+      if(state.pending.preview)URL.revokeObjectURL(state.pending.preview);
       state.pending=null;
-      toast("Posted 💗");
+      toast(isVideo?"Video posted 🎬":"Posted 💗");
       location.hash="#home";
       if(state.view==="home")render(false);
       scheduleCommunityReactions(post);
@@ -2380,6 +2536,7 @@ function migratePost(p){
   delete p.likes;
   p.comments=(p.comments||[]).map(c=>({likes:[],parentId:null,...c}));
   if(p.communityScheduled===undefined)p.communityScheduled=false;
+  if(!p.mediaType)p.mediaType=p.video?"video":"photo";
   return p;
 }
 
@@ -2395,8 +2552,10 @@ function migratePost(p){
     await seedB99IfNeeded();
     await seedHSMIfNeeded();
     await seedEntertainmentIfNeeded();
-    await dailyMoviePostIfNeeded();
+    await dailyMovieStoryIfNeeded();
     await seedTvCartoonPostsIfNeeded();
+    await seedEntertainmentStoriesIfNeeded();
+    await seedBotEngagementIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
     state.stories=await Store.allStories();
@@ -2407,6 +2566,7 @@ function migratePost(p){
     if(savedGraph){
       followGraph=followGraphDefault();
       for(const k in savedGraph)followGraph[k]=new Set(savedGraph[k]);
+      enrichBotFollowGraph(followGraph);
     }
     state.activeUser=await Store.getMeta("active-user",CONFIG.me);
     if(!CONFIG.users[state.activeUser])state.activeUser=CONFIG.me;
@@ -2425,7 +2585,7 @@ function migratePost(p){
       if(CONFIG.users[uidKey])Object.assign(CONFIG.users[uidKey],profileOverrides[uidKey]);
     }
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();startPublicBotStories();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();
