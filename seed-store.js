@@ -3,7 +3,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const KEYS={
- wallet:"lizzyMickyBucsV1",
+ wallet:"lizzyMickyBucsTESTV1",
  jobs:"lizzyMickyJobsV1",
  allowance:"lizzyMickyDailyAllowanceV1",
  activity:"lizzyMickyActivityV1",
@@ -224,7 +224,7 @@ render();
 /* =========================================================
    STORE EXPANSION V2 — VERIFIED JOBS + BANK + EXTRAS
    IMPORTANT: this module NEVER initializes/overwrites:
-   lizzyMickyBucsV1, lizzyMickyJobsV1, lizzyGardenV1,
+   lizzyMickyBucsTESTV1, lizzyMickyJobsV1, lizzyGardenV1,
    lizzyTokenJarV1, lizzyMysteryStreak.
    ========================================================= */
 (() => {
@@ -235,7 +235,7 @@ const V2={
  achievements:"lizzyMickyAchievementsV1", extras:"lizzyStoreExtrasV1",
  pending:"lizzyMickyPendingClaimsV1", proof:"lizzyMickyProofV1"
 };
-const WALLET="lizzyMickyBucsV1", JOBSKEY="lizzyMickyJobsV1";
+const WALLET="lizzyMickyBucsTESTV1", JOBSKEY="lizzyMickyJobsV1";
 const WORKER=window.LIZZY_TELEGRAM_WORKER_URL || "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
@@ -368,7 +368,7 @@ renderExtras();renderBank();renderAchievements();
 const $=id=>document.getElementById(id);
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch{return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const WALLET="lizzyMickyBucsV1",SHELF="lizzySecretShelfV1",LETTERS="lizzyPurchasedLettersV1",DOSSIERS="lizzyPurchasedDossiers",MTOKENS="lizzyMikaelTokensV1";
+const WALLET="lizzyMickyBucsTESTV1",SHELF="lizzySecretShelfV1",LETTERS="lizzyPurchasedLettersV1",DOSSIERS="lizzyPurchasedDossiers",MTOKENS="lizzyMikaelTokensV1";
 const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
 const LETTER002=`Lizzy,
 

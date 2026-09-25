@@ -7,7 +7,7 @@ const LIZZY_TELEGRAM_WORKER_URL = "https://lizzyos-notifications.mulaudzimikael7
 
 async function lizzyTelegramNotify(type, title, details, extra) {
   try {
-    const walletBalance = Number(localStorage.getItem("lizzyMickyBucsV1") || 0);
+    const walletBalance = Number(localStorage.getItem("lizzyMickyBucsTESTV1") || 0);
     const payload = JSON.stringify({
       type: type || "LizzyOS Activity",
       title: title || "New Activity",
@@ -4007,8 +4007,8 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
                 perksNow.mbTripleNext=Number(perksNow.mbTripleNext)-1;
                 safeWrite("lizzyRewardPerksV1",perksNow);
             }
-            const current=Number(safeRead("lizzyMickyBucsV1",0))||0;
-            safeWrite("lizzyMickyBucsV1",current+amount);
+            const current=Number(safeRead("lizzyMickyBucsTESTV1",0))||0;
+            safeWrite("lizzyMickyBucsTESTV1",current+amount);
             window.dispatchEvent(new Event("lizzyStoreRefresh"));
             routed.push(`${amount} Micky Bucs`);
         }
@@ -5533,8 +5533,8 @@ const ANNOY_EFFECTS = {
     const reasons = ["for taking too long to text back", "for existing so likeably", "just because", "for winning the last argument"];
     const reason = reasons[Math.floor(Math.random() * reasons.length)];
     try {
-      const bal = Math.max(0, Number(localStorage.getItem("lizzyMickyBucsV1") || 0) - 1);
-      localStorage.setItem("lizzyMickyBucsV1", String(bal));
+      const bal = Math.max(0, Number(localStorage.getItem("lizzyMickyBucsTESTV1") || 0) - 1);
+      localStorage.setItem("lizzyMickyBucsTESTV1", String(bal));
     } catch (e) {}
     annoyToast("💸 Petty Tax: -1 MB (" + reason + ")", 3000);
   },

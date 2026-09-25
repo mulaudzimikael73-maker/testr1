@@ -1,6 +1,6 @@
 /* LizzyOS claimable Telegram deposits — device wallets stay separate */
 (()=>{"use strict";
-const WALLET_KEY="lizzyMickyBucsV1",APPLIED_KEY="lizzyTelegramDepositsAppliedV2";
+const WALLET_KEY="lizzyMickyBucsTESTV1",APPLIED_KEY="lizzyTelegramDepositsAppliedV2";
 const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
 const wallet=()=>Math.max(0,Math.floor(Number(localStorage.getItem(WALLET_KEY))||0));
 const setWallet=n=>{n=Math.max(0,Math.floor(Number(n)||0));localStorage.setItem(WALLET_KEY,String(n));window.dispatchEvent(new CustomEvent("mickyBucsBalanceChanged",{detail:{balance:n,source:"telegram_claim"}}));window.dispatchEvent(new Event("lizzyStoreRefresh"));return n};

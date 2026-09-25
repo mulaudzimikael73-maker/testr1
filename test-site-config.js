@@ -1,6 +1,15 @@
 (()=>{
 "use strict";
 const KEY="lizzyos_test_worker_url_v1";
+const TEST_WALLET="lizzyMickyBucsTESTV1",LEGACY_WALLET="lizzyMickyBucsV1",MIGRATION="lizzyos_test_wallet_migrated_v1";
+try{
+  if(localStorage.getItem(MIGRATION)!=="yes"){
+    const legacy=Number(localStorage.getItem(LEGACY_WALLET)||0);
+    const current=Number(localStorage.getItem(TEST_WALLET)||0);
+    if(Number.isFinite(legacy)&&legacy>0&&(!Number.isFinite(current)||current<=0))localStorage.setItem(TEST_WALLET,String(legacy));
+    localStorage.setItem(MIGRATION,"yes");
+  }
+}catch{}
 const q=new URLSearchParams(location.search).get("testWorker");
 if(q){try{localStorage.setItem(KEY,q.trim())}catch{}}
 let url="";try{url=(localStorage.getItem(KEY)||"").trim()}catch{}
