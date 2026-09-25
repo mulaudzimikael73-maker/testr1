@@ -934,7 +934,7 @@ const Store=(()=>{
   const open=()=>new Promise(res=>{
     if(!window.indexedDB)return res(false);
     let req;
-    try{req=indexedDB.open("mizzygram",2)}catch{return res(false)}
+    try{req=indexedDB.open("mizzygram-test-lab",2)}catch{return res(false)}
     req.onupgradeneeded=()=>{
       const d=req.result;
       if(!d.objectStoreNames.contains("posts"))d.createObjectStore("posts",{keyPath:"id"});
@@ -1661,8 +1661,8 @@ function homeExtras(){
    Phase 7 — Mikael HQ bridge (HQ queues commands on the Worker; this
    device polls, applies them, and publishes a small snapshot back)
    ===================================================================== */
-const WORKER="https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
-const hqPost=body=>fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})}).then(r=>r.json());
+const WORKER=(window.LIZZY_TELEGRAM_WORKER_URL||"").trim();
+const hqPost=body=>WORKER?fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})}).then(r=>r.json()):Promise.reject(new Error("Test Worker not configured"));
 async function applyCommand(c){
   const p=c.postId?(c.postId==="latest"?state.posts.find(x=>x.userId==="lizzy"):state.posts.find(x=>x.id===c.postId)):null,save=async()=>{try{await Store.savePost(p)}catch{}};
   switch(c.kind){
@@ -1696,12 +1696,20 @@ async function applyCommand(c){
 }
 let hqBusy=false,snapSig="";
 function pushSnapshot(){
-  const posts=state.posts.slice(0,25).map(p=>({id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,140),mood:p.mood||"",mine:p.reactions.mikael||null,rx:Object.values(p.reactions).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{}),createdAt:p.createdAt,comments:p.comments.map(c=>({id:c.id,userId:c.userId,text:c.text.slice(0,80),parentId:c.parentId,pinned:!!c.pinned}))}));
+  const latest=state.posts.slice(0,45),lizzy=state.posts.filter(p=>p.userId==="lizzy").slice(0,20),seen=new Set(),picked=[];
+  for(const p of [...lizzy,...latest]){if(!seen.has(p.id)){seen.add(p.id);picked.push(p)}}
+  picked.sort((a,b)=>b.createdAt-a.createdAt);
+  const posts=picked.slice(0,60).map(p=>({
+    id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,180),mood:p.mood||"",audience:p.audience||"everyone",mediaType:p.mediaType||"photo",
+    thumb:(p.mediaType!=="video"&&typeof p.image==="string"&&p.image.length<1800)?p.image:null,
+    mine:p.reactions.mikael||null,rx:Object.values(p.reactions||{}).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{}),createdAt:p.createdAt,
+    comments:(p.comments||[]).slice(-8).map(c=>({id:c.id,userId:c.userId,text:String(c.text||"").slice(0,100),parentId:c.parentId||null,pinned:!!c.pinned}))
+  }));
   const sig=JSON.stringify(posts);if(sig===snapSig)return;snapSig=sig;
   hqPost({action:"mg_snapshot_put",snapshot:{at:Date.now(),posts}}).catch(()=>{});
 }
 async function pollHQ(){
-  if(hqBusy||document.hidden||state.activeUser!=="lizzy")return; // only Lizzy's side consumes HQ commands
+  if(hqBusy||!WORKER)return;
   hqBusy=true;
   try{
     const d=await (await fetch(WORKER+"?action=mg_queue",{cache:"no-store"})).json();
@@ -1711,7 +1719,11 @@ async function pollHQ(){
     pushSnapshot();
   }catch{}finally{hqBusy=false}
 }
-function startHQ(){setInterval(pollHQ,10000);pollHQ()}
+function startHQ(){
+  setInterval(pollHQ,10000);pollHQ();
+  window.addEventListener("focus",()=>pollHQ());
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollHQ()});
+}
 
 async function seedPresidentIfNeeded(){
   // existing installs already ran the community seed, so The President gets his own one-time seed
@@ -2182,8 +2194,8 @@ async function ensureInfluencerWeek(){
   state.influencer.history=(state.influencer.history||[]).slice(0,40);
   await persistInfluencer();
 }
-const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBV1";
-const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsV2";
+const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBTESTV1";
+const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsTESTV2";
 function localBankRead(key,fallback){
   try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}
 }
@@ -2848,8 +2860,8 @@ function startBotPostCleanup(){
     }
     await normalizeLizzyFollowersIfNeeded();
     await applyLizzyInactivityDecay(Date.now(),true);
-    state.activeUser=await Store.getMeta("active-user",CONFIG.me);
-    if(!CONFIG.users[state.activeUser])state.activeUser=CONFIG.me;
+    state.activeUser="lizzy";
+    try{await Store.setMeta("active-user","lizzy")}catch{}
     const savedSeen=await Store.getMeta("seen-stories:"+state.activeUser,[]);
     state.seenStories=new Set(savedSeen);
     state.notifs=await Store.getMeta("notifs",[]);

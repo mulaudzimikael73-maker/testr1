@@ -1,0 +1,32 @@
+LIZZYOS TEST SITE — FEATURES 3, 4, 5, 6
+
+This package is for testr1, not the live V3 site.
+
+UPLOAD/REPLACE:
+- index.html
+- internet.js
+- style.css
+- mizzygram.js
+- mizzygram.html
+- market-entertainment.js
+- test-site-config.js
+- assets/market/logos/ (21 files)
+
+The included cloudflare-worker-test.js is the same isolated TEST Worker used by MickyHQ Test Lab. Deploy that to a separate Cloudflare Worker and bind KV as LIZZY_TEST.
+
+FIRST OPEN:
+The testr site will show a TEST SITE setup overlay. Enter the same test Worker URL used in MickyHQ Test Lab. It is stored only for the test site/browser.
+
+ISOLATION:
+- No live Worker URL fallback
+- Test-only Bank of Micky localStorage keys
+- Test-only stock market/local entertainment keys
+- Test-only entertainment IndexedDB
+- Test-only MizzyGram IndexedDB
+- Worker KV keys are prefixed mickyhq-test:
+
+Features included:
+3. Fictional stock market
+4. MickyHQ stock controls
+5. 21 cropped company logos
+6. Theatre / Opera / Exclusive Song / Live Show ticket + media delivery system
