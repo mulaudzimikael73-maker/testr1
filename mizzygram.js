@@ -986,7 +986,7 @@ const state={
   replyTo:null,           // {id,username} of the comment being replied to
   seenStories:new Set(),  // story ids the active user has already opened
   exploreQuery:"",        // current text in the Explore search box
-  hashtag:"",notifs:[],notifFilter:"all",notifHi:new Set(),saved:{},rewards:{},trendDone:[],savedCol:"",storyDraft:null,booting:false,news:[],lastEvent:0              // tag currently being viewed on the #hashtag page
+  hashtag:"",notifs:[],notifFilter:"all",notifHi:new Set(),saved:{},rewards:{},trendDone:[],savedCol:"",storyDraft:null,booting:false,news:[],lastEvent:0,socialGrowth:{}              // tag currently being viewed on the #hashtag page
 };
 const VIEWS=["home","explore","post","notifications","profile","hashtag","saved","news","achievements"];
 const userOf=id=>CONFIG.users[id]||{username:"unknown",name:"Unknown",avatar:""};
@@ -995,11 +995,14 @@ const reactionOf=id=>CONFIG.reactions.find(r=>r.id===id);
 const otherHuman=id=>CONFIG.humans.find(h=>h!==id);
 
 /* ---------- follow graph: { userId: Set(userIds they follow) } ---------- */
-function enrichBotFollowGraph(g){
+function enrichBotFollowGraph(g,respectExisting=false){
   const botIds=Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id);
   for(const id of botIds){
     g[id]=g[id]||new Set();
-    g[id].add("lizzy");g[id].add("mikael");
+    if(!respectExisting){
+      if((socialHash("seed-lizzy:"+id)%100)<58)g[id].add("lizzy");
+      if((socialHash("seed-mikael:"+id)%100)<34)g[id].add("mikael");
+    }
     const wanted=6+(socialHash(id+":peers")%11);
     for(let i=0;i<wanted;i++){
       const target=botIds[socialHash(id+":"+i)%botIds.length];
@@ -1019,7 +1022,7 @@ let followGraph=followGraphDefault();
 const isFollowing=(a,b)=>!!(followGraph[a]&&followGraph[a].has(b));
 const followingOf=id=>[...(followGraph[id]||[])];
 const followersOf=id=>Object.keys(CONFIG.users).filter(u=>followGraph[u]&&followGraph[u].has(id));
-const followerCountFor=id=>(CONFIG.users[id]?.followerBase||0)+followersOf(id).length;
+const followerCountFor=id=>((CONFIG.users[id]?.followerBase||0)+(state.socialGrowth?.[id]?.extraFollowers||0))+followersOf(id).length;
 const followingCountFor=id=>(CONFIG.users[id]?.followingBase||0)+followingOf(id).length;
 async function saveFollowGraph(){
   const plain={};for(const k in followGraph)plain[k]=[...followGraph[k]];
@@ -2020,6 +2023,85 @@ function storiesBar(){
 /* =====================================================================
    Monetise Account + Bank of Micky
    ===================================================================== */
+const SOCIAL_GROWTH_KEY="mizzygram-social-growth-v1";
+const dayMs=864e5,weekMs=7*dayMs;
+function socialGrowthProfile(id){
+  state.socialGrowth=state.socialGrowth||{};
+  if(!state.socialGrowth[id])state.socialGrowth[id]={extraFollowers:id==="lizzy"?4200:0,burstCount:0,lastBurstAt:0,lastInactiveAuditAt:0,lastPostAt:0};
+  return state.socialGrowth[id];
+}
+function botIdsList(){return Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id)}
+function randInt(min,max){return min+Math.floor(Math.random()*(max-min+1))}
+async function persistSocialGrowth(){try{await Store.setMeta(SOCIAL_GROWTH_KEY,state.socialGrowth||{})}catch{}}
+function recentPostsBy(userId,days,now=Date.now()){const cutoff=now-days*dayMs;return state.posts.filter(p=>p.userId===userId&&p.createdAt>=cutoff)}
+async function normalizeLizzyFollowersIfNeeded(){
+  if(await Store.getMeta("lizzy-followers-normalized-v1",false))return;
+  const bots=botIdsList();
+  const current=bots.filter(id=>followGraph[id]&&followGraph[id].has("lizzy"));
+  if(current.length>=Math.floor(bots.length*0.9)){
+    for(const id of current){if((socialHash("seed-lizzy:"+id)%100)>=58)followGraph[id].delete("lizzy")}
+    await saveFollowGraph();
+  }
+  await Store.setMeta("lizzy-followers-normalized-v1",true);
+}
+async function adjustLizzyBotFollowers(direction,level="normal"){
+  const bots=shuffle(botIdsList());
+  const n=direction>0?(level==="surge"?randInt(3,6):level==="influencer"?randInt(2,4):randInt(1,3)):randInt(1,3);
+  if(direction>0){
+    const pool=bots.filter(id=>followGraph[id]&&!followGraph[id].has("lizzy"));
+    pool.slice(0,n).forEach(id=>followGraph[id].add("lizzy"));
+  }else{
+    const pool=bots.filter(id=>followGraph[id]&&followGraph[id].has("lizzy")&&id!=="thedailygobshite"&&id!=="bankofmicky");
+    pool.slice(0,n).forEach(id=>followGraph[id].delete("lizzy"));
+  }
+  await saveFollowGraph();
+}
+async function applyLizzyInactivityDecay(now=Date.now(),quiet=true){
+  const s=socialGrowthProfile("lizzy");
+  const lastPostAt=Math.max(s.lastPostAt||0,...state.posts.filter(p=>p.userId==="lizzy").map(p=>p.createdAt),0);
+  if(!lastPostAt){s.lastInactiveAuditAt=now;await persistSocialGrowth();return 0}
+  const anchor=Math.max(lastPostAt,s.lastInactiveAuditAt||lastPostAt);
+  if(now-anchor<weekMs)return 0;
+  const weeks=Math.floor((now-anchor)/weekMs); if(weeks<=0)return 0;
+  let totalLoss=0;
+  for(let i=0;i<weeks;i++) totalLoss+=randInt(180,720)+(i*randInt(120,380));
+  totalLoss=Math.min(totalLoss,Math.max(0,Math.round((s.extraFollowers||0)*0.18)));
+  if(totalLoss>0){
+    s.extraFollowers=Math.max(0,Math.round((s.extraFollowers||0)-totalLoss));
+    s.lastInactiveAuditAt=anchor+weeks*weekMs;
+    await adjustLizzyBotFollowers(-1,"loss");
+    await persistSocialGrowth();
+    if(!quiet)toast(`📉 Inactivity cost Lizzy ${formatCount(totalLoss)} followers.`);
+  }
+  return totalLoss;
+}
+async function handleLizzyFollowerGrowth(post,campaignResult){
+  if(post.userId!=="lizzy")return null;
+  const s=socialGrowthProfile("lizzy"),now=post.createdAt||Date.now();
+  const influencerBoost=campaignResult?.paid?randInt(480,1400):(String(post.caption||"").includes("#")?randInt(140,420):0);
+  const naturalGain=randInt(90,380)+influencerBoost;
+  s.extraFollowers=Math.max(0,Math.round((s.extraFollowers||0)+naturalGain));
+  s.lastPostAt=now;
+  s.lastInactiveAuditAt=Math.max(s.lastInactiveAuditAt||0,now);
+  await adjustLizzyBotFollowers(1,campaignResult?.paid?"influencer":"normal");
+  const postsThisWeek=recentPostsBy("lizzy",7,now).length;
+  let surgeGain=0;
+  if(postsThisWeek>=3&&(!s.lastBurstAt||now-s.lastBurstAt>=6*dayMs)){
+    s.burstCount=(s.burstCount||0)+1;
+    surgeGain=12000*s.burstCount;
+    s.extraFollowers=Math.round((s.extraFollowers||0)+surgeGain);
+    s.lastBurstAt=now;
+    await adjustLizzyBotFollowers(1,"surge");
+  }
+  await persistSocialGrowth();
+  const totalGain=naturalGain+surgeGain;
+  toast(surgeGain?`📈 Lizzy is growing fast: +${formatCount(totalGain)} followers.`:`✨ Lizzy gained ${formatCount(totalGain)} followers.`);
+  return totalGain;
+}
+function startFollowerGrowthAudits(){
+  setInterval(()=>{if(document.hidden)return;applyLizzyInactivityDecay(Date.now(),true).then(loss=>{if(loss&&state.view==="profile"&&(!state.profileUser||state.profileUser==="lizzy"))render(false)})},60*60000);
+}
+
 const INFLUENCER_CAMPAIGNS=[
   {id:"potato",title:"Premium Potato Partnership",brand:"Potato Industries",kind:"photo",payout:35,bonus:"+ one potato",hashtag:"#PotatoPartnerLizzy",instructions:"Post a serious sponsored photo holding one potato like it has completely transformed your lifestyle."},
   {id:"tapwater",title:"Tap Water Takeover",brand:"Municipal Hydration Co.",kind:"video",payout:22,bonus:"+ hydration exposure",hashtag:"#TapWaterTakeover",instructions:"Film a dramatic brand-deal video for ordinary tap water. Explain why this particular glass is clearly premium."},
@@ -2310,6 +2392,7 @@ function bindCompose(){
       await Store.savePost(post);
       state.posts.push(post);newestFirst();
       const campaignResult=await checkInfluencerPost(post);
+      await handleLizzyFollowerGrowth(post,campaignResult);
       award(state.activeUser,"first_post");
       pushNews(isVideo?"🎬":"📸","NEW POST",userOf(state.activeUser).name+` posts a new ${isVideo?"video":"photo"}. The app is "coping".`,post.id);
       if(state.pending.preview)URL.revokeObjectURL(state.pending.preview);
@@ -2761,8 +2844,10 @@ function startBotPostCleanup(){
     if(savedGraph){
       followGraph=followGraphDefault();
       for(const k in savedGraph)followGraph[k]=new Set(savedGraph[k]);
-      enrichBotFollowGraph(followGraph);
+      enrichBotFollowGraph(followGraph,true);
     }
+    await normalizeLizzyFollowersIfNeeded();
+    await applyLizzyInactivityDecay(Date.now(),true);
     state.activeUser=await Store.getMeta("active-user",CONFIG.me);
     if(!CONFIG.users[state.activeUser])state.activeUser=CONFIG.me;
     const savedSeen=await Store.getMeta("seen-stories:"+state.activeUser,[]);
@@ -2771,6 +2856,7 @@ function startBotPostCleanup(){
     state.influencer={weekKey:"",active:[],history:[],earnings:0,...(await Store.getMeta("influencer-state-v1",{}))};
     state.influencer.active=Array.isArray(state.influencer.active)?state.influencer.active:[];
     state.influencer.history=Array.isArray(state.influencer.history)?state.influencer.history:[];
+    state.socialGrowth={lizzy:{extraFollowers:4200,burstCount:0,lastBurstAt:0,lastInactiveAuditAt:0,lastPostAt:0},...(await Store.getMeta(SOCIAL_GROWTH_KEY,{}))};
     await ensureInfluencerWeek();
     await migrateLegacyMizzyBankIfNeeded();
     state.rewards=await Store.getMeta("rewards",{});
