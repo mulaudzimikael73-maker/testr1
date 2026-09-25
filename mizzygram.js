@@ -2086,6 +2086,20 @@ function weeklyCampaignIds(key){
   return out;
 }
 function persistInfluencer(){return Store.setMeta("influencer-state-v1",state.influencer).catch(()=>{})}
+async function ensureInfluencerWeek(){
+  const key=influencerWeekKey();
+  if(state.influencer.weekKey===key&&Array.isArray(state.influencer.active)&&state.influencer.active.length===4)return;
+  if(Array.isArray(state.influencer.active)&&state.influencer.active.length){
+    const expiredAt=Date.now();
+    for(const a of state.influencer.active){
+      state.influencer.history.unshift({...a,status:a.status==="paid"?"paid":"expired",expiredAt});
+    }
+  }
+  state.influencer.weekKey=key;
+  state.influencer.active=weeklyCampaignIds(key).map(id=>({campaignId:id,status:"available",assignedAt:Date.now(),paidAt:null,postId:null}));
+  state.influencer.history=(state.influencer.history||[]).slice(0,40);
+  await persistInfluencer();
+}
 const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBV1";
 const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsV2";
 function localBankRead(key,fallback){
