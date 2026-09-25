@@ -479,3 +479,53 @@ button.uname:hover{text-decoration:underline}
 .photo.classified>video{filter:blur(22px);transform:scale(1.1)}
 .tile.blur video{filter:blur(12px)}
 .colCover,.memCard{position:relative}
+
+/* =====================================================================
+   Monetise Account + Bank of Micky
+   ===================================================================== */
+.monetise{margin:14px 14px 4px;padding:16px;border:1px solid #ead7e4;border-radius:22px;background:linear-gradient(150deg,#fff9fc 0%,#fff 48%,#f8f1ff 100%);box-shadow:0 8px 28px rgba(59,24,55,.06)}
+.monetiseHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.monetiseHead>div>span,.bankMiniHead>div>span,.bankHero>span{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--pink)}
+.monetiseHead h3,.bankMiniHead h3{margin:2px 0 0;font:700 22px/1.1 var(--display)}
+.monetiseHead strong{display:grid;text-align:right;font-size:20px;color:#198754}
+.monetiseHead strong small{margin-top:1px;font-size:10px;font-weight:700;color:var(--soft)}
+.monetiseIntro{margin:0 0 14px;color:var(--soft);font-size:12px;line-height:1.45}
+.campaignGrid{display:grid;gap:10px}
+.campaignCard{padding:13px 14px;border:1px solid var(--line);border-radius:17px;background:#fff}
+.campaignCard.paid{border-color:#a7ddbd;background:#f1fff6}
+.campaignCard.expired{opacity:.65;background:#f7f7f8}
+.campaignTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.campaignTop>b{font-size:18px;color:#168348}
+.campaignType{padding:4px 7px;border-radius:999px;background:#f3e7f7;color:#7a35a0;font-size:9px;font-weight:900;letter-spacing:.05em}
+.campaignCard h4{margin:7px 0 1px;font-size:15px}
+.campaignCard>small{color:var(--soft);font-size:11px}
+.campaignCard p{margin:8px 0;font-size:12px;line-height:1.42}
+.campaignHash{display:inline-block;padding:6px 8px;border:1px dashed #d8a5c4;border-radius:9px;background:#fff5fa;color:#9b1e63;font:800 11px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+.campaignCard em{display:block;margin-top:6px;color:#826b79;font-size:10px}
+.campaignStatus{margin-top:9px;font-size:10px;font-weight:900;letter-spacing:.045em;color:#8b5f75}
+.campaignCard.paid .campaignStatus{color:#168348}
+.campaignHistory{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-size:12px}
+.campaignHistory summary{cursor:pointer;font-weight:800;color:var(--soft)}
+.campaignHistory>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f0e8ed}
+.campaignHistory>div b{white-space:nowrap}
+.bankMini{margin:12px 14px 18px;padding:16px;border-radius:22px;background:linear-gradient(145deg,#062f28,#021d19);color:#fff;box-shadow:0 10px 28px rgba(2,29,25,.18)}
+.bankMiniHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bankMiniHead>div>span{color:#d9bb77}
+.bankMiniHead h3{font-family:Georgia,serif;font-size:30px;color:#f5dfaa}
+.bankMiniHead small{display:block;margin-top:3px;color:#b6c7c2;font-size:11px}
+.bankMini .btn{border-color:#d9bb7755;color:#f5dfaa;background:#ffffff0d}
+.miniTx{margin-top:13px;border-top:1px solid #ffffff1a}
+.miniTx>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #ffffff12;font-size:11px}
+.miniTx>div span{color:#d5dfdc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.credit{color:#38b873!important}.debit{color:#df6b72!important}
+.bankEmpty{margin:12px 0 0;color:#aebebb;font-size:11px;line-height:1.45}.bankEmpty.big{margin:16px;padding:18px;border:1px dashed var(--line);border-radius:16px;color:var(--soft);text-align:center}
+.bankHero{margin:8px 16px 18px;padding:22px;border-radius:22px;background:linear-gradient(145deg,#052e27,#011a17);color:#fff;box-shadow:0 12px 34px rgba(2,29,25,.18)}
+.bankHero>span{display:block;color:#d9bb77}
+.bankHero>strong{display:block;margin:7px 0 4px;font:700 38px/1 Georgia,serif;color:#f4dfa9}
+.bankHero>small{color:#a8bbb6;font-size:11px}
+.bankTxList{margin:0 16px 28px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+.bankTx{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid var(--line)}
+.bankTx:last-child{border-bottom:0}.txIcon{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#f7f1f5;font-size:16px}
+.bankTx>div{min-width:0}.bankTx>div b{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bankTx>div small{display:block;margin-top:2px;color:var(--soft);font-size:10px}
+.bankTx>strong{font-size:13px;white-space:nowrap}.bankProfileLink{padding:0 14px 14px}
+@media(max-width:420px){.monetiseHead{align-items:center}.campaignTop>b{font-size:16px}.bankHero>strong{font-size:34px}}

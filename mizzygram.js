@@ -1097,6 +1097,19 @@ function prepareVideo(file){
     v.src=preview;
   });
 }
+function dataUrlToBlob(dataUrl){
+  const m=String(dataUrl||"").match(/^data:([^;,]+)(;base64)?,(.*)$/s);
+  if(!m)return null;
+  const mime=m[1]||"application/octet-stream",body=m[3]||"";
+  try{
+    if(m[2]){
+      const bin=atob(body),arr=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+      return new Blob([arr],{type:mime});
+    }
+    return new Blob([decodeURIComponent(body)],{type:mime});
+  }catch{return null}
+}
 const videoObjectUrls=new Map();
 function videoSrc(p){
   if(!p||!p.video)return "";
@@ -1294,8 +1307,8 @@ function bindExplore(){
 /* =====================================================================
    Phase 5 — Notifications, Rewards, Saved posts, Sharing, Story tools
    ===================================================================== */
-const NOTIF_FILTERS=[["all","All"],["like","❤️ Likes"],["comment","💬 Comments"],["follow","👥 Followers"],["mikael","💗 Mikael"],["trend","🔥 Trending"],["reward","🎁 Rewards"],["event","🚨 Events"],["share","📤 Shared"]];
-const CATS={like:"❤️",comment:"💬",follow:"👥",mikael:"💗",trend:"🔥",reward:"🎁",share:"📤",event:"🚨"};
+const NOTIF_FILTERS=[["all","All"],["like","❤️ Likes"],["comment","💬 Comments"],["follow","👥 Followers"],["mikael","💗 Mikael"],["bank","🏦 Bank"],["trend","🔥 Trending"],["reward","🎁 Rewards"],["event","🚨 Events"],["share","📤 Shared"]];
+const CATS={like:"❤️",comment:"💬",follow:"👥",mikael:"💗",bank:"🏦",trend:"🔥",reward:"🎁",share:"📤",event:"🚨"};
 const REWARDS={
   welcome:["👋","Welcome to MizzyGram","You're all set. Post, save, share and collect."],
   first_post:["🌱","First Post","You posted your first photo."],
@@ -1355,6 +1368,7 @@ function notifText(n){
     case"follow":return`${nm} started following you.`;
     case"share":return`${nm} sent you a post.${q}`;
     case"event":return esc(n.text);
+    case"bank":return esc(n.text);
     case"newpost":return`${nm} posted a new photo.${q}`;
     case"pin":return`${nm} pinned a comment on your post.`;
     case"trend":return"Your post is <b>trending</b> on MizzyGram!";
@@ -1649,10 +1663,18 @@ async function applyCommand(c){
       const u=CONFIG.users[c.account];if(!u)return;
       const tags=String(c.tags||"").split(/[\s,]+/).filter(Boolean).map(t=>"#"+t.replace(/^#+/,"")).join(" ");
       const caption=[String(c.caption||"").slice(0,CONFIG.maxCaption),tags].filter(Boolean).join(" ").trim(),t=u.tile||["💭","#ff8fce","#7a35dc"];
-      const post={id:uid(),userId:u.id,image:c.image||cardImage(caption||"…",t[0],t[1],t[2]),caption,mood:c.mood||"",audience:c.audience==="lizzy"?"lizzy":"everyone",createdAt:Date.now(),reactions:{},comments:[],communityScheduled:c.audience==="lizzy"};
+      const isVideo=c.mediaType==="video";
+      let post;
+      if(isVideo){
+        const duration=Number(c.duration||0),blob=dataUrlToBlob(c.video);
+        if(c.videoMissing||!blob||!/^video\//.test(blob.type)||!Number.isFinite(duration)||duration<=0||duration>CONFIG.maxVideoSeconds+.05)return;
+        post={id:uid(),userId:u.id,mediaType:"video",video:blob,videoType:c.videoType||blob.type||"video/mp4",duration,caption,mood:c.mood||"",audience:c.audience==="lizzy"?"lizzy":"everyone",createdAt:Date.now(),reactions:{},comments:[],communityScheduled:c.audience==="lizzy"};
+      }else{
+        post={id:uid(),userId:u.id,mediaType:"photo",image:c.image||cardImage(caption||"…",t[0],t[1],t[2]),caption,mood:c.mood||"",audience:c.audience==="lizzy"?"lizzy":"everyone",createdAt:Date.now(),reactions:{},comments:[],communityScheduled:c.audience==="lizzy"};
+      }
       state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
       notify({to:"lizzy",from:u.id,kind:"newpost",postId:post.id,text:post.audience==="lizzy"?"Just for you 💗":""});
-      if(u.bot)pushNews("📰","@"+u.username.toUpperCase(),caption.slice(0,90),post.id);
+      if(u.bot)pushNews(isVideo?"🎬":"📰","@"+u.username.toUpperCase(),caption.slice(0,90),post.id);
       if(post.audience!=="lizzy")scheduleCommunityReactions(post);
       break}
     case"like":case"react":
@@ -1991,6 +2013,135 @@ function storiesBar(){
   return `<div class="stories">${ring(me,"Your story",`<button class="storyAdd" data-st-add aria-label="Add to your story">+</button>`)}${order.map(id=>{const u=userOf(id);return ring(id,esc(u.name)+verifiedMark(u))}).join("")}</div>`;
 }
 
+/* =====================================================================
+   Monetise Account + Bank of Micky
+   ===================================================================== */
+const INFLUENCER_CAMPAIGNS=[
+  {id:"potato",title:"Premium Potato Partnership",brand:"Potato Industries",kind:"photo",payout:35,bonus:"+ one potato",hashtag:"#PotatoPartnerLizzy",instructions:"Post a serious sponsored photo holding one potato like it has completely transformed your lifestyle."},
+  {id:"tapwater",title:"Tap Water Takeover",brand:"Municipal Hydration Co.",kind:"video",payout:22,bonus:"+ hydration exposure",hashtag:"#TapWaterTakeover",instructions:"Film a dramatic brand-deal video for ordinary tap water. Explain why this particular glass is clearly premium."},
+  {id:"spoon",title:"Luxury Spoon Campaign",brand:"Global Spoon Luxury Group",kind:"photo",payout:89,bonus:"",hashtag:"#LuxurySpoonEra",instructions:"Photograph a random spoon like it costs R4,999. The caption must treat it as an elite status symbol."},
+  {id:"toiletpaper",title:"Competitor Toilet Paper Apology",brand:"Soft Decisions Paper Co.",kind:"either",payout:47,bonus:"+ forgiveness pending",hashtag:"#ToiletPaperApology",instructions:"Post a public apology after being 'caught' using a competitor's toilet paper. Be unnecessarily emotional."},
+  {id:"air",title:"Premium Air Ambassador",brand:"Premium Air Ltd",kind:"video",payout:18,bonus:"+ oxygen",hashtag:"#PremiumAirPartner",instructions:"Advertise air. Explain with total confidence why sponsored air is superior to the free version."},
+  {id:"ice",title:"Luxury Ice Cubes",brand:"Micky Premium Ice Cubes",kind:"photo",payout:64,bonus:"+ 2 cubes",hashtag:"#MickysLuxuryIce",instructions:"Take a glamorous product photo of ordinary ice cubes and present them as an exclusive luxury drop."},
+  {id:"mystery",title:"Mystery Product Review",brand:"Unknown Brand Holdings",kind:"video",payout:53,bonus:"",hashtag:"#MysteryProductReview",instructions:"Review a product enthusiastically for the whole video without ever revealing what the product actually is."},
+  {id:"decisions",title:"Questionable Decisions Energy",brand:"Questionable Decisions Beverages",kind:"video",payout:110,bonus:"+ one bad idea",hashtag:"#QuestionableDecisionsAd",instructions:"Create an intense energy-drink advert for Questionable Decisions. The product should sound actively irresponsible."},
+  {id:"leftsock",title:"Left Sock Collection",brand:"Left Foot Luxury",kind:"photo",payout:29,bonus:"+ right sock sold separately",hashtag:"#LeftSockLuxury",instructions:"Promote a fashion collection that sells left socks only. Treat matching pairs as outdated."},
+  {id:"candle",title:"Financial Stability Candle",brand:"Financial Stability Candles",kind:"photo",payout:76,bonus:"+ false reassurance",hashtag:"#FinancialStabilityCandle",instructions:"Post an elegant candle advert. The candle smells like absolutely nothing but must promise financial peace."},
+  {id:"bread",title:"Luxury Bread Deal",brand:"Luxury Bread & Co.",kind:"photo",payout:42,bonus:"+ one slice",hashtag:"#BreadBrandBreakthrough",instructions:"Hold bread like you have just signed the biggest endorsement contract of your career."},
+  {id:"traffic",title:"Bottled Johannesburg Traffic",brand:"Traffic Bottle Beverages",kind:"either",payout:58,bonus:"+ 45 minutes delay",hashtag:"#JoburgTrafficBottled",instructions:"Promote bottled Johannesburg traffic as a premium lifestyle experience nobody asked for."},
+  {id:"unboxing",title:"Infinite Unboxing",brand:"Box Holdings Ltd",kind:"video",payout:95,bonus:"+ another box",hashtag:"#BoxInsideABox",instructions:"Film an unboxing where the box contains another box, then another. The final reveal should be deeply disappointing."},
+  {id:"microwave",title:"Microwave Muse",brand:"Microwave Lifestyle Group",kind:"photo",payout:31,bonus:"",hashtag:"#MicrowaveMuse",instructions:"Take a glamorous sponsored photo staring dramatically at a microwave like it is your creative inspiration."},
+  {id:"kitchen",title:"Kitchen Doing Nothing Ambassador",brand:"Standing in the Kitchen Doing Nothing™",kind:"either",payout:67,bonus:"+ zero productivity",hashtag:"#KitchenDoingNothing",instructions:"Become the official ambassador for standing in the kitchen doing absolutely nothing. Demonstrate the lifestyle."},
+  {id:"redflagr",title:"RedFlagr Dating App",brand:"RedFlagr Technologies",kind:"video",payout:120,bonus:"+ 3 warning signs",hashtag:"#RedFlagrPartner",instructions:"Advertise a dating app designed to identify red flags and then inexplicably match you with them anyway."},
+  {id:"loadshedding",title:"Eau de Loadshedding",brand:"Eau de Loadshedding Fragrance House",kind:"photo",payout:145,bonus:"+ scent of uncertainty",hashtag:"#EauDeLoadshedding",instructions:"Create a luxury fragrance advert for Eau de Loadshedding. The scent should be mysterious because nobody can see it in the dark."},
+  {id:"rock",title:"Luxury Rock Partnership",brand:"Luxury Rock Corporation",kind:"photo",payout:26,bonus:"+ ordinary geological value",hashtag:"#LuxuryRockPartner",instructions:"Photograph a random rock as if it is a limited-edition luxury product with a waiting list."},
+  {id:"bluetoothwater",title:"Bluetooth Water",brand:"Bluetooth Water Co.",kind:"video",payout:88,bonus:"+ pairing unsuccessful",hashtag:"#BluetoothWaterPartner",instructions:"Demonstrate Bluetooth Water. Refuse to explain what it connects to or why water needed Bluetooth."},
+  {id:"skincare",title:"Skincare Without Skincare",brand:"Nothing Beauty Labs",kind:"video",payout:73,bonus:"",hashtag:"#SkincareWithoutSkincare",instructions:"Film a serious skincare routine while using absolutely no skincare products whatsoever."},
+  {id:"taxflakes",title:"Tax Fraud Flakes",brand:"Tax Fraud Flakes Foods",kind:"photo",payout:99,bonus:"+ accounting concern",hashtag:"#TaxFraudFlakesPartner",instructions:"Create a cheerful breakfast sponsorship for Tax Fraud Flakes. Do not explain the name."},
+  {id:"thoughts",title:"Pre-Owned Thoughts",brand:"Pre-Owned Thoughts Limited",kind:"either",payout:41,bonus:"+ one previous owner",hashtag:"#PreOwnedThoughts",instructions:"Advertise second-hand thoughts as an eco-friendly alternative to thinking for yourself."},
+  {id:"noapp",title:"The No App",brand:"No Technologies",kind:"video",payout:37,bonus:"+ no",hashtag:"#JustSayNoApp",instructions:"Promote an app whose entire functionality is opening and saying 'No.' Present it as revolutionary technology."},
+  {id:"couch",title:"Professional Couch Sitting",brand:"Professional Couch Sitting Co.",kind:"photo",payout:52,bonus:"+ certification pending",hashtag:"#CouchSittingPro",instructions:"Post proof of your elite couch-sitting technique and explain why amateurs are doing it wrong."},
+  {id:"nightsunglasses",title:"Indoor Night Sunglasses",brand:"Indoor Night Sunglasses Inc.",kind:"photo",payout:81,bonus:"+ reduced visibility",hashtag:"#NightSunglassesPartner",instructions:"Model sunglasses indoors at night and insist this is the only correct time to wear them."},
+  {id:"naps",title:"Department of Naps",brand:"Department of Naps PLC",kind:"either",payout:69,bonus:"+ exposure after waking",hashtag:"#DepartmentOfNapsPartner",instructions:"Promote an official government-style nap programme. Your content should strongly discourage productivity."},
+  {id:"invisiblebag",title:"Invisible Handbag Launch",brand:"Invisible Handbag Holdings",kind:"photo",payout:132,bonus:"+ bag not included",hashtag:"#InvisibleHandbagAd",instructions:"Pose with an invisible handbag and act personally offended if anyone claims they cannot see it."},
+  {id:"eventually",title:"Eventually Airways",brand:"Eventually Airways",kind:"video",payout:156,bonus:"+ arrival eventually",hashtag:"#EventuallyAirwaysPartner",instructions:"Film a travel advert for an airline that promises you will probably reach your destination at some stage."},
+  {id:"plasticbag",title:"Designer Plastic Bag",brand:"Designer Plastic Bags SA",kind:"photo",payout:44,bonus:"+ handles",hashtag:"#DesignerPlasticBag",instructions:"Style an ordinary plastic shopping bag like the season's most exclusive designer accessory."},
+  {id:"waterchef",title:"Cooking Show: Water",brand:"Executive Water Kitchen",kind:"video",payout:33,bonus:"+ recipe included",hashtag:"#WaterChefCampaign",instructions:"Film a cooking sponsorship where the finished dish is simply a glass of water."},
+  {id:"bedroomresort",title:"Bedroom Luxury Resort",brand:"Definitely A Resort Group",kind:"photo",payout:109,bonus:"+ late checkout denied",hashtag:"#BedroomResortPartner",instructions:"Advertise your bedroom as a five-star international resort. Room service remains unavailable."},
+  {id:"wifigum",title:"Wi-Fi Chewing Gum",brand:"Wi-Fi Gum Holdings",kind:"video",payout:57,bonus:"+ weak signal",hashtag:"#WifiGumPartner",instructions:"Review Wi-Fi flavoured chewing gum and report on the signal strength after every chew."},
+  {id:"cone",title:"Traffic Cone Business Partner",brand:"Cone Capital",kind:"photo",payout:48,bonus:"+ board seat",hashtag:"#TrafficConeCEO",instructions:"Introduce a random traffic cone as your new business partner and praise its leadership qualities."},
+  {id:"silence",title:"Premium Silence",brand:"The Department of Silence",kind:"video",payout:84,bonus:"+ 30 seconds silence",hashtag:"#PremiumSilencePartner",instructions:"Create an advert for premium silence. The video may be suspiciously quiet, but the sales pitch must be serious."},
+  {id:"disappointment",title:"Weekly Disappointment Subscription",brand:"Weekly Disappointment Services",kind:"either",payout:39,bonus:"+ disappointment guaranteed",hashtag:"#WeeklyDisappointment",instructions:"Sell a subscription that delivers one new disappointment every week. Make it sound like exceptional value."},
+  {id:"insurance",title:"Suspiciously Cheap Insurance",brand:"Suspiciously Cheap Insurance Group",kind:"video",payout:118,bonus:"+ terms probably apply",hashtag:"#CheapInsurancePartner",instructions:"Advertise insurance so cheap that the audience should immediately have questions about what is actually covered."},
+  {id:"fridge",title:"Fridge Workout",brand:"Fridge Fitness International",kind:"video",payout:46,bonus:"+ snack recovery",hashtag:"#FridgeWorkoutPartner",instructions:"Create a fitness sponsorship where the entire workout consists of walking to the fridge and back."},
+  {id:"alarm",title:"Unreliable Alarm Clock",brand:"Eventually Awake Technologies",kind:"either",payout:62,bonus:"+ punctuality not guaranteed",hashtag:"#RandomAlarmPartner",instructions:"Promote an alarm clock that rings whenever it personally feels the time is right."},
+  {id:"bankadvice",title:"Maybe Don't Buy That Bank",brand:"Absolutely Not Overdraft Finance",kind:"video",payout:101,bonus:"+ financial judgement",hashtag:"#DontBuyThatBank",instructions:"Promote a bank whose main financial service is looking at purchases and saying 'maybe don't buy that.'"},
+  {id:"watch",title:"Invisible Watch Campaign",brand:"Timeless Luxury",kind:"photo",payout:71,bonus:"+ time unavailable",hashtag:"#InvisibleWatchCampaign",instructions:"Create a luxury watch advert while very obviously not wearing a watch."},
+  {id:"grass",title:"Celebrity-Certified Grass",brand:"Celebrity-Certified Grass Ltd",kind:"photo",payout:28,bonus:"+ grass",hashtag:"#CelebrityGrassPartner",instructions:"Promote completely ordinary grass as celebrity-certified and therefore significantly more prestigious."},
+  {id:"door",title:"Sponsored Front Door Review",brand:"Door Review International",kind:"video",payout:36,bonus:"+ hinge access",hashtag:"#FrontDoorReview",instructions:"Give your own front door a full influencer product review including design, performance and opening ability."},
+  {id:"gossip",title:"VIP Gossip Club",brand:"Gossip Members Club",kind:"either",payout:93,bonus:"+ one rumour",hashtag:"#GossipClubPartner",instructions:"Advertise an exclusive members-only club where the only scheduled activity is gossiping."},
+  {id:"chocinsurance",title:"Chocolate Emergency Insurance",brand:"Emergency Chocolate Insurance",kind:"photo",payout:79,bonus:"+ emergency square",hashtag:"#ChocolateInsurancePartner",instructions:"Post a serious insurance campaign explaining the dangers of being caught without emergency chocolate."},
+  {id:"tuesday",title:"Global Ambassador for Tuesday",brand:"Tuesday Global",kind:"either",payout:125,bonus:"+ Wednesday excluded",hashtag:"#TuesdayAmbassador",instructions:"Announce that you have been appointed Global Ambassador for Tuesday. Explain your responsibilities with confidence."},
+  {id:"onechip",title:"One Chip Delivery",brand:"One Chip Delivery Group",kind:"video",payout:24,bonus:"+ one chip",hashtag:"#OneChipDelivery",instructions:"Advertise a delivery service that arrives at your home with exactly one chip per order."},
+  {id:"pillow",title:"Responsibility Avoidance Pillow",brand:"Responsibility Avoidance Pillow Co.",kind:"photo",payout:86,bonus:"+ obligations postponed",hashtag:"#ResponsibilityPillow",instructions:"Promote a premium pillow engineered specifically for avoiding responsibilities."},
+  {id:"paperclips",title:"Executive Paperclips",brand:"Micky's Executive Paperclips",kind:"photo",payout:54,bonus:"+ corporate synergy",hashtag:"#ExecutivePaperclipsPartner",instructions:"Create a high-powered corporate campaign for paperclips. Use phrases like 'leadership' and 'synergy' unnecessarily."},
+  {id:"toopowerful",title:"Product Too Powerful Apology",brand:"Overpowered Products Ltd",kind:"video",payout:138,bonus:"+ public safety notice",hashtag:"#TooPowerfulApology",instructions:"Film a brand apology announcing that the sponsored product has become too powerful for the general public."},
+  {id:"ultimate",title:"Ultimate Influencer Nonsense",brand:"MizzyGram Premium Campaigns",kind:"video",payout:195,bonus:"+ maximum exposure",hashtag:"#UltimateInfluencerNonsense",instructions:"Produce the most unnecessarily dramatic 30-second sponsored advert possible for a completely useless product and insist it changed your life."}
+];
+const campaignOf=id=>INFLUENCER_CAMPAIGNS.find(c=>c.id===id);
+const money=n=>{n=Number(n||0);return(n<0?"-R":"R")+Math.abs(n).toFixed(2).replace(/\.00$/,"")};
+function localDateKey(d=new Date()){return[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
+function influencerWeekKey(d=new Date()){
+  const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()),day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return localDateKey(x);
+}
+function orderedCampaigns(list,key){return[...list].sort((a,b)=>socialHash(key+":"+a.id)-socialHash(key+":"+b.id))}
+function weeklyCampaignIds(key){
+  const used=new Set(),out=[];
+  for(const kind of ["photo","video","either"]){const c=orderedCampaigns(INFLUENCER_CAMPAIGNS.filter(x=>x.kind===kind),key+kind).find(x=>!used.has(x.id));if(c){used.add(c.id);out.push(c.id)}}
+  const fourth=orderedCampaigns(INFLUENCER_CAMPAIGNS.filter(x=>!used.has(x.id)),key+":fourth")[0];if(fourth)out.push(fourth.id);
+  return out;
+}
+function persistInfluencer(){return Store.setMeta("influencer-state-v1",state.influencer).catch(()=>{})}
+function persistBank(){return Store.setMeta("bank-of-micky-v1",state.bank).catch(()=>{})}
+async function ensureInfluencerWeek(){
+  const key=influencerWeekKey();
+  if(state.influencer.weekKey===key&&state.influencer.active?.length===4)return;
+  if(state.influencer.active?.length){const expiredAt=Date.now();for(const a of state.influencer.active){state.influencer.history.unshift({...a,status:a.status==="paid"?"paid":"expired",expiredAt})}}
+  state.influencer.weekKey=key;
+  state.influencer.active=weeklyCampaignIds(key).map(id=>({campaignId:id,status:"available",assignedAt:Date.now(),paidAt:null,postId:null}));
+  state.influencer.history=(state.influencer.history||[]).slice(0,40);
+  await persistInfluencer();
+}
+async function bankTransaction(amount,description,kind="general",meta={}){
+  amount=Number(amount)||0;if(!amount)return null;
+  if(amount<0&&state.bank.balance+amount<0)return null;
+  state.bank.balance=Math.round((Number(state.bank.balance||0)+amount)*100)/100;
+  const tx={id:uid(),at:Date.now(),amount,description,kind,balanceAfter:state.bank.balance,...meta};
+  state.bank.transactions.unshift(tx);state.bank.transactions=state.bank.transactions.slice(0,200);
+  await persistBank();
+  if(!state.booting)notify({to:"lizzy",from:"bankofmicky",kind:"bank",text:(amount>0?"💸 ":"💳 ")+description+" "+(amount>0?"+":"")+money(amount),key:"bank:"+tx.id});
+  return tx;
+}
+const BANK_RANDOM_CREDITS=[
+  [10,"Good Behaviour Bonus"],[25,"Main Character Allowance"],[7,"Looking Fabulous Credit"],[18,"Compensation for Waking Up Early"],[30,"Mikael Appreciation Dividend"],[12,"We Found Money Behind the Sofa"]
+];
+const BANK_RANDOM_CHARGES=[
+  [12,"Emotional Damage Fee"],[8,"Administrative Nonsense"],[22,"Chocolate Emergency"],[6.5,"Existing While Expensive"],[15,"Premium Gossip Subscription"],[3.99,"Breathing Fee"],[9,"You Know What You Did Fee"]
+];
+async function bankRandomDailyIfNeeded(){
+  const day=localDateKey(),key="bank-random-check:"+day;if(await Store.getMeta(key,false))return;await Store.setMeta(key,true);
+  const roll=socialHash("bank:"+day)%100;
+  if(roll<28){const [amt,desc]=BANK_RANDOM_CREDITS[socialHash(day+":credit")%BANK_RANDOM_CREDITS.length];await bankTransaction(amt,desc,"bonus")}
+  else if(roll<48&&state.bank.balance>0){const choices=BANK_RANDOM_CHARGES.filter(([amt])=>amt<=state.bank.balance);if(choices.length){const [amt,desc]=choices[socialHash(day+":charge")%choices.length];await bankTransaction(-amt,desc,"charge")}}
+}
+function campaignKindLabel(k){return k==="photo"?"📸 PHOTO":k==="video"?"🎬 VIDEO":"📸/🎬 PHOTO OR VIDEO"}
+function campaignCard(a){
+  const c=campaignOf(a.campaignId);if(!c)return"";const done=a.status==="paid",expired=a.status==="expired";
+  return `<article class="campaignCard ${done?"paid":expired?"expired":""}"><div class="campaignTop"><span class="campaignType">${campaignKindLabel(c.kind)}</span><b>${money(c.payout)}</b></div><h4>${esc(c.title)}</h4><small>${esc(c.brand)}</small><p>${esc(c.instructions)}</p><div class="campaignHash">${esc(c.hashtag)}</div>${c.bonus?`<em>${esc(c.bonus)}</em>`:""}<div class="campaignStatus">${done?"✅ COMPLETED · PAYMENT SENT":expired?"⌛ EXPIRED":"● AVAILABLE THIS WEEK"}</div></article>`;
+}
+function monetiseHTML(){
+  const active=state.influencer.active||[],history=(state.influencer.history||[]).slice(0,5);
+  return `<section class="monetise"><div class="monetiseHead"><div><span>CREATOR PROGRAMME</span><h3>Monetise Account</h3></div><strong>${money(state.influencer.earnings||0)}<small>Total earned</small></strong></div><p class="monetiseIntro">Complete any job by publishing the required photo/video with its exact campaign hashtag. Payment is automatic. New jobs arrive every Monday.</p><div class="campaignGrid">${active.map(campaignCard).join("")}</div>${history.length?`<details class="campaignHistory"><summary>Previous jobs</summary>${history.map(a=>{const c=campaignOf(a.campaignId);return c?`<div><span>${a.status==="paid"?"✅":"⌛"} ${esc(c.title)}</span><b>${a.status==="paid"?money(c.payout):"Expired"}</b></div>`:""}).join("")}</details>`:""}</section>`;
+}
+function bankMiniHTML(){
+  const recent=(state.bank.transactions||[]).slice(0,4);
+  return `<section class="bankMini"><div class="bankMiniHead"><div><span>BANK OF MICKY</span><h3>${money(state.bank.balance)}</h3><small>Available balance</small></div><a class="btn ghost sm" href="#bank">Transactions</a></div>${recent.length?`<div class="miniTx">${recent.map(t=>`<div><span>${esc(t.description)}</span><b class="${t.amount>=0?"credit":"debit"}">${t.amount>=0?"+":""}${money(t.amount)}</b></div>`).join("")}</div>`:`<p class="bankEmpty">No transactions yet. Complete an influencer job and the money lands here automatically.</p>`}</section>`;
+}
+async function checkInfluencerPost(post){
+  if(post.userId!=="lizzy"||!post.caption)return null;await ensureInfluencerWeek();
+  const tags=new Set((String(post.caption).match(/#[A-Za-z0-9_]+/g)||[]).map(x=>x.toLowerCase()));
+  const active=(state.influencer.active||[]).filter(a=>a.status==="available");
+  for(const a of active){
+    const c=campaignOf(a.campaignId);if(!c||!tags.has(c.hashtag.toLowerCase()))continue;
+    const ok=c.kind==="either"||c.kind===post.mediaType;
+    if(!ok){toast(`Campaign found — ${c.title} needs a ${c.kind} post.`);return{matched:true,paid:false}}
+    a.status="paid";a.paidAt=Date.now();a.postId=post.id;state.influencer.earnings=Math.round((Number(state.influencer.earnings||0)+c.payout)*100)/100;
+    await persistInfluencer();await bankTransaction(c.payout,`${c.brand} paid your ${c.title} campaign`,"influencer",{campaignId:c.id,postId:post.id});
+    toast(`💸 ${c.brand} paid you ${money(c.payout)}!`);return{matched:true,paid:true,campaign:c};
+  }
+  return null;
+}
+
 const renderers={
   home(){
     const bar=storiesBar()+homeExtras();
@@ -2044,6 +2195,10 @@ const renderers={
       <p class="hashCount">${all.filter(([id])=>have.includes(id)).length} of ${all.length} unlocked</p>
       <div class="achGrid">${all.map(([id,r])=>{const on=have.includes(id);return `<div class="ach ${on?"on":""}"><span>${on?r[0]:"🔒"}</span><b>${esc(r[1])}</b><small>${esc(r[2])}</small></div>`}).join("")}</div>`;
   },
+  bank(){
+    const tx=state.bank.transactions||[];
+    return `<div class="hashHead"><a class="backLink" href="#profile" aria-label="Back to profile">${I.back}</a><h1 class="pageTitle">🏦 Bank of Micky</h1></div><section class="bankHero"><span>AVAILABLE BALANCE</span><strong>${money(state.bank.balance)}</strong><small>Private Banking · Definitely Regulated™</small></section><div class="sectionLabel">Transaction history</div>${tx.length?`<div class="bankTxList">${tx.map(t=>`<div class="bankTx"><span class="txIcon">${t.amount>=0?"↙":"↗"}</span><div><b>${esc(t.description)}</b><small>${new Date(t.at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})} · Balance ${money(t.balanceAfter)}</small></div><strong class="${t.amount>=0?"credit":"debit"}">${t.amount>=0?"+":""}${money(t.amount)}</strong></div>`).join("")}</div>`:`<div class="bankEmpty big">No transactions yet. Your first influencer payment will appear here automatically.</div>`}`;
+  },
   saved(){
     const u=state.activeUser,sv=savedOf(u),col=state.savedCol;
     if(!col){
@@ -2076,6 +2231,8 @@ const renderers={
           ?`<button class="btn primary block" data-edit-profile>✏️ Edit Profile</button>${other==="mikael"?"":`<button class="btn ghost block" data-switch="${other}">Switch to ${esc(userOf(other).name)}</button>`}<a class="btn ghost block achLink" href="#achievements">🏆 Achievements</a>`
           :`<button class="btn ${isFollowing(state.activeUser,viewing)?"ghost":"primary"} block" data-follow="${viewing}" aria-pressed="${isFollowing(state.activeUser,viewing)}">${isFollowing(state.activeUser,viewing)?"Following":"Follow"}</button>`}
       </section>
+      ${isMe&&viewing==="lizzy"?monetiseHTML()+bankMiniHTML():""}
+      ${viewing==="bankofmicky"&&state.activeUser==="lizzy"?`<div class="bankProfileLink"><a class="btn primary block" href="#bank">🏦 Open Bank of Micky</a></div>`:""}
       ${isMe?`<div class="pTabs"><span class="on">${I.grid}Posts</span><a href="#saved">${I.bookmark}Saved</a></div>`:`<div class="gridLabel">${I.grid}<span>Posts</span></div>`}
       ${mine.length?`<div class="grid">${mine.map(tile).join("")}</div>`:`<div class="gridEmpty">No posts yet.</div>`}`;
   }
@@ -2151,11 +2308,12 @@ function bindCompose(){
     try{
       await Store.savePost(post);
       state.posts.push(post);newestFirst();
+      const campaignResult=await checkInfluencerPost(post);
       award(state.activeUser,"first_post");
       pushNews(isVideo?"🎬":"📸","NEW POST",userOf(state.activeUser).name+` posts a new ${isVideo?"video":"photo"}. The app is "coping".`,post.id);
       if(state.pending.preview)URL.revokeObjectURL(state.pending.preview);
       state.pending=null;
-      toast(isVideo?"Video posted 🎬":"Posted 💗");
+      if(!campaignResult?.paid)toast(isVideo?"Video posted 🎬":"Posted 💗");
       location.hash="#home";
       if(state.view==="home")render(false);
       scheduleCommunityReactions(post);
@@ -2573,6 +2731,13 @@ function migratePost(p){
     const savedSeen=await Store.getMeta("seen-stories:"+state.activeUser,[]);
     state.seenStories=new Set(savedSeen);
     state.notifs=await Store.getMeta("notifs",[]);
+    state.influencer={weekKey:"",active:[],history:[],earnings:0,...(await Store.getMeta("influencer-state-v1",{}))};
+    state.influencer.active=Array.isArray(state.influencer.active)?state.influencer.active:[];
+    state.influencer.history=Array.isArray(state.influencer.history)?state.influencer.history:[];
+    state.bank={balance:0,transactions:[],...(await Store.getMeta("bank-of-micky-v1",{}))};
+    state.bank.transactions=Array.isArray(state.bank.transactions)?state.bank.transactions:[];
+    await ensureInfluencerWeek();
+    await bankRandomDailyIfNeeded();
     state.rewards=await Store.getMeta("rewards",{});
     state.trendDone=await Store.getMeta("trend-done",[]);
     for(const u of CONFIG.humans){const v=await Store.getMeta("saved:"+u,null);if(v)state.saved[u]=v}
