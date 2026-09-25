@@ -84,7 +84,7 @@ const CONFIG={
       comments:["Logged. Cuteness levels rising.","System says: 😍","Running diagnostics… conclusion: iconic.","Saving this to permanent memory."]
     },
     bowlingfederation:{
-      id:"bowlingfederation",username:"bowlingfederation",name:"Bowling Federation",bot:true,favReaction:"bowling",
+      id:"bowlingfederation",verified:true,username:"bowlingfederation",name:"Bowling Federation",bot:true,favReaction:"bowling",
       avatar:tileAvatar("🎳","#ffb84c","#e8317f"),
       bio:"Official-ish authority on all things bowling.\nStrikes only. Gutter balls will be mocked.",
       tile:["🎳","#ffb84c","#e8317f"],
@@ -96,7 +96,7 @@ const CONFIG={
       comments:["This deserves a 300 score. Perfect game.","STRIKE. That's a strike right there.","The Federation has reviewed this post. Verdict: excellent.","10/10, would high-five."]
     },
     chocolateemergency:{
-      id:"chocolateemergency",username:"chocolateemergency",name:"Chocolate Emergency",bot:true,favReaction:"chocolate",
+      id:"chocolateemergency",verified:true,username:"chocolateemergency",name:"Chocolate Emergency",bot:true,favReaction:"chocolate",
       avatar:tileAvatar("🍫","#8a5a2c","#3a220f"),
       bio:"First responders for chocolate-related crises.\nAvailable 24/7. Bring snacks.",
       tile:["🍫","#8a5a2c","#3a220f"],
@@ -108,7 +108,7 @@ const CONFIG={
       comments:["This is now a Level 1 Chocolate Emergency. Sending backup.","Deploying rescue chocolate to this post immediately.","We've never seen anything this sweet. Dispatching a team to investigate.","Confirmed: chocolate-worthy content."]
     },
     bankofmicky:{
-      id:"bankofmicky",username:"bankofmicky",name:"Bank of Micky",bot:true,favReaction:"fire",
+      id:"bankofmicky",verified:true,username:"bankofmicky",name:"Bank of Micky",bot:true,favReaction:"fire",
       avatar:"assets/mizzygram/bankofmicky.png",
       bio:"Handling deposits to the Token Jar since forever.\nInterest rates: unreasonably high for good behaviour.",
       tile:["💰","#2f8f5b","#123322"],
@@ -120,7 +120,7 @@ const CONFIG={
       comments:["Logging this as a Token Jar deposit. Approved.","This post just increased your account balance significantly.","The Bank of Micky has reviewed this and issued a bonus.","Certified: this is rich (in a good way)."]
     },
     thedailygobshite:{
-      id:"thedailygobshite",username:"thedailygobshite",name:"TheDailyGobshite",bot:true,favReaction:"suspicious",
+      id:"thedailygobshite",verified:true,username:"thedailygobshite",name:"TheDailyGobshite",bot:true,favReaction:"suspicious",
       avatar:"assets/mizzygram/thedailygobshite.png",
       bio:"Covering the Lizzy & Mikael beat, 24 hours a day.\nUnverified sources. Fully biased. Front page always.",
       tile:["📰","#c9c9d6","#4a4a5a"],
@@ -132,7 +132,7 @@ const CONFIG={
       comments:["This is going on the front page. No debate.","Sources confirm: adorable. Printing tomorrow's headline now.","Breaking news just dropped and it's this post.","Exclusive coverage incoming. This is huge."]
     },
     thepresident:{
-      id:"thepresident",username:"thepresident",name:"The President",bot:true,favReaction:"fire",
+      id:"thepresident",verified:true,username:"thepresident",name:"The President",bot:true,favReaction:"fire",
       avatar:"assets/mizzygram/thepresident.png",
       bio:"Head of state. Head of the household.\nSpeaking on behalf of the people (two of them).",
       tile:["🏛️","#2a4a9a","#0b1633"],
@@ -758,7 +758,77 @@ const CONFIG={
         "New dessert idea in the works. Highly classified. Will reveal at the next bake sale."
       ],
       comments:["Okay these desserts look incredible, no notes.","I would try literally anything you baked, all of it.","This deserves its own bake sale.","So good, genuinely impressed every time.","This is elite level baking, respectfully."]
-    }
+    },
+
+    /* ---- Movie recommendation pages: one genre account posts each day ---- */
+    horrorreels:{
+      id:"horrorreels",username:"horrorreels",name:"Midnight Reels",bot:true,public:true,favReaction:"suspicious",
+      avatar:tileAvatar("🩸","#201020","#050505"),bio:"Horror picks after dark. New scares + classics worth losing sleep over.",tile:["🩸","#201020","#050505"],
+      posts:["Tonight's horror pick: Get Out. Smart, tense, funny in exactly the wrong moments — go in as blind as possible. 🎬","Recommendation: Hereditary. Family drama first, nightmare fuel second. Headphones off. Lights on. 😶","Scream is still one of the sharpest horror comfort watches ever made. Meta, funny and properly tense. 🔪","If you missed Talk to Me, fix that. Short runtime, nasty concept, zero wasted time. 👋","Classic corner: Alien. Space, silence and one very bad work trip. 👽","The Babadook is for anyone who likes horror that leaves emotional damage with the jump scares."],
+      timedPosts:[
+        {until:"2026-10-09T23:59:59+02:00",text:"Upcoming horror watch: Other Mommy opens 9 October 2026. Putting this on the spooky-season list now. 👀"},
+        {until:"2026-10-23T23:59:59+02:00",text:"October horror radar: Clayface opens 23 October 2026. Body-horror season is looking busy. 🫠"},
+        {until:"2026-11-13T23:59:59+02:00",text:"Upcoming: Victorian Psycho opens 13 November 2026. Period drama energy, but make it deeply unsettling. 🕯️"},
+        {until:"2026-12-25T23:59:59+02:00",text:"Christmas horror counter-programming: Werwulf is set for 25 December 2026. Very festive. Very normal. 🐺"}
+      ],comments:["Adding this to the list.","Okay this one actually got me.","Lights staying ON.","That ending though 👀"]
+    },
+    comedyclub:{
+      id:"comedyclub",username:"comedyclub",name:"The Laugh Track",bot:true,public:true,favReaction:"funny",
+      avatar:tileAvatar("😂","#ffd34e","#e85d04"),bio:"Comedies for bad days, good days and group chats that need a movie.",tile:["😂","#ffd34e","#e85d04"],
+      posts:["Comedy pick: Game Night. A mystery, chaos, and people making catastrophically confident decisions. Perfect. 😂","Bridesmaids remains a top-tier comfort comedy. No serious film analysis today, just laughs.","The Nice Guys: detective movie + buddy comedy + absolute disaster energy. Highly recommended.","Booksmart is fast, warm and genuinely funny. Great one for a friend-movie night.","Superbad is still a time capsule of terrible teenage decision-making. That is the recommendation.","Mean Girls. You know the quotes. You know the scenes. You know what to do."],
+      timedPosts:[
+        {until:"2026-10-02T23:59:59+02:00",text:"Coming up: Digger opens 2 October 2026. Adding a fresh comedy to the watchlist. 🎟️"},
+        {until:"2026-11-06T23:59:59+02:00",text:"Upcoming comedy: The Cat in the Hat opens 6 November 2026. Chaos incoming. 🎩"},
+        {until:"2026-12-11T23:59:59+02:00",text:"December watchlist: The Debut opens 11 December 2026. New comedy for the end-of-year queue. 🍿"}
+      ],comments:["That one is hilarious.","Rewatch immediately.","Perfect group-watch pick.","No notes 😂"]
+    },
+    romanceframe:{
+      id:"romanceframe",username:"romanceframe",name:"Love Letter Cinema",bot:true,public:true,favReaction:"love",
+      avatar:tileAvatar("💌","#ff7aa8","#8b2c5f"),bio:"Romance movies, yearning, beautiful lighting and unnecessary emotional damage.",tile:["💌","#ff7aa8","#8b2c5f"],
+      posts:["Romance pick: Before Sunrise. Two people, one night, a lot of talking, somehow perfect. 🌙","Past Lives for quiet yearning and the kind of ending you stare at the credits after.","Pride & Prejudice (2005). Hand flex. Rain. Fields. Cinema. That's the post.","Carol is gorgeous, restrained and made for a slow evening watch.","The Notebook is obvious, yes. Sometimes obvious is exactly what you need.","About Time: romance, family, time travel, and a sneaky amount of crying."],
+      timedPosts:[
+        {until:"2026-10-16T23:59:59+02:00",text:"Upcoming romance: Sense and Sensibility opens 16 October 2026. Austen season is officially booked. 💐"},
+        {until:"2026-10-23T23:59:59+02:00",text:"Romance watchlist update: Wicker opens 23 October 2026 — a comedy/romance/sci-fi mix. Intrigued. 🧺"},
+        {until:"2026-11-27T23:59:59+02:00",text:"Upcoming: In Waves opens 27 November 2026. Adding it to the romance queue. 🌊"}
+      ],comments:["The yearning!","This one hurts beautifully.","Adding to date-night list.","Cinema for soft people 💗"]
+    },
+    dramadaily:{
+      id:"dramadaily",username:"dramadaily",name:"After Credits Drama",bot:true,public:true,favReaction:"fire",
+      avatar:tileAvatar("🎭","#394867","#14213d"),bio:"Big performances, complicated people, and movies you keep thinking about tomorrow.",tile:["🎭","#394867","#14213d"],
+      posts:["Drama recommendation: Whiplash. Stressful in the most watchable way possible. 🥁","Moonlight. Beautiful, intimate, devastating. Give it your full attention.","The Social Network is still one of the most rewatchable dialogue-heavy dramas around.","Manchester by the Sea if today's plan is apparently emotional destruction.","Parasite is funny, tense, sharp and constantly changing shape. Essential watch.","The Shawshank Redemption: a classic for a reason. Save a long evening for it."],
+      timedPosts:[
+        {until:"2026-10-02T23:59:59+02:00",text:"Drama radar: Verity opens 2 October 2026. One for the twisty, darker end of the watchlist. 📚"},
+        {until:"2026-10-09T23:59:59+02:00",text:"Upcoming drama: The Social Reckoning opens 9 October 2026. Added to the October queue. 🎬"},
+        {until:"2026-11-06T23:59:59+02:00",text:"Coming 6 November 2026: Wild Horse Nine. November drama slot secured. 🎟️"}
+      ],comments:["Still thinking about this one.","That performance was unreal.","Worth the full attention.","Credits rolled and I just sat there."]
+    },
+    meetcutemovies:{
+      id:"meetcutemovies",username:"meetcutemovies",name:"Meet Cute Movies",bot:true,public:true,favReaction:"cute",
+      avatar:tileAvatar("💕","#ff9ec4","#7c3aed"),bio:"Rom-coms, chemistry, airport runs and people finally communicating in act three.",tile:["💕","#ff9ec4","#7c3aed"],
+      posts:["Rom-com pick: 10 Things I Hate About You. Charm levels remain undefeated. 💕","When Harry Met Sally. The blueprint. That's it. That's the recommendation.","Crazy Rich Asians for glamour, chemistry and a wedding sequence that still works every time.","Palm Springs if you want a rom-com that starts weird and gets even better.","Notting Hill: bookstore, movie star, London, feelings. Easy recommendation.","Set It Up is a modern comfort-watch rom-com that knows exactly what it is."],
+      timedPosts:[
+        {until:"2026-10-23T23:59:59+02:00",text:"Upcoming rom-com-ish pick: Wicker opens 23 October 2026, mixing romance, comedy and sci-fi. Very curious. 💘"},
+        {until:"2026-11-20T23:59:59+02:00",text:"Holiday romance radar: LAX: Holiday in New York opens 20 November 2026. Seasonal meet-cute energy loading. ✈️🎄"}
+      ],comments:["Elite comfort watch.","The chemistry!!","Adding this immediately.","Meet-cute approved 💕"]
+    },
+
+    /* ---- Music + celebrity accounts ---- */
+    msaki:{id:"msaki",username:"msaki",name:"Msaki",bot:true,public:true,verified:true,favReaction:"love",avatar:tileAvatar("🌙","#6a4c93","#1d3557"),bio:"Artist. Songwriter. Storyteller.",tile:["🌙","#6a4c93","#1d3557"],posts:["A quiet day with old songs. 'Ubomi Abumanga' still carries its own weather. 🌙","Thinking about all the places 'Fetch Your Life' has travelled since we made it.","Studio days: tea, voice notes, half-finished melodies, one line that changes everything.","Some songs arrive loudly. Others sit beside you until you're ready to hear them.","Back in rehearsal. Live music always teaches the song something new."],timedPosts:[{until:"2026-11-07T23:59:59+02:00",text:"Roodepoort — 7 November. Sunset Music Series at Walter Sisulu Botanical Garden with Thando Zide. See you under the evening sky. 🌿"},{until:"2026-11-14T23:59:59+02:00",text:"13–14 November: Jesse Clegg and I bring Entropy live to the Lyric Theatre at Gold Reef City. Can't wait to share this room with you."}],comments:["Beautiful.","This one stays with you.","See you there ❤️","Music for the soul."]},
+    sjava:{id:"sjava",username:"sjava",name:"Sjava",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🎙️","#8c5a2b","#2f1b12"),bio:"Umculi. Storyteller. South Africa.",tile:["🎙️","#8c5a2b","#2f1b12"],posts:["'uMama' will always have a special place in the set. Siyabonga for carrying it with me.","Rehearsal today. 'Amafu' still sounds different when the whole room sings it back.","From Isina Muva to Isibuko — ten years of stories, lessons and people who listened.","Ngiyabonga to everyone who has grown with the music. We keep going.","Some nights are for writing. Some nights are for listening back and letting the song tell you what is missing."],timedPosts:[{until:"2026-10-23T23:59:59+02:00",text:"23 October — the 10 Year Celebration Tour comes to the Big Top Arena at Carnival City. A decade of music in one room. Ngiyabonga. 🙏🏾"}],comments:["Ngiyabonga 🙏🏾","Siyabonga.","See you there.","Love always."]},
+    jabulilemajola:{id:"jabulilemajola",username:"jabulilemajola",name:"Jabulile Majola",bot:true,public:true,verified:true,favReaction:"love",avatar:tileAvatar("🪕","#728c69","#25372d"),bio:"Afro-folk singer-songwriter. IPASI out now.",tile:["🪕","#728c69","#25372d"],posts:["IPASI is out now. Eleven songs about home, faith, memory and becoming. Thank you for meeting me here. 🌿","'Ubukho Bakhe' has been living in my head all morning. Some songs keep unfolding after release day.","Playing 'Baba Wethu' live reminds me why I started telling stories this way.","From Isitifiketi to IPASI — grateful for every person who has listened closely.","Acoustic guitar, a quiet room and 'Amagugu'. Sometimes that is enough."],comments:["Thank you for listening.","Ngiyabonga kakhulu.","See you at the show.","This means a lot."]},
+    jesseclegg:{id:"jesseclegg",username:"jesseclegg",name:"Jesse Clegg",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🎸","#2f6690","#0b2545"),bio:"Singer-songwriter. Johannesburg / wherever the songs go.",tile:["🎸","#2f6690","#0b2545"],posts:["'Let It Burn' still feels good loud. Some songs are built for the drive home.","Back with the guitar today. Old songs, new ideas, same problem: too many voice notes.","'Speed of Light' kind of day. Turn it up.","The best part of making music is when a song stops belonging only to you.","Studio photo dump: cables, coffee, one good take, fourteen almost-good takes."],timedPosts:[{until:"2026-11-14T23:59:59+02:00",text:"Johannesburg: Msaki and I are bringing Entropy to the Lyric Theatre at Gold Reef City on 13 & 14 November. See you there. 🎸"}],comments:["Thanks for listening.","See you there!","Appreciate you.","More soon 🎸"]},
+    raye:{id:"raye",username:"raye",name:"RAYE",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🎤","#8f2d56","#2b0f1c"),bio:"Singer, songwriter, professional over-sharer through music.",tile:["🎤","#8f2d56","#2b0f1c"],posts:["'Escapism.' changed my life in ways I am still processing. Thank you for every scream-sing in every room. 🖤","Putting 'Oscar Winning Tears.' on the set is basically choosing emotional violence, respectfully.","Studio at an unreasonable hour. This is apparently when the ideas arrive.","Vocal warm-up, tea, heels, chaos. Show day.","I love songs that sound glamorous while the subject matter is absolutely not."],comments:["Love youuuu.","Thank you darling 🖤","SEE YOU SOON.","You lot are too much 😭"]},
+    sunelmusician:{id:"sunelmusician",username:"sunelmusician",name:"Sun-El Musician",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("☀️","#f4a261","#264653"),bio:"Musician / producer. EL World Music.",tile:["☀️","#f4a261","#264653"],posts:["'Akanamali' in the headphones today. Grateful for how far that song travelled. ☀️","'Sonini' still belongs in golden-hour playlists. No debate.","Studio day. Synths first, phone later.","Thinking about the Red Bull Symphonic nights at Montecasino — hearing these records with a full orchestra was something else.","New session, blank project, no rules. My favourite place to start."],comments:["🙏🏾","Thank you for listening.","Much love.","We keep creating."]},
+    dave:{id:"dave",username:"santandave",name:"Dave",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🎹","#3d405b","#111827"),bio:"Artist. South London.",tile:["🎹","#3d405b","#111827"],posts:["'Starlight' still goes off. Appreciate everyone who's kept that record moving.","'Location' in a live set and the crowd does half the job for you.","Piano for an hour. Phone on silent. Best reset.","'Black' is one of those songs I still approach differently every time I perform it.","Tour rehearsals. Small adjustments make a big difference."],timedPosts:[{until:"2026-10-03T23:59:59+02:00",text:"South Africa — Pretoria, 3 October. The Boy Who Played the Harp Tour at SunBet Arena, Time Square. See you soon. 🇿🇦"},{until:"2026-10-06T23:59:59+02:00",text:"Cape Town — 6 October. The Boy Who Played the Harp Tour at Grand Arena, GrandWest. 🇿🇦"}],comments:["Love.","See you there.","Appreciate it.","🙏🏾"]},
+    jcole:{id:"jcole",username:"realcoleworld",name:"J. Cole",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🌍","#7f5539","#2d1e15"),bio:"Dreamville.",tile:["🌍","#7f5539","#2d1e15"],posts:["'Love Yourz' still says what it needs to say.","Some days it's 'No Role Modelz'. Some days it's silence and a notebook.","Studio. No caption really needed.","'MIDDLE CHILD' energy today.","Grateful for everybody that's been listening all these years. More work to do."],timedPosts:[{until:"2026-12-12T23:59:59+02:00",text:"Johannesburg — 12 December. The Fall-Off Tour at FNB Stadium. South Africa, see you soon. 🇿🇦"}],comments:["Much love.","Appreciate you.","See you there.","🙏🏾"]},
+    maleh:{id:"maleh",username:"maleh",name:"Maleh",bot:true,public:true,verified:true,favReaction:"love",avatar:tileAvatar("✨","#8a6d3b","#302718"),bio:"Singer. Songwriter. Lesotho / Southern Africa.",tile:["✨","#8a6d3b","#302718"],posts:["Music for slow mornings and long drives. Thank you for keeping these songs close.","Rehearsal room today. Voice, keys, patience.","Some songs need time before they tell you what they are.","A little behind the scenes: warm-ups, tea, laughter, then one more take.","Grateful for every room that has sung back to me."],comments:["Thank you ❤️","Love always.","See you soon.","Grateful."]},
+    yebba:{id:"yebba",username:"yebba",name:"Yebba",bot:true,public:true,verified:true,favReaction:"love",avatar:tileAvatar("🎙️","#7d8597","#202632"),bio:"Singer / songwriter.",tile:["🎙️","#7d8597","#202632"],posts:["'My Mind' will always ask a lot from me. Thank you for holding it gently.","'Distance' in the headphones. Still finding new corners in that song.","'October Sky' kind of morning.","One mic, one quiet room, no hiding. My favourite and least favourite thing.","Tour prep is mostly singing, stretching, losing things, finding them, singing again."],comments:["Thank you ❤️","Means a lot.","See you soon.","Love."]},
+    muzi:{id:"muzi",username:"muzi",name:"MUZI",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("⚡","#e76f51","#264653"),bio:"Zulu Skywalker. Artist / producer.",tile:["⚡","#e76f51","#264653"],posts:["'Zulu Skywalker' energy. Always.","'Interblaktic' back in the headphones today. 🚀","Studio looks like a spaceship again. Good sign.","South African sounds don't need permission to be futuristic.","Laptop, synth, field recordings, one idea at a time."],comments:["🚀","Sharp.","Love that.","Siyabonga."]},
+    onedirection:{id:"onedirection",username:"onedirection",name:"One Direction",bot:true,public:true,verified:true,favReaction:"love",avatar:tileAvatar("1D","#d62828","#1d3557"),bio:"Official archive. Five albums, a lot of memories.",tile:["🎧","#d62828","#1d3557"],posts:["From the archive: 'Night Changes'. Some songs simply refuse to age. ❤️","Throwback to the 'What Makes You Beautiful' era. That opening guitar still does the job.","'Story of My Life' appreciation post. That's all.","Archive pull: 'Drag Me Down'. Turn it up.","Five albums. Countless shows. Thank you for keeping the music alive.","'History' feels different every time the anniversary posts come around."],comments:["❤️","What a memory.","Thank you for being there.","Forever grateful."]},
+    micasa:{id:"micasa",username:"micasamusic",name:"Mi Casa",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🏠","#00a896","#05668d"),bio:"Mi Casa es su casa. J'Something · Mo-T · Dr Duda.",tile:["🏠","#00a896","#05668d"],posts:["'Jika' in the set and suddenly everybody remembers every move. 🏠","'These Streets' still feels like home.","'Mamela' appreciation post. Turn it up.","Band rehearsal = three opinions, one groove, eventually magic.","More than a decade of music and the best part is still playing it together."],timedPosts:[{until:"2026-12-27T23:59:59+02:00",text:"Cape Town — 27 December at Cabo Beach Club with Liquideep, Oskido and DWSON. Summer is booked. 🌊"}],comments:["Mi Casa es su casa ❤️","See you there!","Let's go!","Love this."]},
+    liquideep:{id:"liquideep",username:"liquideep",name:"Liquideep",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("🌊","#277da1","#14213d"),bio:"Ziyon + Ryzor. Deep house from South Africa.",tile:["🌊","#277da1","#14213d"],posts:["'Fairytale' still finds its way into the room like it never left. 🌊","'Alone' — one of those records that carries memories with it.","'Something About You' kind of night.","Digging through old sessions and finding ideas that still have a pulse.","Deep house, warm nights, good people. That's the recipe."],timedPosts:[{until:"2026-12-27T23:59:59+02:00",text:"Cape Town — 27 December. Cabo Beach Club with Mi Casa, Oskido and DWSON. Classics, new music and a long summer night. 🌊"}],comments:["Much love.","See you there.","Classic!","🌊"]},
+    bonang:{id:"bonang",username:"bonang_m",name:"Bonang Matheba",bot:true,public:true,verified:true,favReaction:"fire",avatar:tileAvatar("👑","#f5b7d2","#7b2c5f"),bio:"Media personality. Entrepreneur. House of BNG. ✨",tile:["👑","#f5b7d2","#7b2c5f"],posts:["Soft glam, hard work. Happy Friday, my loves. ✨","Airport look: done. Passport: found. Mood: expensive. ✈️","A little House of BNG moment because celebrations deserve bubbles. 🥂","Glam chair chronicles. The before photo will never see daylight. 😂","Meetings all morning, fitting all afternoon, fabulous by dinner. Balance, baby.","South African sunshine and a very good outfit. Couldn't ask for more. 👑","Reminder: take the picture. Wear the dress. Book the trip. Celebrate yourself."],comments:["Love this for you! ✨","Beautiful!","My love ❤️","Fabulous, darling."]},
+    disney:{id:"disney",username:"disney",name:"Disney",bot:true,public:true,verified:true,favReaction:"cute",avatar:tileAvatar("🏰","#4b6cb7","#182848"),bio:"Movies, magic, Disney+ and a little nostalgia. ✨",tile:["🏰","#4b6cb7","#182848"],posts:["Nostalgia check: which Disney Channel theme song can you still sing from memory? 📺✨","Throwback to Kim Possible. Saving the world before homework remains an elite schedule.","The Lion King rewatch rule: yes, you still have to sing every song.","High School Musical nostalgia has entered the chat. What team? Wildcats. 🏀🎤","Lilo & Stitch reminder: found family stories always hit.","Phineas and Ferb really did wake up every day and choose productivity.","DuckTales theme song. That's it. That's the post. 🦆"],timedPosts:[{until:"2026-10-14T23:59:59+02:00",text:"Marvel Television's VisionQuest arrives on Disney+ on 14 October 2026. 🤖✨"},{until:"2026-10-16T23:59:59+02:00",text:"20th Century Studios' Whalefall comes to cinemas on 16 October 2026. 🌊"},{until:"2026-11-20T23:59:59+02:00",text:"Percy Jackson and the Olympians Season 3 streams on Disney+ from 20 November 2026. ⚡"},{until:"2026-11-25T23:59:59+02:00",text:"Walt Disney Animation Studios' Hexed arrives in cinemas on 25 November 2026. ✨"},{until:"2026-12-18T23:59:59+02:00",text:"Marvel Studios' Avengers: Doomsday arrives in cinemas on 18 December 2026. Assemble the group chat. 🅰️"}],comments:["✨","Adding to the watchlist!","Nostalgia unlocked.","See you there! 🏰"]}
   },
   reactions:[
     {id:"love",emoji:"❤️",label:"Love"},
@@ -801,6 +871,7 @@ function botImageFor(u,caption,chance=TV_CARTOON_POST_CHANCE){
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const verifiedMark=u=>u&&u.verified&&u.id!=="lizzy"&&u.id!=="mikael"?'<span class="verifiedBadge" title="Verified" aria-label="Verified">✓</span>':"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
@@ -1104,7 +1175,7 @@ function searchPosts(q){return state.posts.filter(p=>(p.caption||"").toLowerCase
 function accountChip(u){
   const isMe=u.id===state.activeUser;
   return `<div class="chipCard">
-    <button class="chipUser" data-user="${u.id}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><small>@${esc(u.username)}</small></button>
+    <button class="chipUser" data-user="${u.id}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}${verifiedMark(u)}</b><small>@${esc(u.username)}</small></button>
     ${isMe?"":`<button class="btn ${isFollowing(state.activeUser,u.id)?"ghost":"primary"} sm" data-follow="${u.id}">${isFollowing(state.activeUser,u.id)?"Following":"Follow"}</button>`}
   </div>`;
 }
@@ -1658,6 +1729,53 @@ function startHSMPosts(){
 }
 
 
+/* ---------- movies, musicians, Bonang + Disney ---------- */
+const MOVIE_IDS=["horrorreels","comedyclub","romanceframe","dramadaily","meetcutemovies"];
+const CELEB_IDS=["msaki","sjava","jabulilemajola","jesseclegg","raye","sunelmusician","dave","jcole","maleh","yebba","muzi","onedirection","micasa","liquideep","bonang","disney"];
+const entertainmentBots=()=>CELEB_IDS.map(id=>CONFIG.users[id]).filter(Boolean);
+function liveTimedPosts(u,now=Date.now()){
+  return (u.timedPosts||[]).filter(x=>!x.from||now>=Date.parse(x.from)).filter(x=>!x.until||now<=Date.parse(x.until));
+}
+function pickAccountPost(u){
+  const timed=liveTimedPosts(u);
+  if(timed.length&&Math.random()<.68)return pick(timed).text;
+  return pick(u.posts||timed.map(x=>x.text));
+}
+async function seedEntertainmentIfNeeded(){
+  if(await Store.getMeta("npc-seed-entertainment-v1",false))return;
+  try{await Store.setMeta("npc-seed-entertainment-v1",true)}catch{}
+  const now=Date.now(),ids=[...MOVIE_IDS,...CELEB_IDS];
+  for(const [i,id] of ids.entries()){
+    const u=CONFIG.users[id];if(!u||state.posts.some(p=>p.userId===id))continue;
+    const caption=pickAccountPost(u),hoursAgo=2+(i*9)%150+Math.random()*8;
+    const post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:now-hoursAgo*36e5,reactions:{},comments:[],communityScheduled:true};
+    state.posts.push(post);try{await Store.savePost(post)}catch{}
+  }
+  newestFirst();
+}
+async function dailyMoviePostIfNeeded(){
+  const d=new Date(),dateKey=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+  const key="movie-daily-v1:"+dateKey;if(await Store.getMeta(key,false))return;
+  const dayNo=Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);
+  const id=MOVIE_IDS[((dayNo%MOVIE_IDS.length)+MOVIE_IDS.length)%MOVIE_IDS.length],u=CONFIG.users[id];
+  if(!u)return;
+  const caption=pickAccountPost(u),post={id:uid(),userId:u.id,image:botImageFor(u,caption),caption,createdAt:Date.now()-60000,reactions:{},comments:[],communityScheduled:true};
+  state.posts.push(post);newestFirst();try{await Store.savePost(post);await Store.setMeta(key,true)}catch{}
+}
+function startEntertainmentPosts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    dailyMoviePostIfNeeded().catch(()=>{});
+    for(const u of entertainmentBots()){
+      const lastPost=state.posts.find(p=>p.userId===u.id),lastAt=lastPost?lastPost.createdAt:0;
+      const minGapHours=20+Math.random()*34;
+      if(Date.now()-lastAt<minGapHours*36e5)continue;
+      if(Math.random()<0.008)botPost(u.id,pickAccountPost(u));
+    }
+  },8*60000);
+}
+
+
 /* ---------- one-time cartoon-photo sampler for existing MizzyGram installs ----------
    Older browser databases already have the text-card seeds marked complete.
    This adds only a small handful of matching character-photo posts so the
@@ -1690,7 +1808,7 @@ function postCard(p){
   return `<article class="post" data-id="${p.id}">
     <header class="postHead">
       <button class="ava" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
-      <button class="uname" data-user="${u.id}">${esc(u.username)}</button>${p.mood?`<small class="mood">${esc(p.mood)}</small>`:""}${p.audience==="lizzy"?`<small class="mood">💗 just for Lizzy</small>`:""}
+      <button class="uname" data-user="${u.id}">${esc(u.username)}${verifiedMark(u)}</button>${p.mood?`<small class="mood">${esc(p.mood)}</small>`:""}${p.audience==="lizzy"?`<small class="mood">💗 just for Lizzy</small>`:""}
       <time datetime="${new Date(p.createdAt).toISOString()}">${ago(p.createdAt)}</time>
     </header>
     <div class="photo ${p.classified&&!p.declassified?"classified":""}" data-dbl>${p.classified&&!p.declassified?`<button class="declass" data-declassify="${p.id}">🕵️ CLASSIFIED — tap to declassify</button>`:""}${badge?`<span class="postBadge ${badge.cls}">${badge.label}</span>`:""}<img src="${p.image}" alt="${esc(alt)}"><span class="burst" aria-hidden="true">${mineReact?reactionOf(mineReact).emoji:I.heart}</span></div>
@@ -1705,7 +1823,7 @@ function postCard(p){
       <button class="act ${saved?"on":""}" data-save aria-pressed="${saved}" aria-label="${saved?"Unsave":"Save"}">${I.bookmark}</button>
     </div>
     ${total?`<button class="likes" data-reactions="${p.id}">${groups} ${total} ${total===1?"reaction":"reactions"}</button>`:""}
-    ${p.caption?`<div class="cap"><b>${esc(u.username)}</b>${linkifyCaption(p.caption)}</div>`:""}
+    ${p.caption?`<div class="cap"><b>${esc(u.username)}${verifiedMark(u)}</b>${linkifyCaption(p.caption)}</div>`:""}
     ${n?`<button class="viewC" data-comment>View ${n===1?"1 comment":`all ${n} comments`}</button>`:""}
   </article>`;
 }
@@ -1725,7 +1843,7 @@ function storiesBar(){
     const u=userOf(id),unseen=(byUser[id]||[]).some(x=>!state.seenStories.has(x.id));
     return `<div class="storyItem"><button class="storyRing ${unseen?"unseen":""}" data-story-user="${id}"><span class="storyAva"><img src="${esc(u.avatar)}" alt=""></span><span class="storyName">${label}</span></button>${extra||""}</div>`;
   };
-  return `<div class="stories">${ring(me,"Your story",`<button class="storyAdd" data-st-add aria-label="Add to your story">+</button>`)}${order.map(id=>ring(id,esc(userOf(id).name))).join("")}</div>`;
+  return `<div class="stories">${ring(me,"Your story",`<button class="storyAdd" data-st-add aria-label="Add to your story">+</button>`)}${order.map(id=>{const u=userOf(id);return ring(id,esc(u.name)+verifiedMark(u))}).join("")}</div>`;
 }
 
 const renderers={
@@ -1804,7 +1922,7 @@ const renderers={
         </div>
       </section>
       <section class="pInfo">
-        <h1 class="pName">${esc(u.name)}${u.bot?' <span class="botTag">bot</span>':""}</h1>
+        <h1 class="pName">${esc(u.name)}${verifiedMark(u)}${u.bot&&!u.public?' <span class="botTag">bot</span>':""}</h1>
         <div class="pUser">@${esc(u.username)}</div>
         <p class="pBio">${esc(u.bio)}</p>
         ${(state.rewards[viewing]||[]).filter(x=>x!=="welcome").length?`<p class="pBadges" title="Achievements">${state.rewards[viewing].filter(x=>x!=="welcome").map(x=>REWARDS[x][0]).join(" ")}</p>`:""}
@@ -1981,7 +2099,7 @@ function commentRow(c,isReply){
   return `<div class="cItem ${isReply?"reply":""}">
     <button class="ava sm" data-user="${u.id}" aria-label="${esc(u.name)}'s profile"><img src="${esc(u.avatar)}" alt=""></button>
     <div class="cBody">
-      <div><button class="cUname" data-user="${u.id}">${esc(u.username)}</button> ${c.pinned?'<span class="pinTag">📌 Pinned</span> ':""}${esc(c.text)}</div>
+      <div><button class="cUname" data-user="${u.id}">${esc(u.username)}${verifiedMark(u)}</button> ${c.pinned?'<span class="pinTag">📌 Pinned</span> ':""}${esc(c.text)}</div>
       <div class="cMeta">
         <time>${ago(c.createdAt)}</time>
         ${c.likes.length?`<span>${c.likes.length} like${c.likes.length===1?"":"s"}</span>`:""}
@@ -2069,7 +2187,7 @@ function renderSheet(force){
         <div class="reactGroup">
           <div class="reactGroupHead">${g.emoji} <b>${g.label}</b><span>${g.count}</span></div>
           ${g.users.map(uidKey=>{const u=userOf(uidKey);return `<button class="reactUser" data-user="${uidKey}">
-            <span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><span>${esc(u.name)}</span></button>`}).join("")}
+            <span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><span>${esc(u.name)}${verifiedMark(u)}</span></button>`}).join("")}
         </div>`).join(""):`<div class="cNone">No reactions yet.</div>`}</div></div>`;
 
   }else if(s.type==="followList"){
@@ -2079,7 +2197,7 @@ function renderSheet(force){
       <div class="sheetScroll">${ids.length?ids.map(uidKey=>{
         const u=userOf(uidKey),isMe=uidKey===state.activeUser;
         return `<div class="followRow">
-          <button class="followUser" data-user="${uidKey}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><span><b>${esc(u.name)}</b><small>@${esc(u.username)}</small></span></button>
+          <button class="followUser" data-user="${uidKey}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><span><b>${esc(u.name)}${verifiedMark(u)}</b><small>@${esc(u.username)}</small></span></button>
           ${isMe?"":`<button class="btn ${isFollowing(state.activeUser,uidKey)?"ghost":"primary"} sm" data-follow="${uidKey}">${isFollowing(state.activeUser,uidKey)?"Following":"Follow"}</button>`}
         </div>`}).join(""):`<div class="cNone">${s.mode==="followers"?"No followers yet.":"Not following anyone yet."}</div>`}</div></div>`;
 
@@ -2089,7 +2207,7 @@ function renderSheet(force){
     const left=own&&!st.evergreen?` · ${Math.max(1,Math.ceil((st.createdAt+CONFIG.storyHours*36e5-Date.now())/36e5))}h left`:"";
     el.innerHTML=`<div class="sheetBody storySheet" role="dialog" aria-modal="true" aria-label="${esc(u.name)}'s story">
       <div class="svBars">${s.list.map((_,i)=>`<span class="${i<s.index?"done":""}"><i ${i===s.index?`class="cur" style="--d:${dur}ms"`:""}></i></span>`).join("")}</div>
-      <div class="svHead"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><span class="svTime">${ago(st.createdAt)}${left}</span><button class="act" data-close aria-label="Close">${I.close}</button></div>
+      <div class="svHead"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}${verifiedMark(u)}</b><span class="svTime">${ago(st.createdAt)}${left}</span><button class="act" data-close aria-label="Close">${I.close}</button></div>
       ${body}${st.caption?`<div class="svCap">${esc(st.caption)}</div>`:""}
       <button class="svZone left" type="button" data-story-prev aria-label="Previous story"></button>
       <button class="svZone right" type="button" data-story-next aria-label="Next story"></button>
@@ -2151,7 +2269,7 @@ function renderSheet(force){
   }else if(s.type==="share"){
     const p=state.posts.find(x=>x.id===s.id);if(!p){closeSheet();return}
     const targets=[...CONFIG.humans.filter(h=>h!==state.activeUser),...Object.values(CONFIG.users).filter(u=>u.bot).map(u=>u.id)];
-    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Share"><div class="sheetHead"><h2>Share</h2><button class="act" data-close aria-label="Close">${I.close}</button></div><div class="sheetScroll">${targets.map(id=>{const u=userOf(id),on=s.sel.includes(id);return `<button class="colRow" data-share-to="${id}" aria-pressed="${on}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}</b><i>${on?"✓":""}</i></button>`}).join("")}
+    el.innerHTML=`<div class="sheetBody" role="dialog" aria-modal="true" aria-label="Share"><div class="sheetHead"><h2>Share</h2><button class="act" data-close aria-label="Close">${I.close}</button></div><div class="sheetScroll">${targets.map(id=>{const u=userOf(id),on=s.sel.includes(id);return `<button class="colRow" data-share-to="${id}" aria-pressed="${on}"><span class="ava sm"><img src="${esc(u.avatar)}" alt=""></span><b>${esc(u.name)}${verifiedMark(u)}</b><i>${on?"✓":""}</i></button>`}).join("")}
       <div class="sharePad"><input id="shareNote" class="shareNote" maxlength="120" placeholder="Add a message…" value="${esc(s.note||"")}" aria-label="Message"><button class="btn primary block" data-share-send ${s.sel.length?"":"disabled"}>Send${s.sel.length?" ("+s.sel.length+")":""}</button><button class="btn ghost block" data-share-story>Add to your story</button></div></div></div>`;
   }
 }
@@ -2276,6 +2394,8 @@ function migratePost(p){
     await seedGilmoreIfNeeded();
     await seedB99IfNeeded();
     await seedHSMIfNeeded();
+    await seedEntertainmentIfNeeded();
+    await dailyMoviePostIfNeeded();
     await seedTvCartoonPostsIfNeeded();
     // give the community a chance to catch up on any older posts that never got reactions
     state.posts.filter(p=>!p.communityScheduled&&CONFIG.humans.includes(p.userId)).forEach(scheduleCommunityReactions);
@@ -2305,7 +2425,7 @@ function migratePost(p){
       if(CONFIG.users[uidKey])Object.assign(CONFIG.users[uidKey],profileOverrides[uidKey]);
     }
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();

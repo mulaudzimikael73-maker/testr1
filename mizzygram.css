@@ -460,3 +460,7 @@ button.uname:hover{text-decoration:underline}
 .editProfileForm textarea{width:100%;min-height:90px;resize:vertical;padding:13px 14px;font:inherit;color:var(--ink);border:1.5px solid var(--line);border-radius:16px;background:#fff}
 .editProfileForm textarea:focus{outline:3px solid #b23fd655;border-color:var(--violet)}
 .editProfileForm .count{margin-top:-6px}
+
+/* Verified public accounts */
+.verifiedBadge{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:4px;vertical-align:-2px;border-radius:50%;background:#1d9bf0;color:#fff;font:800 10px/1 Arial,sans-serif;box-shadow:0 0 0 1px rgba(255,255,255,.75)}
+.uname .verifiedBadge,.cUname .verifiedBadge{vertical-align:0}
