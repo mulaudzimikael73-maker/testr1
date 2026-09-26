@@ -42,6 +42,58 @@ const COMPANY_NEWS=[
  ["SCIG","Suspiciously Cheap Insurance says claims remain ‘more of a suggestion.’",-1],
  ["FASH","Fashionista launches a shoe so elegant it refuses to touch ordinary flooring.",1]
 ];
+const MARKET_EVENT_NEWS={
+ crash:[
+  "MARKET CRASH: Investors panic after someone whispers ‘sell’ near the Wi-Fi router.",
+  "BREAKING: Micky Stock Exchange falls sharply. Analysts recommend chocolate and absolutely no eye contact.",
+  "Markets tumble after confidence leaves the building without signing out.",
+  "Financial emergency declared as graphs discover they can point down.",
+  "The market has entered freefall. Bank of Micky insists this is ‘character building.’",
+  "Trading floor update: everyone is calm, except everyone.",
+  "Stocks plunge after the economy receives a suspiciously dramatic group-chat message.",
+  "Market crash confirmed. Department of Naps advises sleeping through it."
+ ],
+ rally:[
+  "MARKET RALLY: Investors discover optimism and immediately overuse it.",
+  "Stocks surge after someone says ‘to the moon’ with unreasonable confidence.",
+  "Micky Stock Exchange turns green. Financial experts take full credit despite doing nothing.",
+  "Markets rally strongly after Chocolate Emergency announces morale remains delicious.",
+  "Investor confidence returns from lunch and chooses violence — upward violence.",
+  "Breaking: nearly everything is up. Analysts pretend this was obvious all along.",
+  "Stocks climb as Tuesday Global confirms there will, in fact, be another Tuesday.",
+  "Bull market energy detected. Premium Air is now 37% more confident than normal."
+ ],
+ recover:[
+  "MARKET RECOVERY: Prices crawl back up and investors suddenly remember their long-term strategy.",
+  "Stocks recover after everyone agrees to stop refreshing the portfolio every nine seconds.",
+  "The market is healing. Bank of Micky has removed the emergency biscuit tray.",
+  "Recovery underway as investors quietly delete yesterday’s panicked messages.",
+  "Markets rebound. Analysts describe the strategy as ‘apparently just waiting.’",
+  "Confidence returns cautiously, wearing a helmet and carrying paperwork.",
+  "Stocks begin recovering after Department of Naps wakes up and checks the charts.",
+  "The market has stopped screaming and is now speaking in a firm indoor voice."
+ ],
+ pump:[
+  "Sudden surge detected. Investors insist they definitely knew this would happen.",
+  "Shares jump after one extremely confident person says ‘trust me.’",
+  "Price rockets higher. Fundamentals have requested not to be involved."
+ ],
+ drop:[
+  "Shares slide after investors collectively develop second thoughts.",
+  "Price falls sharply. Management says the graph is simply exploring the lower half of the screen.",
+  "Investors retreat after a meeting that could absolutely have been an email."
+ ]
+};
+function randomMarketHeadline(action,scope,ticker){
+ const pool=MARKET_EVENT_NEWS[action]||[];
+ if(!pool.length)return null;
+ let headline=pool[Math.floor(Math.random()*pool.length)];
+ if(scope!=="market"&&ticker){const st=STOCKS.find(x=>x.ticker===ticker);if(st)headline=`${st.name}: ${headline}`}
+ return headline;
+}
+function marketEventSentiment(action){
+ return action==="crash"?"catastrophic":action==="rally"?"ridiculously positive":action==="recover"||action==="pump"?"positive":action==="drop"?"negative":"neutral";
+}
 function read(key,fallback){try{const x=localStorage.getItem(key);return x==null?fallback:JSON.parse(x)}catch{return fallback}}
 function write(key,v){localStorage.setItem(key,JSON.stringify(v))}
 const round=n=>Math.round(Number(n||0)*100)/100,fmt=n=>round(n).toFixed(2).replace(/\.00$/,"")+" MB";
@@ -120,7 +172,12 @@ async function playEntertainment(id){
 async function worldApi(action,body={}){if(!WORKER)throw new Error("Test Worker not configured");const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...body}),cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)throw new Error(d.error||`Request failed (${r.status})`);return d}
 async function getWorldQueue(){if(!WORKER)return[];const r=await fetch(WORKER+"?action=world_queue",{cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok)return[];return d.commands||[]}
 function marketMove(s,tickers,pct){for(const ticker of tickers){if(s.frozen[ticker]&&pct!==0)continue;const p=Math.max(1,round(s.prices[ticker]*(1+pct/100)));s.prices[ticker]=p;(s.history[ticker]||(s.history[ticker]=[])).push({t:Date.now(),p});s.history[ticker]=s.history[ticker].slice(-72)}}
-function applyMarketCommand(c){const s=marketState(),all=STOCKS.map(x=>x.ticker),ticker=String(c.ticker||"").toUpperCase(),targets=c.scope==="market"?all:(STOCKS.some(x=>x.ticker===ticker)?[ticker]:[]);if(!targets.length&&c.action!=="set_mode")return;let pct=Number(c.percent);if(!Number.isFinite(pct)||pct<=0)pct=undefined;switch(c.action){case"pump":marketMove(s,targets,pct||12);break;case"drop":marketMove(s,targets,-(pct||12));break;case"crash":marketMove(s,targets,-(pct||35));break;case"rally":marketMove(s,targets,pct||22);break;case"recover":marketMove(s,targets,pct||15);break;case"gradual_rise":{const total=pct||12,steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"gradual_decline":{const total=-(pct||12),steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"freeze":targets.forEach(t=>s.frozen[t]=true);break;case"unfreeze":targets.forEach(t=>delete s.frozen[t]);break;case"set_mode":s.mode=c.mode||"normal";break;default:return}if(c.headline){s.news.unshift({id:"hq"+Date.now(),t:Date.now(),ticker:c.scope==="market"?"MARKET":ticker,headline:String(c.headline).slice(0,180),sentiment:c.sentiment||"neutral",hq:true});s.news=s.news.slice(0,15)}saveMarket(s);if(document.querySelector(".marketSite"))market();}
+function applyMarketCommand(c){const s=marketState(),all=STOCKS.map(x=>x.ticker),ticker=String(c.ticker||"").toUpperCase(),targets=c.scope==="market"?all:(STOCKS.some(x=>x.ticker===ticker)?[ticker]:[]);if(!targets.length&&c.action!=="set_mode")return;let pct=Number(c.percent);if(!Number.isFinite(pct)||pct<=0)pct=undefined;switch(c.action){case"pump":marketMove(s,targets,pct||12);break;case"drop":marketMove(s,targets,-(pct||12));break;case"crash":marketMove(s,targets,-(pct||35));break;case"rally":marketMove(s,targets,pct||22);break;case"recover":marketMove(s,targets,pct||15);break;case"gradual_rise":{const total=pct||12,steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"gradual_decline":{const total=-(pct||12),steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"freeze":targets.forEach(t=>s.frozen[t]=true);break;case"unfreeze":targets.forEach(t=>delete s.frozen[t]);break;case"set_mode":s.mode=c.mode||"normal";break;default:return}
+ const automaticAction=c.action==="set_mode"?(c.mode==="crash"?"crash":c.mode==="rally"||c.mode==="bubble"?"rally":c.mode==="normal"?"recover":null):c.action;
+ const autoHeadline=automaticAction?randomMarketHeadline(automaticAction,c.scope,ticker):null;
+ const headline=String(c.headline||autoHeadline||"").trim();
+ if(headline){s.news.unshift({id:"hq"+Date.now()+Math.random().toString(36).slice(2,6),t:Date.now(),ticker:c.scope==="market"?"MARKET":ticker,headline:headline.slice(0,220),sentiment:c.headline?(c.sentiment||marketEventSentiment(automaticAction)):marketEventSentiment(automaticAction),hq:true});s.news=s.news.slice(0,15)}
+ saveMarket(s);if(document.querySelector(".marketSite"))market();}
 async function applyDelivery(c){const s=entState(),p=s.purchases.find(x=>x.id===c.purchaseId);if(!p)return;const d=await worldApi("world_media_get",{mediaId:c.mediaId});if(!d.media?.data)return;await MediaDB.put(p.id,d.media);p.status="ready";p.mediaId=p.id;p.deliveredAt=Date.now();p.mediaType=d.media.mediaType||p.mediaType;saveEnt(s);await worldApi("world_media_delete",{mediaId:c.mediaId}).catch(()=>{});if(document.querySelector(".entSite"))entertainment();}
 async function pushSnapshot(){try{const s=marketTick(),e=entState();await worldApi("world_snapshot_put",{snapshot:{at:Date.now(),cash:core.bankSpendable(),stocks:STOCKS.map(st=>({ticker:st.ticker,name:st.name,price:s.prices[st.ticker],frozen:!!s.frozen[st.ticker]})),marketMode:s.mode,purchases:e.purchases.map(p=>({id:p.id,type:p.type,title:p.title,tier:p.tier,price:p.price,boughtAt:p.boughtAt,status:p.status,mediaType:p.mediaType}))}})}catch{}}
 async function syncWorld(){try{const cmds=await getWorldQueue();const ids=[];for(const c of cmds){try{if(c.kind==="market")applyMarketCommand(c);else if(c.kind==="ent_delivery")await applyDelivery(c);ids.push(c.id)}catch{}}if(ids.length)await worldApi("world_ack",{ids});await pushSnapshot()}catch{}}
