@@ -1,0 +1,17 @@
+TESR1 CORRECT CONSOLIDATED UPDATE — 2026-09-26
+
+This package restores all current test features while keeping the tight cropped desktop tab layout.
+
+Included fixes/features:
+- Test Worker config scripts restored in index.html.
+- Micky Stock Exchange opens from The Internet.
+- Micky Entertainment opens from The Internet.
+- Entertainment purchases use the shared test MB wallet.
+- Live Show accepts audio/video deliveries.
+- Entertainment audio playback uses Blob/Object URLs and has Play + Pause controls.
+- Influencer hashtag payouts credit the real spendable test MB wallet.
+- Funny automatic market news appears for crashes/rallies/recoveries.
+- 21 stock-market logo assets retained.
+- Tight cropped desktop tabs retained without overwriting feature script hooks.
+
+No Cloudflare Worker redeploy is required for this package.
