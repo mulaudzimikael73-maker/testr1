@@ -2195,19 +2195,25 @@ async function ensureInfluencerWeek(){
   await persistInfluencer();
 }
 const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBTESTV1";
+const INTERNET_BANK_WALLET_KEY="lizzyMickyBucsTESTV1";
+const INTERNET_BANK_INFLUENCER_TOTAL_KEY="bankOfMickyInfluencerTotalTESTV2";
 const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsTESTV2";
 function localBankRead(key,fallback){
   try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}
 }
 function creditInternetBank(amount,description,meta={}){
   amount=Math.round((Number(amount)||0)*100)/100;if(amount<=0)return null;
-  const oldBalance=Number(localBankRead(INTERNET_BANK_CREATOR_KEY,0))||0;
-  const balance=Math.round((oldBalance+amount)*100)/100;
+  const oldWallet=Number(localBankRead(INTERNET_BANK_WALLET_KEY,0))||0;
+  const wallet=Math.round((oldWallet+amount)*100)/100;
+  const oldTotal=Number(localBankRead(INTERNET_BANK_INFLUENCER_TOTAL_KEY,0))||0;
+  const total=Math.round((oldTotal+amount)*100)/100;
   const ledger=localBankRead(INTERNET_BANK_LEDGER_KEY,[]);
-  const tx={id:"mizzy-"+uid(),at:Date.now(),amount,description,kind:"influencer",currency:"MB",balanceAfter:balance,...meta};
-  localStorage.setItem(INTERNET_BANK_CREATOR_KEY,JSON.stringify(balance));
+  const tx={id:"mizzy-"+uid(),at:Date.now(),amount,description,kind:"influencer",currency:"MB",balanceAfter:wallet,...meta};
+  localStorage.setItem(INTERNET_BANK_WALLET_KEY,JSON.stringify(wallet));
+  localStorage.setItem(INTERNET_BANK_INFLUENCER_TOTAL_KEY,JSON.stringify(total));
   localStorage.setItem(INTERNET_BANK_LEDGER_KEY,JSON.stringify([tx,...(Array.isArray(ledger)?ledger:[])].slice(0,250)));
   window.dispatchEvent(new Event("bankOfMickyUpdated"));
+  window.dispatchEvent(new Event("lizzyStoreRefresh"));
   return tx;
 }
 async function migrateLegacyMizzyBankIfNeeded(){

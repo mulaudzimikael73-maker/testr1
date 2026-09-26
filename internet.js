@@ -37,6 +37,8 @@ const BANK_WALLET_KEY="lizzyMickyBucsTESTV1";
 const BANK_STATE_KEY="lizzyMickyBankTESTV1";
 const BANK_WEEK=7*24*60*60*1000;
 const BANK_CREATOR_KEY="bankOfMickyCreatorMBTESTV1";
+const BANK_INFLUENCER_TOTAL_KEY="bankOfMickyInfluencerTotalTESTV2";
+const BANK_CREATOR_MIGRATION_KEY="bankOfMickyCreatorMergedIntoWalletTESTV2";
 const BANK_LEDGER_KEY="bankOfMickyTransactionsTESTV2";
 const BANK_RANDOM_DAY_KEY="bankOfMickyRandomActivityDayTESTV1";
 const BANK_RANDOM_CREDITS=[[10,"Good Behaviour Bonus"],[25,"Main Character Allowance"],[7,"Looking Fabulous Credit"],[18,"Compensation for Waking Up Early"],[30,"Mikael Appreciation Dividend"],[12,"Money Found Behind the Sofa"]];
@@ -47,25 +49,36 @@ function bankRead(key,fallback){
  catch(e){return fallback}
 }
 function bankWrite(key,value){localStorage.setItem(key,JSON.stringify(value))}
-function bankCreatorBalance(){return Number(bankRead(BANK_CREATOR_KEY,0))||0}
+function bankCreatorBalance(){return Number(bankRead(BANK_INFLUENCER_TOTAL_KEY,0))||0}
 function bankLedger(){const x=bankRead(BANK_LEDGER_KEY,[]);return Array.isArray(x)?x:[]}
 function bankEsc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function bankMoney(n){return (Math.round((Number(n)||0)*100)/100).toFixed(2).replace(/\.00$/,"" )+" MB"}
 function bankRecord(tx){const ledger=bankLedger();ledger.unshift({id:"bank-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),at:Date.now(),...tx});bankWrite(BANK_LEDGER_KEY,ledger.slice(0,250))}
+function bankMigrateLegacyCreatorBalance(){
+ if(bankRead(BANK_CREATOR_MIGRATION_KEY,false))return;
+ const legacy=Math.max(0,Number(bankRead(BANK_CREATOR_KEY,0))||0);
+ if(legacy>0){
+   bankSetWallet(Math.round((bankWallet()+legacy)*100)/100);
+ }
+ const earned=bankLedger().filter(x=>x&&x.kind==="influencer"&&Number(x.amount)>0).reduce((s,x)=>s+Number(x.amount||0),0);
+ bankWrite(BANK_INFLUENCER_TOTAL_KEY,Math.round(Math.max(bankCreatorBalance(),earned)*100)/100);
+ bankWrite(BANK_CREATOR_KEY,0);
+ bankWrite(BANK_CREATOR_MIGRATION_KEY,true);
+}
 function bankCreatorTransaction(amount,description,kind="general"){
  amount=Math.round((Number(amount)||0)*100)/100;if(!amount)return false;
- const old=bankCreatorBalance();if(amount<0&&old+amount<0)return false;
- const balance=Math.round((old+amount)*100)/100;bankWrite(BANK_CREATOR_KEY,balance);
+ const old=bankWallet();if(amount<0&&old+amount<0)return false;
+ const balance=Math.round((old+amount)*100)/100;bankSetWallet(balance);
+ if(kind==="influencer"&&amount>0){bankWrite(BANK_INFLUENCER_TOTAL_KEY,Math.round((bankCreatorBalance()+amount)*100)/100)}
  bankRecord({amount,description,kind,currency:"MB",balanceAfter:balance});return true;
 }
-function bankSpendable(){return Math.round((bankCreatorBalance()+bankWallet())*100)/100}
+function bankSpendable(){bankMigrateLegacyCreatorBalance();return Math.round(bankWallet()*100)/100}
 function bankSpend(amount,description,kind="purchase"){
+ bankMigrateLegacyCreatorBalance();
  amount=Math.round((Number(amount)||0)*100)/100;if(amount<=0||bankSpendable()<amount)return false;
- let left=amount,creator=bankCreatorBalance(),wallet=bankWallet();
- const creatorPart=Math.min(creator,left);creator=Math.round((creator-creatorPart)*100)/100;left=Math.round((left-creatorPart)*100)/100;
- if(left>0)wallet=Math.round((wallet-left)*100)/100;
- bankWrite(BANK_CREATOR_KEY,creator);bankSetWallet(wallet);
- bankRecord({amount:-amount,description,kind,currency:"MB",balanceAfter:Math.round((creator+wallet)*100)/100});
+ const wallet=Math.round((bankWallet()-amount)*100)/100;
+ bankSetWallet(wallet);
+ bankRecord({amount:-amount,description,kind,currency:"MB",balanceAfter:wallet});
  return true;
 }
 function bankCredit(amount,description,kind="income"){return bankCreatorTransaction(Math.abs(Number(amount)||0),description,kind)}
@@ -76,7 +89,7 @@ function bankMaybeRandomActivity(){
  bankWrite(BANK_RANDOM_DAY_KEY,day);
  const roll=fnv1aSeed("bank-random|"+day)%100;
  if(roll<22){const x=BANK_RANDOM_CREDITS[fnv1aSeed(day+"|credit")%BANK_RANDOM_CREDITS.length];bankCreatorTransaction(x[0],x[1],"bonus")}
- else if(roll<44){const bal=bankCreatorBalance(),choices=BANK_RANDOM_CHARGES.filter(x=>x[0]<=bal);if(choices.length){const x=choices[fnv1aSeed(day+"|charge")%choices.length];bankCreatorTransaction(-x[0],x[1],"charge")}}
+ else if(roll<44){const bal=bankWallet(),choices=BANK_RANDOM_CHARGES.filter(x=>x[0]<=bal);if(choices.length){const x=choices[fnv1aSeed(day+"|charge")%choices.length];bankCreatorTransaction(-x[0],x[1],"charge")}}
 }
 function bankWallet(){return Number(bankRead(BANK_WALLET_KEY,0))||0}
 function bankSetWallet(n){
@@ -130,6 +143,7 @@ function bankBonusText(s){
  return "🎉 Your +5 MB weekly savings bonus is ready.";
 }
 function bankDashboard(message=""){
+ bankMigrateLegacyCreatorBalance();
  bankMaybeRandomActivity();
  const s=bankState(),w=bankWallet(),creator=bankCreatorBalance(),tx=bankLedger();
  const txHtml=tx.length?tx.map(x=>{
@@ -141,10 +155,10 @@ function bankDashboard(message=""){
  $("browserPage").innerHTML=`<div class="bankSite">
  <div class="bankSiteHeader"><div><small>BANK OF MICKY</small><h2>Good day, Lizzy 👋</h2></div><button id="bankLogout" type="button">Log Out</button></div>
  <div class="bankAccountCard"><small>AVAILABLE MICKY BUCS</small><div class="bankBigBalance">${w} <span>MB</span></div><div class="bankAccountNo">Everyday Wallet • **** 0002</div></div>
- <div class="bankGrid"><div class="bankMiniCard creatorCash"><small>INFLUENCER EARNINGS</small><strong>${bankMoney(creator)}</strong><span>MizzyGram Creator Account</span></div><div class="bankMiniCard"><small>SAVINGS</small><strong>${s.savings} MB</strong><span>Bank of Micky Savings</span></div><div class="bankMiniCard"><small>WEEKLY BONUS</small><strong>+5 MB</strong><span>${bankBonusText(s)}</span></div></div>
+ <div class="bankGrid"><div class="bankMiniCard creatorCash"><small>TOTAL INFLUENCER EARNINGS</small><strong>${bankMoney(creator)}</strong><span>Paid directly into Available Micky Bucs</span></div><div class="bankMiniCard"><small>SAVINGS</small><strong>${s.savings} MB</strong><span>Bank of Micky Savings</span></div><div class="bankMiniCard"><small>WEEKLY BONUS</small><strong>+5 MB</strong><span>${bankBonusText(s)}</span></div></div>
  <div class="bankActions"><button type="button" data-web-bank="deposit">↓ Deposit 5 MB</button><button type="button" data-web-bank="withdraw">↑ Withdraw 5 MB</button><button type="button" data-web-bank="bonus">🎁 Claim Weekly Bonus</button></div>
  ${message?`<div class="bankWebStatus">${message}</div>`:""}
- <div class="bankRules"><b>How savings work</b><p>Move 5 MB at a time between your wallet and savings. Keep at least 15 MB saved for 7 days to qualify for the +5 MB weekly bonus. MizzyGram creator payments land in your separate Influencer Earnings account above.</p></div>
+ <div class="bankRules"><b>How savings work</b><p>Move 5 MB at a time between your wallet and savings. Keep at least 15 MB saved for 7 days to qualify for the +5 MB weekly bonus. MizzyGram creator payments are paid directly into your Available Micky Bucs wallet. The Influencer Earnings card above tracks your lifetime campaign income.</p></div>
  <div class="bankHistory"><div class="bankHistoryHead"><h3>Transaction History</h3><small>Bank activity, creator payments and suspicious fees</small></div>${txHtml}</div></div>`;
 }
 async function bankAction(action){
