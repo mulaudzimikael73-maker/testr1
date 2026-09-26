@@ -87,7 +87,35 @@ const MediaDB=(()=>{let dbp;function db(){if(dbp)return dbp;dbp=new Promise((res
 function entertainment(){core.setAddress("https://mickyentertainment.lizzy");const s=entState(),cash=core.bankSpendable();const shop=Object.values(ENT_ITEMS).map(it=>`<article class="entCard"><div class="entIcon">${it.icon}</div><h3>${esc(it.name)}</h3><b>${esc(it.title)}</b><p>${esc(it.desc)}</p><div class="ticketTiers">${it.tiers.map(([name,price])=>`<button data-ent-buy="${it.type}" data-ent-tier="${esc(name)}" data-ent-price="${price}"><span>${esc(name)}</span><b>${price} MB</b></button>`).join("")}</div></article>`).join("");const lib=s.purchases.slice().reverse().map(p=>{const it=ENT_ITEMS[p.type]||{};return `<article class="libraryItem"><div class="entIcon">${it.icon||"🎟️"}</div><div><b>${esc(p.title)}</b><span>${esc(p.tier)} · ${fmt(p.price)} · ${new Date(p.boughtAt).toLocaleDateString("en-ZA")}</span><small>${p.status==="ready"?"✅ Ready to enjoy":"⏳ Purchased — waiting for Mikael to upload your content"}</small></div>${p.status==="ready"?`<button data-ent-play="${esc(p.id)}">${p.mediaType==="audio"?"Listen":"Watch"}</button>`:""}</article>`}).join("")||'<div class="marketEmpty">Your Entertainment folder is empty. Buy a ticket or exclusive song above.</div>';
  $("browserPage").innerHTML=`<div class="entSite"><header class="entHero"><div><small>THE INTERNET • ENTERTAINMENT</small><h1>Micky Entertainment</h1><p>Buy access now. Once Mikael uploads the performance, it appears in your Entertainment folder.</p></div><strong>${fmt(cash)}<small>Spendable MB</small></strong></header><div class="entGrid">${shop}</div><section class="entLibrary"><div class="entLibraryHead"><div><small>MY FOLDER</small><h2>🎟️ Entertainment</h2></div><span>${s.purchases.length} purchase${s.purchases.length===1?"":"s"}</span></div>${lib}</section></div>`;}
 function purchaseEntertainment(type,tier,price){const it=ENT_ITEMS[type],amount=Number(price);if(!it||!it.tiers.some(x=>x[0]===tier&&x[1]===amount))return;if(!core.bankSpend(amount,`${it.name} · ${tier}`,"entertainment-ticket")){alert(`Not enough MB. This ticket costs ${fmt(amount)}.`);return}const s=entState(),p={id:`ticket-${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`,type,title:it.title,tier,price:amount,boughtAt:Date.now(),status:"waiting",mediaType:it.media};s.purchases.push(p);saveEnt(s);entertainment();pushSnapshot();}
-async function playEntertainment(id){const p=entState().purchases.find(x=>x.id===id);if(!p||p.status!=="ready")return;const media=await MediaDB.get(p.mediaId||p.id);if(!media?.data){alert("That media is not stored on this device yet. Keep The Internet open for a few seconds so it can sync from MickyHQ.");return}const modal=document.createElement("div");modal.className="entModal";modal.innerHTML=`<div class="entPlayer"><button class="entClose" aria-label="Close">×</button><small>${esc(ENT_ITEMS[p.type]?.name||"Entertainment")}</small><h2>${esc(p.title)}</h2>${p.mediaType==="audio"?`<audio controls src="${esc(media.data)}"></audio>`:`<video controls playsinline src="${esc(media.data)}"></video>`}<p>${esc(p.tier)} · Purchased for ${fmt(p.price)}</p></div>`;document.body.appendChild(modal);modal.querySelector(".entClose").onclick=()=>modal.remove();modal.onclick=e=>{if(e.target===modal)modal.remove()}}
+async function entertainmentObjectURL(media){
+ if(!media?.data)return null;
+ try{
+  const res=await fetch(media.data),raw=await res.blob(),mime=String(media.mime||raw.type||(media.mediaType==="audio"?"audio/mp4":"video/mp4"));
+  const blob=raw.type===mime?raw:new Blob([await raw.arrayBuffer()],{type:mime});
+  return URL.createObjectURL(blob);
+ }catch{return null}
+}
+async function playEntertainment(id){
+ const p=entState().purchases.find(x=>x.id===id);if(!p||p.status!=="ready")return;
+ const media=await MediaDB.get(p.mediaId||p.id);
+ if(!media?.data){alert("That media is not stored on this device yet. Keep The Internet open for a few seconds so it can sync from MickyHQ.");return}
+ const src=await entertainmentObjectURL(media);
+ if(!src){alert("That file was delivered, but the browser could not prepare it for playback. Try uploading it again from the Test HQ.");return}
+ const isAudio=(media.mediaType||p.mediaType)==="audio";
+ const modal=document.createElement("div");modal.className="entModal";
+ modal.innerHTML=`<div class="entPlayer"><button class="entClose" aria-label="Close">×</button><small>${esc(ENT_ITEMS[p.type]?.name||"Entertainment")}</small><h2>${esc(p.title)}</h2>${isAudio?`<audio preload="metadata" src="${esc(src)}"></audio><div class="entAudioControls"><button type="button" data-ent-audio-play>▶ Play</button><button type="button" data-ent-audio-pause>⏸ Pause</button><span data-ent-audio-status>Ready</span></div><div class="entNativeAudio"><audio controls preload="metadata" src="${esc(src)}"></audio></div>`:`<video controls playsinline preload="metadata" src="${esc(src)}"></video>`}<p>${esc(p.tier)} · Purchased for ${fmt(p.price)}</p></div>`;
+ document.body.appendChild(modal);
+ const close=()=>{modal.querySelectorAll("audio,video").forEach(el=>{try{el.pause()}catch{}});URL.revokeObjectURL(src);modal.remove()};
+ modal.querySelector(".entClose").onclick=close;modal.onclick=e=>{if(e.target===modal)close()};
+ if(isAudio){
+  const audio=modal.querySelector(".entPlayer>audio"),play=modal.querySelector("[data-ent-audio-play]"),pause=modal.querySelector("[data-ent-audio-pause]"),status=modal.querySelector("[data-ent-audio-status]");
+  const set=t=>{if(status)status.textContent=t};
+  play.onclick=async()=>{try{await audio.play();set("Playing") }catch{set("Tap Play again or use the player below")}};
+  pause.onclick=()=>{audio.pause();set("Paused")};
+  audio.addEventListener("playing",()=>set("Playing"));audio.addEventListener("pause",()=>{if(!audio.ended)set("Paused")});audio.addEventListener("ended",()=>set("Finished"));
+  audio.addEventListener("error",()=>set("This browser could not decode the audio. Re-upload as M4A/AAC, MP3 or WAV."));
+ }
+}
 
 async function worldApi(action,body={}){if(!WORKER)throw new Error("Test Worker not configured");const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...body}),cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)throw new Error(d.error||`Request failed (${r.status})`);return d}
 async function getWorldQueue(){if(!WORKER)return[];const r=await fetch(WORKER+"?action=world_queue",{cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok)return[];return d.commands||[]}
