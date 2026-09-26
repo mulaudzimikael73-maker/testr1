@@ -4697,9 +4697,123 @@ body[data-personality="Agent Yelizaveta"]:not(.mikaelTakeoverActive)::after{
 .bankHistoryIcon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.09);font-weight:900}.bankHistoryRow b{display:block;font-size:12px}.bankHistoryRow small{display:block;opacity:.58;font-size:10px;margin-top:2px}.bankHistoryRow strong{font-size:12px;white-space:nowrap}.bankCredit{color:#8ee5ae}.bankDebit{color:#ff9d9d}.bankHistoryEmpty{padding:18px;text-align:center;opacity:.55}
 @media(max-width:650px){.bankGrid{grid-template-columns:1fr}.bankHistoryHead{align-items:flex-start;flex-direction:column}.bankHistoryHead small{text-align:left}.bankHistoryRow{grid-template-columns:30px minmax(0,1fr) auto}}
 
-/* ===== Micky Stock Exchange + Entertainment ===== */
-.marketSite,.entSite{max-width:1120px;margin:0 auto;padding-bottom:28px}.marketHero,.entHero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:22px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(135deg,rgba(19,35,53,.92),rgba(40,23,58,.92));box-shadow:0 16px 40px rgba(0,0,0,.22)}.marketHero small,.entHero small,.entLibraryHead small{font-size:10px;font-weight:900;letter-spacing:1.3px;opacity:.7}.marketHero h1,.entHero h1{margin:4px 0 5px;font-size:30px}.marketHero p,.entHero p{margin:0;opacity:.72}.marketTotals{display:grid;gap:8px;min-width:220px}.marketTotals span,.entHero>strong{display:flex;justify-content:space-between;gap:18px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.09);font-size:12px}.entHero>strong{display:grid;justify-items:end;font-size:24px}.entHero>strong small{font-size:10px;font-weight:700;opacity:.65}.marketTicker{display:flex;gap:8px;overflow-x:auto;margin:12px 0;padding:10px;border-radius:14px;background:rgba(0,0,0,.18)}.marketTicker span{flex:none;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.08);font-size:11px}.marketNews{margin:12px 0;padding:15px;border-radius:16px;background:rgba(255,255,255,.07)}.marketNews h3{margin:0 0 8px}.marketNewsItem{display:grid;grid-template-columns:64px 1fr;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.08);font-size:12px}.marketNewsItem:first-of-type{border-top:0}.marketNewsItem b{color:#ffd678}.marketEmpty{padding:18px;text-align:center;opacity:.65}.stockGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}.stockCard{padding:14px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden}.stockHead{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center}.stockHead img{width:54px;height:54px;object-fit:cover;border-radius:12px}.stockHead div{min-width:0}.stockHead b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stockHead span{display:block;margin-top:3px;font-size:10px;opacity:.62}.stockHead strong{font-size:15px}.marketSpark{width:100%;height:42px;margin:9px 0 4px}.marketSpark polyline{fill:none;stroke-width:2.2;vector-effect:non-scaling-stroke}.marketSpark .up{stroke:#55dca0}.marketSpark .down{stroke:#ff7c8f}.stockMeta{display:flex;justify-content:space-between;gap:8px;font-size:10px}.stockMeta .gain{color:#70efb3}.stockMeta .loss{color:#ff91a1}.stockCard p{min-height:34px;font-size:11px;line-height:1.4;opacity:.72}.stockTrade{display:grid;grid-template-columns:74px 1fr 1fr;gap:7px}.stockTrade input,.stockTrade button{box-sizing:border-box;width:100%;padding:9px;border:0;border-radius:10px}.stockTrade input{background:rgba(255,255,255,.12);color:inherit;outline:none}.stockTrade button{font-weight:800;cursor:pointer}.stockTrade button:first-of-type{background:#aef0c8}.stockTrade button:last-of-type{background:#ffd3dc}.stockTrade button:disabled{opacity:.35;cursor:not-allowed}.entGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.entCard{padding:18px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13)}.entIcon{font-size:34px}.entCard h3{margin:5px 0 2px}.entCard>p{font-size:12px;line-height:1.45;opacity:.72}.ticketTiers{display:grid;gap:7px;margin-top:12px}.ticketTiers button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.08);color:inherit;cursor:pointer}.ticketTiers button:hover{background:rgba(255,255,255,.14)}.ticketTiers button span{font-size:11px}.ticketTiers button b{font-size:12px;color:#ffd678}.entLibrary{margin-top:15px;padding:16px;border-radius:20px;background:rgba(0,0,0,.17)}.entLibraryHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.entLibraryHead h2{margin:2px 0}.entLibraryHead>span{font-size:11px;opacity:.65}.libraryItem{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}.libraryItem:first-of-type{border-top:0}.libraryItem .entIcon{font-size:28px}.libraryItem b,.libraryItem span,.libraryItem small{display:block}.libraryItem span{margin:2px 0;font-size:10px;opacity:.66}.libraryItem small{font-size:10px;color:#d8cae8}.libraryItem button{border:0;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}.entModal{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}.entPlayer{position:relative;width:min(850px,96vw);max-height:90vh;overflow:auto;padding:18px;border-radius:20px;background:#18131d;color:#fff}.entPlayer video{display:block;width:100%;max-height:68vh;background:#000;border-radius:14px}.entPlayer audio{width:100%;margin:20px 0}.entPlayer h2{margin:4px 0 12px}.entPlayer small{opacity:.6}.entPlayer p{opacity:.65}.entClose{position:absolute;right:12px;top:10px;width:38px;height:38px;border:0;border-radius:50%;font-size:24px;cursor:pointer}.browserBookmarks button[data-site="market"] span,.browserBookmarks button[data-site="entertainment"] span{filter:drop-shadow(0 4px 8px rgba(0,0,0,.22))}@media(max-width:720px){.marketHero,.entHero{display:grid}.marketTotals{min-width:0}.stockGrid,.entGrid{grid-template-columns:1fr}.stockHead{grid-template-columns:48px minmax(0,1fr)}.stockHead strong{grid-column:2}.libraryItem{grid-template-columns:40px 1fr}.libraryItem>button{grid-column:2}.marketNewsItem{grid-template-columns:1fr}.stockTrade{grid-template-columns:62px 1fr 1fr}}
-/* Stock holding detail + HQ trend status */
-.holdingStats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;padding:8px 9px;border-radius:10px;background:rgba(0,0,0,.16);font-size:10px}.holdingStats span{display:grid;gap:2px}.holdingStats b{font-size:11px}.holdingStats .gain,.marketTotals .gain{color:#70efb3}.holdingStats .loss,.marketTotals .loss{color:#ff91a1}.stockTrend{margin-top:7px;padding:7px 9px;border-radius:9px;background:rgba(255,214,120,.09);font-size:10px;color:#ffd678}.marketNewsItem.catastrophic b{color:#ff8798}.marketNewsItem.ridiculously b{color:#70efb3}.marketNewsItem.positive b{color:#70efb3}.marketNewsItem.negative b{color:#ff91a1}
 
-.entAudioControls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 10px}.entAudioControls button{border:0;border-radius:12px;padding:10px 16px;font-weight:900;cursor:pointer;background:#fff;color:#18131d}.entAudioControls button[data-ent-audio-pause]{background:#ffd3dc}.entAudioControls span{font-size:12px;opacity:.72}.entNativeAudio audio{width:100%;margin:8px 0 16px}
+/* LIZZY DESKTOP TAB LAYOUT V3.0 — cleaner card-style launcher */
+#desktopArea{
+  width:min(1380px,calc(100% - 44px))!important;
+  padding:32px 26px 110px!important;
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr))!important;
+  grid-auto-rows:minmax(94px,auto)!important;
+  column-gap:18px!important;
+  row-gap:18px!important;
+  align-content:start!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+}
+#desktopArea>.desktopIcon{
+  --iconA:#ff6fa7;
+  --iconB:#ffc2da;
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:96px!important;
+  padding:14px 18px!important;
+  border-radius:28px!important;
+  background:linear-gradient(145deg,rgba(39,20,57,.68),rgba(83,47,102,.45))!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:0 18px 38px rgba(67,20,84,.18), inset 0 1px 0 rgba(255,255,255,.14)!important;
+  backdrop-filter:blur(16px)!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  display:grid!important;
+  grid-template-columns:72px 1fr!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  text-align:left!important;
+  position:relative!important;
+  overflow:hidden!important;
+}
+#desktopArea>.desktopIcon::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:6px;
+  border-radius:28px;
+  background:linear-gradient(180deg,var(--iconA),var(--iconB));
+  opacity:.95;
+}
+#desktopArea>.desktopIcon::after{
+  content:"";
+  position:absolute;
+  right:-18px;top:-18px;
+  width:84px;height:84px;
+  border-radius:999px;
+  background:radial-gradient(circle at center, color-mix(in srgb, var(--iconA) 55%, white 45%) 0%, transparent 70%);
+  opacity:.24;
+  pointer-events:none;
+}
+#desktopArea>.desktopIcon:hover{transform:translateY(-4px)!important;box-shadow:0 24px 44px rgba(67,20,84,.24), inset 0 1px 0 rgba(255,255,255,.17)!important}
+#desktopArea>.desktopIcon>.desktopEmoji{
+  width:64px!important;
+  height:64px!important;
+  min-height:64px!important;
+  border-radius:20px!important;
+  font-size:39px!important;
+  background:linear-gradient(145deg,color-mix(in srgb, var(--iconA) 72%, white 28%),color-mix(in srgb, var(--iconB) 65%, white 35%))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 22px rgba(78,32,92,.15)!important;
+  color:#fff!important;
+}
+#desktopArea>.desktopIcon>span:not([id$="Dot"]){
+  width:auto!important;
+  max-width:none!important;
+  display:block!important;
+  text-align:left!important;
+  font-size:19px!important;
+  font-weight:900!important;
+  line-height:1.1!important;
+  color:#fff!important;
+  text-shadow:0 2px 12px rgba(57,13,57,.20)!important;
+  padding-right:16px!important;
+}
+#desktopArea>.desktopIcon>span[id$="Dot"],
+#desktopArea>.desktopIcon .mailDesktopDot,
+#desktopArea>.desktopIcon .irDesktopDot{
+  position:absolute!important;
+  top:10px!important;
+  right:12px!important;
+  z-index:4!important;
+}
+#desktopArea>.desktopIcon#coopWorldIcon{--iconA:#ff5b95;--iconB:#ff9fc5}
+#desktopArea>.desktopIcon#folderIcon{--iconA:#f6bf3a;--iconB:#ffd96d}
+#desktopArea>.desktopIcon#readMeIcon{--iconA:#ff4c86;--iconB:#ff97bf}
+#desktopArea>.desktopIcon#missionIcon{--iconA:#f5a623;--iconB:#ffd15d}
+#desktopArea>.desktopIcon#openWhenIcon{--iconA:#ff87bd;--iconB:#ffd2e7}
+#desktopArea>.desktopIcon#recycleBinIcon{--iconA:#cdd6e7;--iconB:#eef3ff}
+#desktopArea>.desktopIcon#personalityIcon{--iconA:#ff7ecf;--iconB:#ffb4e3}
+#desktopArea>.desktopIcon#gamesFolderStaticIcon{--iconA:#7367ff;--iconB:#a594ff}
+#desktopArea>.desktopIcon#classifiedFolderIcon{--iconA:#7f7f8f;--iconB:#bdbdd1}
+#desktopArea>.desktopIcon#livingDesktopIcon{--iconA:#7ad2ff;--iconB:#a7ebff}
+#desktopArea>.desktopIcon#internetIcon{--iconA:#43c7ff;--iconB:#8be7ff}
+#desktopArea>.desktopIcon#lizzyMailIcon{--iconA:#ff5d96;--iconB:#ffb6d7}
+#desktopArea>.desktopIcon#lizzyGardenIcon{--iconA:#ff77bf;--iconB:#ffc1e5}
+#desktopArea>.desktopIcon#tokenJarIcon{--iconA:#96d5ff;--iconB:#d7f0ff}
+#desktopArea>.desktopIcon#seedStoreIcon{--iconA:#ff7db2;--iconB:#ffc5df}
+#desktopArea>.desktopIcon#lizzyAssistantIcon{--iconA:#ae7cff;--iconB:#d6b8ff}
+#desktopArea>.desktopIcon#dayCheckIcon{--iconA:#ff6799;--iconB:#ffb2d1}
+#desktopArea>.desktopIcon#connectionIcon{--iconA:#ff5eb1;--iconB:#ff9bd1}
+#desktopArea>.desktopIcon#thoughtBoardIcon{--iconA:#d97bff;--iconB:#efc2ff}
+#desktopArea>.desktopIcon#calendarIcon{--iconA:#ff5d97;--iconB:#ff9ec5}
+#desktopArea>.desktopIcon#interactiveRewardsIcon{--iconA:#a98aff;--iconB:#d9c8ff}
+@media (max-width: 1100px){
+  #desktopArea{grid-template-columns:repeat(3,minmax(210px,1fr))!important;}
+}
+@media (max-width: 760px){
+  #desktopArea{grid-template-columns:repeat(2,minmax(170px,1fr))!important;padding:24px 14px 100px!important;gap:14px!important;}
+  #desktopArea>.desktopIcon{min-height:88px!important;padding:12px 14px!important;grid-template-columns:58px 1fr!important;gap:12px!important;border-radius:24px!important;}
+  #desktopArea>.desktopIcon>.desktopEmoji{width:54px!important;height:54px!important;min-height:54px!important;font-size:31px!important;border-radius:16px!important;}
+  #desktopArea>.desktopIcon>span:not([id$="Dot"]){font-size:16px!important;line-height:1.12!important;}
+}
+@media (max-width: 520px){
+  #desktopArea{grid-template-columns:1fr!important;padding:20px 12px 96px!important;}
+}
