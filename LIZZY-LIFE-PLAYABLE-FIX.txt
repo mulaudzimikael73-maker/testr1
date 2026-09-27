@@ -1,0 +1,17 @@
+LIZZY LIFE — PLAYABLE TEST UPDATE
+
+Upload to testr1:
+- index.html
+- style.css
+- life-mode.js
+
+What changed:
+- Main screen is now a playable Life world, not a stats dashboard.
+- Travel: Home, Work, City Centre, Cafe, Shops, Gym, Park, Restaurant.
+- Location-specific actions advance Life Time and affect Life Bucs / Energy / Fullness / Fun / Confidence.
+- Random choice events.
+- Real 5-round Work Challenge mini-game.
+- Play / Manage Life / Story & Calendar tabs.
+- Existing Bank of Micky, Mikael Spector, Michael Scott recruitment, Government recruitment, housing, diets, skips and HQ sync preserved.
+- NO real-world offline catch-up. The save contains Life Time only.
+- Automatic ticking only occurs while the Lizzy Life window is open, browser tab visible, Play view active, and the game is not paused/event-blocked.
