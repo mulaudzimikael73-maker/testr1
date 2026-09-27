@@ -3,3 +3,18 @@
 
 /* ===== ACTIVITY-DRIVEN TIME + INTERVIEWS ===== */
 .slot{display:inline-block;margin:0 7px 5px 0;padding:5px 9px;border-radius:999px;background:#6d2a59;color:#fff;font-size:9px;font-weight:1000;letter-spacing:.7px;text-transform:uppercase}.event.interview{background:linear-gradient(135deg,#37204c,#744a91)}.event.interview.ready{background:linear-gradient(135deg,#1d3b48,#336f80)}.event.interview .q{display:block;margin:12px 0}.event.interview .q b{display:block;font-size:12px;line-height:1.45;margin-bottom:6px}.event.interview textarea{width:100%;min-height:74px;resize:vertical;border:1px solid #ffffff30;border-radius:12px;padding:10px;background:#ffffff14;color:#fff}.event.interview textarea::placeholder{color:#ffffff88}.primaryish{border:0!important;background:#fff!important;color:#44263c!important;margin-top:6px}.counter{display:grid;grid-template-columns:120px 1fr;gap:7px;margin:8px 0}.counter input{min-width:0;border:1px solid #6d2a5922;border-radius:10px;padding:8px}.familymini{display:grid;gap:6px}.familymini>div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed #6d2a5914}.familymini b{font-size:11px}.familymini small{font-size:9px;text-align:right}.pending.contract{background:#f4ecff;border-color:#8d62b738}.pending.contract strong{font-size:16px}@media(max-width:620px){.counter{grid-template-columns:1fr}}
+
+/* ===== Lizzy Life v6: Office relationships + court ===== */
+.office-rel{margin-top:12px}
+.office-rel .muted{opacity:.72;margin-top:-4px}
+.officepeople{display:grid;gap:10px}
+.officepeople article{padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.035)}
+.officepeople article>div:first-child{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.officepeople small{opacity:.72}
+.legalcase{padding:12px;margin:9px 0;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.035)}
+.legalcase>small{display:block;opacity:.72;margin-top:3px}
+.verdict{padding:9px 10px;border-radius:10px;margin:8px 0;background:rgba(255,255,255,.06)}
+.verdict.won{outline:1px solid rgba(102,255,178,.35)}
+.verdict.lost{outline:1px solid rgba(255,130,130,.25)}
+.transcript{max-height:260px;overflow:auto;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.16);margin-top:8px}
+.transcript p{margin:7px 0}
