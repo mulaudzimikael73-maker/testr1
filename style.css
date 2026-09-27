@@ -5067,3 +5067,28 @@ body[data-personality="Agent Yelizaveta"]:not(.mikaelTakeoverActive)::after{
 .lifeTopBar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}.lifeTabs{display:flex;gap:6px;flex-wrap:wrap}.lifeTabs button,.lifeTravel,.lifeAction,.lifeEventChoices button{border:1px solid #7a285f22;background:#fff;border-radius:12px;padding:9px 12px;font-weight:900;cursor:pointer}.lifeTabs button.on,.lifeTravel.on{background:#7a285f;color:#fff}.lifeNotice.compact{padding:8px 11px;margin-bottom:8px}.lifePlayLayout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:12px;align-items:start}.lifeScene{background:#fff;border:1px solid #6f315d18;border-radius:20px;overflow:hidden;box-shadow:0 8px 24px #5a24420d}.lifeSceneSky{min-height:160px;display:flex;align-items:center;gap:20px;padding:22px;background:linear-gradient(145deg,#ffe8f5,#f3ecff)}.lifeSceneSky>span{font-size:76px;filter:drop-shadow(0 8px 12px #7a285f22)}.lifeSceneSky small{font-size:10px;letter-spacing:1.2px;font-weight:900;color:#8c3d72}.lifeSceneSky h2{font-size:30px;margin:4px 0 5px}.lifeSceneSky p{margin:0;max-width:650px;line-height:1.45;font-size:13px}.lifeNeeds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px;border-bottom:1px solid #7a285f12}.lifeNeed{display:grid;grid-template-columns:auto 1fr auto;gap:7px;align-items:center;font-size:10px;font-weight:900}.lifeNeed>div{height:8px;border-radius:99px;background:#efe7ee;overflow:hidden}.lifeNeed i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ab4789,#71356f)}.lifeNeed.bad i{background:linear-gradient(90deg,#d65b57,#e1a04f)}.lifeActionTitle{display:flex;justify-content:space-between;gap:10px;align-items:end;padding:13px 14px 7px}.lifeActionTitle b{font-size:16px}.lifeActionTitle span{font-size:10px;opacity:.65}.lifeActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 14px 16px}.lifeAction{text-align:left;min-height:48px}.lifeAction:hover,.lifeEventChoices button:hover{transform:translateY(-1px);box-shadow:0 6px 14px #6f315d16}.lifeSidePanel{display:grid;gap:10px}.lifeMiniCard{background:#fff;border:1px solid #6f315d18;border-radius:16px;padding:12px;box-shadow:0 6px 18px #5a24420b}.lifeMiniCard h3{margin:0 0 8px;font-size:14px}.lifeMiniCard p{font-size:11px;line-height:1.45}.lifeTravelGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.lifeTravel{padding:8px 6px;font-size:10px;display:flex;align-items:center;gap:5px}.lifeTravel span{font-size:17px}.lifeAlert{border-color:#d777a944;background:#fff8fc}.lifeAlert .lifeDecision{padding:7px;margin:5px 0}.lifeGameEvent{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;margin:12px 0;background:linear-gradient(135deg,#2c1734,#6c315d);color:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 12px 30px #3014282b}.lifeGameEvent.work{background:linear-gradient(135deg,#172c34,#315d63)}.lifeEventEmoji{font-size:52px;text-align:center}.lifeGameEvent small{font-weight:900;letter-spacing:1px;opacity:.72}.lifeGameEvent h3{font-size:20px;margin:4px 0}.lifeGameEvent p{margin:3px 0 10px;font-size:12px;line-height:1.45}.lifeEventChoices{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0}.lifeEventChoices button{background:#fff;color:#372438;border:0}.lifeQuickActivity{margin-top:10px}.lifeView{min-height:430px}.lifeModeWindow .windowScroll{scroll-behavior:smooth}
 @media(max-width:900px){.lifePlayLayout{grid-template-columns:1fr}.lifeSidePanel{grid-template-columns:1fr 1fr}.lifeNeeds{grid-template-columns:1fr 1fr}.lifeActions{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.lifeSidePanel{grid-template-columns:1fr}.lifeSceneSky{min-height:130px;padding:16px}.lifeSceneSky>span{font-size:56px}.lifeSceneSky h2{font-size:24px}.lifeNeeds{grid-template-columns:1fr}.lifeActions{grid-template-columns:1fr}.lifeTopBar{align-items:flex-start}.lifeEventEmoji{font-size:38px}.lifeGameEvent{grid-template-columns:50px 1fr;padding:13px}.lifeTabs{width:100%}.lifeTabs button{flex:1;padding:8px 6px;font-size:11px}}
+
+/* =========================================================
+   LIZZY LIFE — ISOLATED GAME SHELL v4
+   Keeps Life controls separate from the LizzyOS desktop DOM.
+========================================================= */
+.lifeIsolatedWindow{
+  position:fixed!important;
+  inset:3vh 2vw!important;
+  transform:none!important;
+  width:96vw!important;
+  height:94vh!important;
+  max-height:none!important;
+  padding:0!important;
+  overflow:hidden!important;
+  z-index:25000!important;
+  pointer-events:auto!important;
+  background:#fff!important;
+  color:#2d2030!important;
+}
+.lifeIsolatedWindow.hidden{display:none!important}
+.lifeIsolatedWindow .windowTop{height:58px;box-sizing:border-box;background:linear-gradient(135deg,#5c214d,#8b3d73)!important;color:#fff!important;position:relative;z-index:2}
+.lifeIsolationBadge{margin-left:auto;padding:5px 9px;border-radius:999px;background:#ffffff22;border:1px solid #ffffff33;font-size:9px;font-weight:900;letter-spacing:1px}
+.lifeGameFrame{display:block;width:100%;height:calc(100% - 58px);border:0;background:#fff;pointer-events:auto!important}
+#lifeModeIcon{pointer-events:auto!important;cursor:pointer!important}
+@media(max-width:700px){.lifeIsolatedWindow{inset:1vh 1vw!important;width:98vw!important;height:98vh!important}.lifeIsolationBadge{display:none}}
