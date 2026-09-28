@@ -18,3 +18,15 @@
 .verdict.lost{outline:1px solid rgba(255,130,130,.25)}
 .transcript{max-height:260px;overflow:auto;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.16);margin-top:8px}
 .transcript p{margin:7px 0}
+
+/* ===== v9 playable relationships / always-visible interactions ===== */
+.eventOverlay{position:fixed;inset:0;z-index:10000;background:rgba(28,13,30,.58);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
+.eventOverlay .event{width:min(760px,96vw);max-height:88vh;overflow:auto;margin:auto;box-shadow:0 28px 80px rgba(29,10,28,.38);border:1px solid rgba(255,255,255,.18)}
+.boss-card{margin-top:12px;border-color:rgba(143,87,46,.24);background:linear-gradient(135deg,#fff,#fff9ef)}
+.peoplegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.peoplewide{grid-column:1/-1}
+.personrow{padding:11px 0;border-bottom:1px dashed #6d2a5917}
+.personrow:last-child{border-bottom:0}
+.personrow>b,.personrow>small{display:block}.personrow>small{opacity:.72;margin:3px 0 8px}
+.peoplegrid .office-rel{margin:0;box-shadow:none;border:0;padding:0}
+@media(max-width:760px){.peoplegrid{grid-template-columns:1fr}.peoplewide{grid-column:auto}.eventOverlay{padding:8px}.eventOverlay .event{grid-template-columns:46px 1fr;padding:14px}.eventOverlay .event .emoji{font-size:38px}}
