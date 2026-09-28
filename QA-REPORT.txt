@@ -1,0 +1,21 @@
+BANK OF MICKY HEIST — QA PASS
+
+Verified shared answers against Worker logic:
+Stage 1: 4815
+Stage 2: A2 -> B1 -> C3 -> D2
+Stage 3: 317
+Stage 4: 27 kg total (all five listed items = 27 kg)
+Stage 5: Mikael arms override, then Lizzy enters Q9-AB-47 (formatting tolerant)
+
+Fixes:
+- Stage 2 tiles use explicit button type and stable click handlers.
+- One tile per column; route is always ordered A,B,C,D.
+- Tile selection is preserved locally instead of relying on rendered DOM order.
+- TESTR standalone page now reads the actual worker key: lizzyos_test_worker_url_v1.
+- TestHQ page reads mickyhq_test_worker_url_v1.
+- Final code accepts Q9-AB-47, Q9 AB 47, or Q9AB47.
+- Stage 4 validates actual weight total.
+- Browser cache versions bumped.
+- TestHQ navigation recognizes Heist Room.
+
+Automated Worker test result: PASS — all 5 stages + reset.

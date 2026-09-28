@@ -4,7 +4,7 @@
  * Secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  * Telegram webhook: /telegram
  */
-const H={"content-type":"application/json","access-control-allow-origin":"*","access-control-allow-headers":"Content-Type","access-control-allow-methods":"GET,POST,OPTIONS"};
+const H={"content-type":"application/json","access-control-allow-origin":"*","access-control-allow-headers":"Content-Type,X-Mikael-HQ-Key","access-control-allow-methods":"GET,POST,OPTIONS","access-control-max-age":"86400"};
 const json=(x,s=200)=>new Response(JSON.stringify(x),{status:s,headers:H});
 
 /* TEST LAB ISOLATION
@@ -21,6 +21,16 @@ function testKV(env){
     delete:(k,...a)=>kv.delete(TEST_KV_PREFIX+k,...a)
   };
 }
+
+/* ===== LOW-KV SNAPSHOT LAYER =====
+   Snapshot clients poll often, but unchanged state must not burn a KV write.
+   Warm isolates skip duplicates without touching KV. Cold isolates do one KV read,
+   compare meaningful state (ignoring top-level `at`), and only write when changed. */
+const SNAPSHOT_HASHES=globalThis.__MICKY_TEST_SNAPSHOT_HASHES||(globalThis.__MICKY_TEST_SNAPSHOT_HASHES=new Map());
+function fastHash(v){const raw=typeof v==="string"?v:JSON.stringify(v);let h=2166136261;for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
+function meaningfulSnapshot(x){if(!x||typeof x!=="object"||Array.isArray(x))return x;const y={...x};delete y.at;return y}
+async function putSnapshotIfChanged(env,key,snapshot,maxLength){const raw=JSON.stringify(snapshot||{});if(raw.length>maxLength)throw new Error("Snapshot too large");const hash=fastHash(meaningfulSnapshot(snapshot||{}));if(SNAPSHOT_HASHES.get(key)===hash)return{stored:false,unchanged:true,hash};const kv=testKV(env);const previousRaw=await kv.get(key);if(previousRaw){try{const previous=JSON.parse(previousRaw),previousHash=fastHash(meaningfulSnapshot(previous));SNAPSHOT_HASHES.set(key,previousHash);if(previousHash===hash)return{stored:false,unchanged:true,hash}}catch{}}await kv.put(key,raw);SNAPSHOT_HASHES.set(key,hash);return{stored:true,unchanged:false,hash}}
+
 async function tg(env,m,p){const r=await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/${m}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(p)});return r.json();}
 async function getClaim(env,id){return testKV(env).get(`claim:${id}`,{type:"json"})||testKV(env).get(id,{type:"json"});}
 async function putClaim(env,c){await testKV(env).put(`claim:${c.claimId}`,JSON.stringify(c));}
@@ -402,7 +412,71 @@ async function getAnnoyCooldown(env){
   return null;
 }
 
+
+
+/* ===== 🏦 BANK OF MICKY HEIST ===== */
+const HEIST_STATE_KEY="heist:bank_of_micky:v1";
+function defaultHeistStages(){return {1:{solved:false},2:{solved:false},3:{solved:false},4:{solved:false},5:{solved:false}}}
+function defaultHeistState(){return {title:"Bank of Micky Heist",currentStage:1,completed:false,overrideArmed:false,lastMessage:"Stage 1 ready. Mikael has the symbol chart. Lizzy has the keypad.",completionText:"",logs:[{title:"Mission Online",text:"The bank is locked down. Split up and compare clues.",at:new Date().toISOString()}],stages:defaultHeistStages(),updatedAt:new Date().toISOString()};}
+function normalizeHeistState(x){const base=defaultHeistState();const s=x&&typeof x==="object"?x:{};const out={...base,...s,stages:{...base.stages,...(s.stages||{})}};out.logs=Array.isArray(out.logs)?out.logs:base.logs;return out;}
+async function getHeistState(env){const s=await testKV(env).get(HEIST_STATE_KEY,{type:"json"});return normalizeHeistState(s);}
+async function putHeistState(env,s){s.updatedAt=new Date().toISOString();await testKV(env).put(HEIST_STATE_KEY,JSON.stringify(s));return s;}
+function heistLog(state,title,text){state.logs=Array.isArray(state.logs)?state.logs:[];state.logs.push({title,text,at:new Date().toISOString()});state.logs=state.logs.slice(-30);}
+function heistAdvance(state,stage,title,text){state.stages[String(stage)]={...(state.stages[String(stage)]||{}),solved:true};heistLog(state,title,text);if(Number(stage)>=5){state.completed=true;state.currentStage=5;state.completionText="Vault breached. The two-player escape is complete. Bank of Micky is preparing a strongly worded memo.";state.lastMessage=state.completionText;}else{state.currentStage=Number(stage)+1;state.lastMessage=`Stage ${stage} cleared. Proceed to Stage ${Number(stage)+1}.`;}}
+function eqArray(a,b){return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>x===b[i]);}
+function normalizeDigits(v){return String(v||"").replace(/\D+/g,"")}
+function normalizeFinalCode(v){return String(v||"").toUpperCase().replace(/[^A-Z0-9]+/g,"")}
+function normalizeRoute(v){const order={A:0,B:1,C:2,D:3};const arr=(Array.isArray(v)?v:[]).map(x=>String(x).toUpperCase().trim()).filter(x=>/^[A-D][1-3]$/.test(x));const byCol=new Map();for(const tile of arr)byCol.set(tile[0],tile);return [...byCol.values()].sort((a,b)=>order[a[0]]-order[b[0]])}
+function validateHeistSubmission(state,b){
+  const stage=Number(b.stage||state.currentStage||1),role=String(b.role||"").toLowerCase();
+  if(state.completed)return{ok:false,message:"The heist has already been completed. Reset it from HQ if you want another run."};
+  if(stage!==Number(state.currentStage||1))return{ok:false,message:`That clue belongs to Stage ${stage}, but the shared game is on Stage ${state.currentStage}. Refresh both screens.`};
+  switch(stage){
+    case 1:{
+      const ans=normalizeDigits(b.answer);
+      if(role!=="lizzy")return{ok:false,message:"Mikael does not enter the code on this stage. Guide Lizzy instead."};
+      if(ans==="4815"){heistAdvance(state,1,"Stage 1 Cleared","Lizzy entered the lockdown code 4815 and the first steel gate opened.");return{ok:true,message:"✅ Correct. The first gate unlocked."};}
+      return{ok:false,message:"❌ Wrong code. The visible symbol key resolves to 4-8-1-5."};
+    }
+    case 2:{
+      const path=normalizeRoute(b.path),expected=["A2","B1","C3","D2"];
+      if(role!=="lizzy")return{ok:false,message:"Only Lizzy crosses the laser hallway on this stage."};
+      if(eqArray(path,expected)){state.stages["2"].path=path;heistAdvance(state,2,"Stage 2 Cleared","Lizzy crossed the laser corridor without turning herself into toast.");return{ok:true,message:"✅ Perfect route: A2 → B1 → C3 → D2."};}
+      return{ok:false,message:`❌ Route received: ${path.join(" → ")||"none"}. Correct route from Mikael's clue is A2 → B1 → C3 → D2.`};
+    }
+    case 3:{
+      const choice=String(b.choice||"").trim();
+      if(role!=="lizzy")return{ok:false,message:"Only Lizzy can open a deposit box from the room side."};
+      if(choice==="317"){state.stages["3"].choice=choice;heistAdvance(state,3,"Stage 3 Cleared","Deposit box 317 contained the prototype key item and a worrying amount of glitter.");return{ok:true,message:"✅ Box 317 was correct."};}
+      return{ok:false,message:"❌ Wrong box. Mikael's ledger explicitly points to Box 317."};
+    }
+    case 4:{
+      const selected=[...new Set((Array.isArray(b.selection)?b.selection:[]).map(x=>String(x)))];
+      const weights={gold:10,diamond:7,cash:5,mask:3,key:2};
+      const total=selected.reduce((sum,id)=>sum+(weights[id]||0),0);
+      if(role!=="lizzy")return{ok:false,message:"Only Lizzy can place the pressure items in the chamber."};
+      if(total===27){state.stages["4"].selection=selected;heistAdvance(state,4,"Stage 4 Cleared","The pressure plate hit exactly 27 kg. Maths has saved the heist.");return{ok:true,message:"✅ Exact pressure reached: 27 kg."};}
+      return{ok:false,message:`❌ Current pressure is ${total} kg. Mikael's blueprint says the target is exactly 27 kg.`};
+    }
+    case 5:{
+      if(role==="mikael"){
+        if(state.overrideArmed)return{ok:true,message:"Override is already armed. Lizzy can enter the final code."};
+        if(!b.arm)return{ok:false,message:"Arm the override first."};
+        state.overrideArmed=true;heistLog(state,"Override Armed","Mikael armed the final override console.");state.lastMessage="Final override armed. Lizzy can enter the escape code.";return{ok:true,message:"✅ Override armed. Lizzy may enter the final code now."};
+      }
+      if(role!=="lizzy")return{ok:false,message:"Unknown player role."};
+      const answer=normalizeFinalCode(b.answer);
+      if(!state.overrideArmed)return{ok:false,message:"⚠ Mikael still needs to arm the override first."};
+      if(answer==="Q9AB47"){heistAdvance(state,5,"Escape Complete","Lizzy entered Q9-AB-47 and the final vault door swung open.");return{ok:true,message:"🏆 Escape successful. You both got out."};}
+      return{ok:false,message:"❌ Wrong final code. Lizzy's Q9 comes first, followed by Mikael's AB-47. Q9-AB-47, Q9 AB 47, or Q9AB47 all work."};
+    }
+    default:return{ok:false,message:"Unknown stage."};
+  }
+}
+
+
 export default{async fetch(req,env){
+ try{
  if(req.method==="OPTIONS")return json({ok:true});
  const u=new URL(req.url);
 
@@ -411,6 +485,8 @@ export default{async fetch(req,env){
    if(u.searchParams.get("action")==="lizzy_messages"){const messages=await hqMessages(env);return json({success:true,messages:messages.filter(x=>x.status!=="handled").slice(-50)});}
    if(u.searchParams.get("action")==="mg_queue"){const commands=await arrKV(env,"mg:queue:v1");return json({success:true,commands});}
    if(u.searchParams.get("action")==="world_queue"){const commands=await arrKV(env,"world:queue:v1");return json({success:true,commands});}
+   if(u.searchParams.get("action")==="life_queue"){const commands=await arrKV(env,"life:queue:v1");return json({success:true,commands});}
+   if(u.searchParams.get("action")==="heist_state"){const state=await getHeistState(env);return json({success:true,state});}
    if(u.searchParams.get("action")==="annoy_state"){
      const pending=await getAnnoyPending(env);
      const cooldown=await getAnnoyCooldown(env);
@@ -766,15 +842,12 @@ if((b.action||b.type)==="mg_hq_push"){
   return json({success:true});
 }
 if((b.action||b.type)==="mg_ack"){
-  const ids=Array.isArray(b.ids)?b.ids:[];
-  const q=(await arrKV(env,"mg:queue:v1")).filter(c=>!ids.includes(c.id));
-  await testKV(env).put("mg:queue:v1",JSON.stringify(q));
-  return json({success:true});
+  const ids=Array.isArray(b.ids)?b.ids:[],before=await arrKV(env,"mg:queue:v1"),q=before.filter(c=>!ids.includes(c.id));
+  if(q.length!==before.length)await testKV(env).put("mg:queue:v1",JSON.stringify(q));
+  return json({success:true,removed:before.length-q.length});
 }
 if((b.action||b.type)==="mg_snapshot_put"){
-  if(JSON.stringify(b.snapshot||{}).length>200000)return json({success:false,error:"Too large"},400);
-  await testKV(env).put("mg:snapshot:v1",JSON.stringify(b.snapshot||{}));
-  return json({success:true});
+  try{const r=await putSnapshotIfChanged(env,"mg:snapshot:v1",b.snapshot||{},200000);return json({success:true,...r})}catch(e){return json({success:false,error:String(e?.message||e)},e?.message==="Snapshot too large"?400:503)}
 }
 if((b.action||b.type)==="mg_snapshot_get"){
   if(!hqOnly(req,env,b))return json({success:false,error:"Unauthorized"},401);
@@ -793,14 +866,12 @@ if((b.action||b.type)==="world_hq_push"){
   return json({success:true});
 }
 if((b.action||b.type)==="world_ack"){
-  const ids=Array.isArray(b.ids)?b.ids:[];
-  const q=(await arrKV(env,"world:queue:v1")).filter(c=>!ids.includes(c.id));
-  await testKV(env).put("world:queue:v1",JSON.stringify(q));
-  return json({success:true});
+  const ids=Array.isArray(b.ids)?b.ids:[],before=await arrKV(env,"world:queue:v1"),q=before.filter(c=>!ids.includes(c.id));
+  if(q.length!==before.length)await testKV(env).put("world:queue:v1",JSON.stringify(q));
+  return json({success:true,removed:before.length-q.length});
 }
 if((b.action||b.type)==="world_snapshot_put"){
-  const raw=JSON.stringify(b.snapshot||{});if(raw.length>350000)return json({success:false,error:"Snapshot too large"},400);
-  await testKV(env).put("world:snapshot:v1",raw);return json({success:true});
+  try{const r=await putSnapshotIfChanged(env,"world:snapshot:v1",b.snapshot||{},350000);return json({success:true,...r})}catch(e){return json({success:false,error:String(e?.message||e)},e?.message==="Snapshot too large"?400:503)}
 }
 if((b.action||b.type)==="world_snapshot_get"){
   if(!hqOnly(req,env,b))return json({success:false,error:"Unauthorized"},401);
@@ -826,6 +897,49 @@ if((b.action||b.type)==="world_media_get"){
 }
 if((b.action||b.type)==="world_media_delete"){
   const mediaId=S(b.mediaId,180);if(mediaId)await testKV(env).delete(`world:media:${mediaId}`);return json({success:true});
+}
+
+
+
+/* ---- Our World: Bank of Micky Heist ---- */
+if((b.action||b.type)==="heist_submit"){
+  const state=await getHeistState(env);
+  const result=validateHeistSubmission(state,b||{});
+  if(!result.ok)return json({success:false,error:result.message,state},400);
+  await putHeistState(env,state);
+  return json({success:true,message:result.message,state});
+}
+if((b.action||b.type)==="heist_reset"){
+  if(!hqOnly(req,env,b))return json({success:false,error:"Unauthorized"},401);
+  const state=defaultHeistState();
+  await putHeistState(env,state);
+  return json({success:true,state});
+}
+
+/* ---- Lizzy Life: virtual-time simulation bridge ---- */
+if((b.action||b.type)==="life_hq_push"){
+  if(!hqOnly(req,env,b))return json({success:false,error:"Unauthorized"},401);
+  const c=b.command||{};
+  const allowed=["life_invite","loan_decision","legal_decision","recruitment","life_message","contract_offer","hiring_decision","employment_action","court_verdict"];
+  if(!allowed.includes(String(c.kind||"")))return json({success:false,error:"Unknown Life command"},400);
+  const q=await arrKV(env,"life:queue:v1");
+  const queued={...c,id:c.id||crypto.randomUUID(),createdAt:new Date().toISOString()};
+  const existing=q.find(x=>x.id===queued.id);if(existing)return json({success:true,command:existing,duplicate:true});
+  q.push(queued);
+  await testKV(env).put("life:queue:v1",JSON.stringify(q.slice(-100)));
+  return json({success:true,command:queued});
+}
+if((b.action||b.type)==="life_ack"){
+  const ids=Array.isArray(b.ids)?b.ids:[],before=await arrKV(env,"life:queue:v1"),q=before.filter(c=>!ids.includes(c.id));
+  if(q.length!==before.length)await testKV(env).put("life:queue:v1",JSON.stringify(q));
+  return json({success:true,removed:before.length-q.length});
+}
+if((b.action||b.type)==="life_snapshot_put"){
+  try{const r=await putSnapshotIfChanged(env,"life:snapshot:v1",b.snapshot||{},350000);return json({success:true,...r})}catch(e){return json({success:false,error:String(e?.message||e)},e?.message==="Snapshot too large"?400:503)}
+}
+if((b.action||b.type)==="life_snapshot_get"){
+  if(!hqOnly(req,env,b))return json({success:false,error:"Unauthorized"},401);
+  return json({success:true,snapshot:await testKV(env).get("life:snapshot:v1",{type:"json"})});
 }
 
 if((b.action||b.type)==="annoy_trigger"){
@@ -1893,4 +2007,9 @@ ${title}${details?`\n\n${S(details,1800)}`:""}${extra?`\n\n${extra}`:""}`
  });
 
  return json({ok:true,type,telegram:true});
+}catch(err){
+   const msg=String(err?.message||err||"Unknown Worker error");
+   const quota=/limit|quota|rate/i.test(msg);
+   return json({success:false,error:quota?`Cloudflare KV limit/quota error: ${msg}`:`Worker error: ${msg}`},quota?429:500);
+ }
 }};
