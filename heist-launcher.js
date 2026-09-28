@@ -8,7 +8,7 @@
   }
   function bindClose(btnId, winId){ const btn=document.getElementById(btnId), win=document.getElementById(winId); if(btn&&win) btn.addEventListener('click',()=>win.classList.add('hidden')); }
   document.addEventListener('DOMContentLoaded',()=>{
-    bindOpen('coopWorldIcon','bankHeistWindow','bankHeistFrame');
+    bindOpen('bankHeistIcon','bankHeistWindow','bankHeistFrame');
     bindClose('bankHeistClose','bankHeistWindow');
     bindClose('closeBankHeist','bankHeistWindow');
   });
