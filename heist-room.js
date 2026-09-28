@@ -133,8 +133,9 @@
     }
   };
 
-  const state = {data:null, busy:false, routeOrder:[]};
-  const TEST_WORKER_FALLBACK='https://mickyhq-test.mulaudzimikael73.workers.dev';
+  const state = {data:null, busy:false};
+  let laserPath = [];
+  let renderedStage = null;
 
   function resolveWorkerUrl(){
     const keys=['lizzyTelegramWorkerURL','testWorkerUrl','testWorkerURL','mikaelHQTestWorkerUrl','mikaelHQTestWorkerURL','mikaelTestWorkerUrl'];
@@ -146,7 +147,7 @@
     }catch{}
     if(window.TEST_WORKER_URL) return window.TEST_WORKER_URL;
     if(window.LIZZY_TELEGRAM_WORKER_URL) return window.LIZZY_TELEGRAM_WORKER_URL;
-    return TEST_WORKER_FALLBACK;
+    return '';
   }
   function resolveHQKey(){
     const keys=['hqKey','testHqKey','mikaelHQKey','mikaelTestHQKey'];
@@ -204,16 +205,21 @@
     if(action.type==='choices') return `<div class="actionBox choices">${action.choices.map(ch=>`<label class="choicePill"><input type="radio" name="boxChoice" value="${escapeHtml(ch)}" ${stageState.choice===ch?'checked':''}><span>${escapeHtml(ch)}</span></label>`).join('')}<button id="submitAction" class="primaryBtn">${escapeHtml(action.button)}</button></div>`;
     if(action.type==='checks') return `<div class="actionBox checks">${action.items.map(item=>`<label class="choicePill"><input type="checkbox" value="${escapeHtml(item.id)}" ${(stageState.selection||[]).includes(item.id)?'checked':''}><span>${escapeHtml(item.label)}</span></label>`).join('')}<button id="submitAction" class="primaryBtn">${escapeHtml(action.button)}</button></div>`;
     if(action.type==='grid'){
-      const picked = stageState.path || [];
+      const picked = laserPath.length ? laserPath : (stageState.path || []);
       const cols=['A','B','C','D'];
       const rows=[1,2,3];
-      return `<div class="actionBox"><div class="laserGrid">${rows.map(row=>cols.map(col=>{const tile=col+row;return `<button class="tileBtn ${picked.includes(tile)?'selected':''}" data-tile="${tile}">${tile}</button>`}).join('')).join('')}</div><div class="tileMeta">Selected route: <b id="routePreview">${picked.join(' → ')||'None'}</b></div><button id="submitAction" class="primaryBtn">${escapeHtml(action.button)}</button></div>`;
+      return `<div class="actionBox"><div class="laserGrid">${rows.map(row=>cols.map(col=>{const tile=col+row;return `<button type="button" class="tileBtn ${picked.includes(tile)?'selected':''}" data-tile="${tile}" aria-pressed="${picked.includes(tile)?'true':'false'}">${tile}</button>`}).join('')).join('')}</div><div class="tileMeta">Selected route: <b id="routePreview">${picked.join(' → ')||'None'}</b></div><div class="routeActions"><button type="button" id="clearRoute" class="secondaryBtn">Clear Route</button><button type="button" id="submitAction" class="primaryBtn">${escapeHtml(action.button)}</button></div></div>`;
     }
     if(action.type==='arm') return `<div class="actionBox"><button id="submitAction" class="primaryBtn">${escapeHtml(action.button)}</button><p class="muted">This enables Lizzy’s final keypad.</p></div>`;
     return '<p class="muted">No action.</p>';
   }
   function render(){
     const s = state.data || {};
+    const stageNumber = Number(s.currentStage || 1);
+    if(renderedStage !== stageNumber){
+      renderedStage = stageNumber;
+      laserPath = stageNumber===2 ? [...(s.stages?.[2]?.path || [])] : [];
+    }
     const stage = currentStageData();
     const side = stage[role] || stage.lizzy;
     $('#roleName').textContent = roleLabel;
@@ -236,19 +242,31 @@
     const resetWrap = $('#hqResetWrap');
     if(resetWrap) resetWrap.style.display = role==='mikael' ? 'flex' : 'none';
 
-    if(stage[role]?.action?.type==='grid') state.routeOrder=[...(stageState.path||[])];
-    $$('.tileBtn').forEach(btn=>btn.addEventListener('click',()=>{
+    $$('.tileBtn').forEach(btn=>btn.addEventListener('click',(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
       const tile=btn.dataset.tile;
-      if(btn.classList.contains('selected')){
-        btn.classList.remove('selected');
-        state.routeOrder=state.routeOrder.filter(x=>x!==tile);
+      const col=tile.charAt(0);
+      // One tile per column. Clicking another tile in the same column replaces it
+      // while keeping the route in the order Lizzy chose the columns.
+      const existingIndex=laserPath.findIndex(x=>x.charAt(0)===col);
+      if(existingIndex>=0){
+        if(laserPath[existingIndex]===tile){
+          laserPath.splice(existingIndex,1);
+        }else{
+          laserPath[existingIndex]=tile;
+        }
       }else{
-        btn.classList.add('selected');
-        state.routeOrder=state.routeOrder.filter(x=>x!==tile);
-        state.routeOrder.push(tile);
+        laserPath.push(tile);
       }
-      $('#routePreview').textContent = state.routeOrder.join(' → ') || 'None';
+      $$('.tileBtn').forEach(x=>{
+        const on=laserPath.includes(x.dataset.tile);
+        x.classList.toggle('selected',on);
+        x.setAttribute('aria-pressed',on?'true':'false');
+      });
+      if($('#routePreview')) $('#routePreview').textContent=laserPath.join(' → ')||'None';
     }));
+    $('#clearRoute')?.addEventListener('click',(e)=>{e.preventDefault();laserPath=[];$$('.tileBtn').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});if($('#routePreview'))$('#routePreview').textContent='None';});
     $('#submitAction')?.addEventListener('click', submitCurrentAction);
     $('#refreshBtn')?.addEventListener('click', ()=>load(true));
     $('#resetHeistBtn')?.addEventListener('click', resetHeist);
@@ -260,7 +278,7 @@
     const action = stage[role]?.action;
     let payload = {stage:stageNum, role};
     if(action?.type==='text') payload.answer = $('#answerInput')?.value?.trim() || '';
-    if(action?.type==='grid') payload.path = [...state.routeOrder];
+    if(action?.type==='grid') payload.path = [...laserPath];
     if(action?.type==='choices') payload.choice = $('input[name="boxChoice"]:checked')?.value || '';
     if(action?.type==='checks') payload.selection = $$('input[type="checkbox"]:checked').map(x=>x.value);
     if(action?.type==='arm') payload.arm = true;

@@ -62,3 +62,8 @@ body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:radial-gra
 .hqResetWrap{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
 @media (max-width:980px){.heistGrid{grid-template-columns:1fr}.heistHero{flex-direction:column}.roleCard{width:100%}.progressDots{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:640px){.heistShell{padding:12px}.card,.heistHero{border-radius:18px;padding:15px}.heistHero h1{font-size:28px}.progressDots{grid-template-columns:repeat(2,1fr)}.laserGrid{grid-template-columns:repeat(2,1fr)}}
+/* Stage 2 interaction hardening */
+.laserGrid,.actionBox,.tileBtn{position:relative;z-index:5;pointer-events:auto!important}
+.tileBtn{touch-action:manipulation;user-select:none;-webkit-user-select:none;min-height:52px}
+.routeActions{display:flex;gap:10px;flex-wrap:wrap}
+.routeActions>*{flex:1 1 160px}
