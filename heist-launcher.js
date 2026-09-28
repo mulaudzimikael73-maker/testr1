@@ -10,6 +10,5 @@
   document.addEventListener('DOMContentLoaded',()=>{
     bindOpen('bankHeistIcon','bankHeistWindow','bankHeistFrame');
     bindClose('bankHeistClose','bankHeistWindow');
-    bindClose('closeBankHeist','bankHeistWindow');
   });
 })();
