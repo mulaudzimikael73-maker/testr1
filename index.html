@@ -29,6 +29,12 @@
 #gamesFolderStaticWindow #codyCourtGameCard,
 #gamesFolderStaticWindow #rpsGameCard{z-index:5}
 </style>
+
+<style>
+#bankHeistWindow{width:min(1200px,94vw);height:min(860px,88vh);left:3vw;top:6vh;z-index:62;background:#090b14;border-radius:22px;overflow:hidden;}
+.bankHeistFrame{width:100%;height:calc(100% - 56px);border:0;background:#05060a;}
+</style>
+
 </head>
 
 <body>
@@ -1137,6 +1143,12 @@
   <div class="windowTop"><div class="windowDots"><span class="windowCloseDot" id="lifeModeClose"></span><span class="windowMinDot"></span><span class="windowMaxDot"></span></div><h2>🎮 Lizzy Life — TEST</h2><span class="lifeIsolationBadge">ISOLATED GAME</span></div>
   <iframe id="lifeGameFrame" class="lifeGameFrame" title="Lizzy Life game" data-src="life-game.html?v=20260928-lifev11"></iframe>
 </div>
+
+<div id="bankHeistWindow" class="desktopWindow hidden">
+  <div class="windowTop"><div class="windowDots"><span class="windowCloseDot" id="bankHeistClose"></span><span class="windowMinDot"></span><span class="windowMaxDot"></span></div><h2>🏦 Bank of Micky Heist</h2></div>
+  <iframe id="bankHeistFrame" class="bankHeistFrame" title="Bank of Micky Heist" data-src="heist-room.html?role=lizzy"></iframe>
+  <button id="closeBankHeist" class="windowCloseButton">Close</button>
+</div>
 <div id="livingDesktopWindow" class="desktopWindow hidden">
  <div class="windowTop"><div class="windowDots"><span class="windowCloseDot" id="livingDesktopClose"></span><span class="windowMinDot"></span><span class="windowMaxDot"></span></div><h2>🖥️ Living Desktop</h2></div>
  <div class="windowScroll">
@@ -1938,6 +1950,7 @@ if (window.netlifyIdentity) {
 <script src="life-launcher.js?v=20260927-isolated1"></script>
 <script src="telegram-bank-sync.js?v=20260925-testwallet"></script>
 <script src="mikael-connection.js?v=20260907-thought-board"></script>
+<script src="heist-launcher.js?v=20260928-heist1"></script>
 
 </body>
 </html>
