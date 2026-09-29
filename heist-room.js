@@ -136,7 +136,7 @@
   const state = {data:null, busy:false, routeOrder:[]};
 
   function resolveWorkerUrl(){
-    const keys=['lizzyTelegramWorkerURL','testWorkerUrl','testWorkerURL','mikaelHQTestWorkerUrl','mikaelHQTestWorkerURL','mikaelTestWorkerUrl'];
+    const keys=[role === 'mikael' ? 'mickyhq_test_worker_url_v1' : 'lizzyos_test_worker_url_v1','testWorkerUrl','testWorkerURL','mikaelHQTestWorkerUrl','mikaelHQTestWorkerURL','mikaelTestWorkerUrl'];
     for(const k of keys){ const v=localStorage.getItem(k); if(v && /^https?:/i.test(v)) return v; }
     try{
       const parentDoc = window.parent && window.parent !== window ? window.parent.document : null;
