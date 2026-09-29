@@ -1,16 +1,13 @@
-BANK OF MICKY HEIST — STAGE 2 FIX / FULL PUZZLE CHECK
+BANK OF MICKY HEIST — TESTR STAGE 2 FIX
 
-Fixed:
-- Stage 2 tiles use explicit click-order tracking.
-- One tile per column.
-- Clicking another tile in a column replaces that choice.
-- Clear Route button added.
-- Touch/click interaction hardened.
-- Browser cache version bumped.
+Stage 2 now uses a real ordered route selector.
+- Every tile click is visible.
+- Clicked tiles receive 1,2,3,4 sequence badges.
+- Only one tile per column can be active.
+- Submit stays disabled until four route tiles are selected.
+- The exact CLICK ORDER is sent to Cloudflare.
 
-Verified Worker answers:
-Stage 1: 4815
-Stage 2: A2 -> B1 -> C3 -> D2
-Stage 3: 317
-Stage 4: gold + diamond + cash + mask + master key = 27 kg
-Stage 5: Mikael arms override; Lizzy enters Q9-AB-47
+Correct Stage 2 route from Mikael's screen:
+A2 -> B1 -> C3 -> D2
+
+This package keeps the standalone full-page TESTR heist display.
