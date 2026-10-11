@@ -54,3 +54,56 @@
 @media(prefers-reduced-motion:reduce){#lizzyGardenWindow .gm-landscape.butterfly:before{animation:none}#lizzyGardenWindow .gm-hub button{transition:none}}
 
 #lizzyGardenWindow .gm-card.gm-moonlit{border:1px solid #c6caffaa;background:radial-gradient(circle at 90% 0%,#aeadff55,transparent 60%),#ffffff1d;box-shadow:0 0 15px #d3c8ff44}
+
+/* ===== Garden Magic v2: handcrafted image-led game panels; no AI scene backgrounds ===== */
+#lizzyGardenWindow .gm-seedlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px;margin:14px 0}
+#lizzyGardenWindow .gm-seedcard{border:1px solid #ffffff3c;background:linear-gradient(155deg,#ffffff19,#ffffff08);border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;min-width:0}
+#lizzyGardenWindow .gm-seedcard>img{width:100%;height:120px;object-fit:contain;filter:drop-shadow(0 9px 14px #021d2444)}
+#lizzyGardenWindow .gm-seedcard b{font-size:13px;min-height:35px;line-height:1.3}
+#lizzyGardenWindow .gm-seedcard small{font-size:11px;opacity:.83}
+#lizzyGardenWindow .gm-seedcard button{margin-top:auto;width:100%}
+#lizzyGardenWindow .gm-butterfly-album{display:grid;grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:11px;margin:14px 0}
+#lizzyGardenWindow .gm-species{padding:13px 9px;background:#fffdf914;border:1px solid #ffffff30;border-radius:16px;min-width:0;display:flex;align-items:center;flex-direction:column;gap:5px;text-align:center;min-height:185px}
+#lizzyGardenWindow .gm-species img{width:118px;max-width:100%;height:118px;object-fit:contain;filter:drop-shadow(0 6px 8px #08152655)}
+#lizzyGardenWindow .gm-species b{font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+#lizzyGardenWindow .gm-species small{font-size:10px;opacity:.85}
+#lizzyGardenWindow .gm-undiscovered img{filter:brightness(0) drop-shadow(0 5px 6px #08152644);opacity:.55}
+#lizzyGardenWindow .gm-discovered{border-color:#efdbb366;background:linear-gradient(160deg,#fff8e921,#ffffff0b)}
+#lizzyGardenWindow .gm-encounter{display:grid;grid-template-columns:minmax(135px,200px) 1fr;gap:18px;align-items:center;max-width:680px;margin:auto}
+#lizzyGardenWindow .gm-encounter>img{width:100%;height:210px;object-fit:contain;animation:gm-bob 3s ease-in-out infinite alternate;filter:drop-shadow(0 14px 16px #091a2e77)}
+#lizzyGardenWindow .gm-encounter button{margin:4px}
+#lizzyGardenWindow .gm-timing{height:24px;border:2px solid #ffffffa0;border-radius:999px;position:relative;overflow:hidden;background:#081c3580;margin:14px 0;box-shadow:inset 0 2px 8px #1015208f}
+#lizzyGardenWindow .gm-target{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#f6d480bd,#ffeaa7,#f5ce74bc);box-shadow:0 0 15px #ffe6b7}
+#lizzyGardenWindow .gm-marker{position:absolute;top:0;bottom:0;width:6px;left:0;background:white;box-shadow:0 0 8px 4px #ffffffc0;animation:gm-sweep 2.6s linear infinite alternate}
+@keyframes gm-sweep{from{left:0}to{left:calc(100% - 6px)}}
+@keyframes gm-bob{to{transform:translateY(-8px) rotate(2deg)}}
+#lizzyGardenWindow .gm-moon-scene{background:linear-gradient(145deg,#26315b,#4f4474 55%,#394e79);border:1px solid #b9acff6c;box-shadow:inset 0 0 35px #d7c9ff0b,0 10px 30px #16123242}
+#lizzyGardenWindow .gm-two-actions{display:flex;flex-wrap:wrap;gap:7px}
+#lizzyGardenWindow .gm-starline{display:flex;gap:9px;flex-wrap:wrap}
+#lizzyGardenWindow .gm-starline button{background:#c8c6ef31!important;border-color:#d2d0ff77!important}
+#lizzyGardenWindow .gm-plantbed{align-items:center;text-align:center;gap:7px;min-width:0}
+#lizzyGardenWindow .gm-plantbed>img{max-width:100%;width:110px;height:108px;object-fit:contain}
+#lizzyGardenWindow .gm-plantbed button{margin-top:auto}
+#lizzyGardenWindow .gm-memory-tree{display:grid;grid-template-columns:minmax(180px,35%) 1fr;gap:22px;align-items:center;background:linear-gradient(125deg,#395d4c,#56694d 45%,#4d3b5c);border:1px solid #f2d6bb6b}
+#lizzyGardenWindow .gm-memory-tree>img{width:100%;max-height:310px;object-fit:contain;filter:drop-shadow(0 15px 17px #0b2f304b)}
+#lizzyGardenWindow .gm-memory-tree p{line-height:1.6}
+#lizzyGardenWindow .gm-gifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+#lizzyGardenWindow .gm-giftcard img{max-width:120px;height:125px;object-fit:contain;display:block;margin:7px auto}
+#lizzyGardenWindow .gm-formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#lizzyGardenWindow .gm-check{display:flex;align-items:center;gap:10px;margin:10px 0 17px;padding:8px;background:#ffffff12;border-radius:10px}
+#lizzyGardenWindow .gm-check input{width:19px;height:19px;accent-color:#d6bbe9}
+#lizzyGardenWindow .gm-glowing-bouquet{background:radial-gradient(ellipse at 70% 20%,#aaa6ff59,transparent 64%),linear-gradient(140deg,#543e73a8,#314865a6);border-color:#e5d7ffbb;box-shadow:0 0 14px #bdb1ff5a;animation:gm-glow 4s ease-in-out infinite alternate}
+@keyframes gm-glow{to{box-shadow:0 0 26px #e5d9ff94}}
+#lizzyGardenWindow .gm-glowing-bouquet .gm-gift-header img{filter:drop-shadow(0 0 10px #bfe5ff)}
+.gm-overlay{position:fixed;inset:0;z-index:999999;background:#111128de;display:grid;place-items:center;padding:18px;backdrop-filter:blur(9px)}
+.gm-reveal{position:relative;border:1px solid #ffdeda;border-radius:24px;padding:26px;text-align:center;max-width:550px;width:min(100%,550px);background:linear-gradient(140deg,#fffdf9,#fae0eb);color:#43324c;box-shadow:0 20px 70px #08070eaa;max-height:90vh;overflow:auto}
+.gm-reveal h2{font:700 clamp(19px,3vw,28px) Georgia,serif;margin:12px 0}
+.gm-reveal #gmCloseReveal{position:absolute;right:10px;top:9px;background:#fff;border:1px solid #d4c3d6;border-radius:9px;padding:6px 10px;color:#43324c;cursor:pointer}
+.gm-reveal-glow{background:radial-gradient(circle at 50% 30%,#d7eafa,#e7dcff 65%,#ad97db);border:2px solid #f9f0ff;box-shadow:0 0 30px #bbaaff,0 20px 70px #050415}
+.gm-reveal-flowers{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin:16px 0;min-height:180px}
+.gm-reveal-flowers img{max-width:115px;max-height:170px;object-fit:contain;filter:drop-shadow(0 10px 10px #7974a077);animation:gm-bob 2.5s ease-in-out infinite alternate}
+.gm-reveal-glow .gm-reveal-flowers img{filter:drop-shadow(0 0 14px #d9e5ff)}
+#lizzyGardenWindow .gm-hub .gm-card{margin-bottom:12px}
+#lizzyGardenWindow .gm-hub h4{margin:9px 0}
+@media(max-width:680px){#lizzyGardenWindow .gm-encounter{grid-template-columns:1fr}#lizzyGardenWindow .gm-encounter>img{height:160px}#lizzyGardenWindow .gm-memory-tree{grid-template-columns:1fr}#lizzyGardenWindow .gm-memory-tree>img{max-height:220px}#lizzyGardenWindow .gm-formgrid{grid-template-columns:1fr}#lizzyGardenWindow .gm-butterfly-album{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#lizzyGardenWindow .gm-encounter>img,#lizzyGardenWindow .gm-glowing-bouquet,#lizzyGardenWindow .gm-marker{animation:none!important;left:50%!important}#lizzyGardenWindow .gm-encounter>img,#lizzyGardenWindow .gm-glowing-bouquet,.gm-reveal-flowers img{animation:none!important}}
