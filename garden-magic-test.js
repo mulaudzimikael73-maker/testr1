@@ -31,7 +31,8 @@
  const decorations={butterflyFountain:['Butterfly Fountain','⛲'],moonLantern:['Moon Lantern','🏮'],gardenBench:['Garden Bench','🪑'],starPlanter:['Star Planter','✨'],butterflyStatue:['Butterfly Statue','🦋'],topiary:['Flower Topiary','🌳'],miniFountain:['Mini Fountain','⛲']};
  const seedDefault={};
  const defaults=()=>({version:2,tab:'butterfly',grownIds:[],butterflies:{},seeds:{},beds:[],harvested:{},potted:[],decor:[],claimedGifts:[],
- milestones:[],lastArrival:0,lastPollinateDay:'',lastFireflyAt:0,fireflies:{},stardust:0,lastStarAt:0,starsCaught:0,
+ milestones:[],lastArrival:0,lastPollinateDay:'',lastFireflyAt:0,fireflies:{},stardust:0,nectar:0,lastStarAt:0,starsCaught:0,
+ wishChoice:'stardust',wishHistory:[],constellationMistakes:0,constellationLockUntil:0,constellationHint:'',
  constellationIndex:0,constellation:false,gateStep:0,hiddenUnlocked:false,lastWishDay:'',lastSync:'',pendingDelivery:null,
  light:'auto',lastGallery:'',unlockedSeeds:[],legacyMigrated:false});
  function read(k,fallback={}){try{return JSON.parse(localStorage.getItem(k)||'null')??fallback}catch{return fallback}}
@@ -44,14 +45,17 @@
   local.hiddenUnlocked=!!old.hiddenUnlocked;local.lastWishDay=old.lastWishDay||'';
   local.legacyMigrated=true;
  }
+ local.nectar=Math.max(0,Number(local.nectar)||0);
+ local.wishHistory=Array.isArray(local.wishHistory)?local.wishHistory:[];
+ local.wishChoice=['stardust','seed','decor'].includes(local.wishChoice)?local.wishChoice:'stardust';
  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(local))}catch(e){status('Local storage is full. Garden changes may not save.')}};
  let shared={bouquets:[],surprises:[],progress:{},deliveries:{total:0,fromMikael:0,fromLizzy:0}};
  let connected=false,lastFetched=0,isFetching=false,sendingProgress=false;
- let chosen=[],wrapping=wrapOptions[0],ribbon=ribbonOptions[0],note='',encounter=null,arrivalTimer=0;
+ let chosen=[],wrapping=wrapOptions[0],ribbon=ribbonOptions[0],note='',encounter=null,fireflyEncounter=null,meteorEncounter=null,arrivalTimer=0;
  const status=t=>{const e=$('gmStatus');if(e)e.textContent=t};
  const garden=()=>read(GARDEN,{plants:[],flowers:{}});
  const worker=()=>{const v=String(localStorage.getItem(URLKEY)||window.LIZZY_TELEGRAM_WORKER_URL||'').trim();return v?v.replace(/\/+$/,'')+'/':''};
- const now=()=>Date.now(),today=()=>new Date().toISOString().slice(0,10),uid=()=>('gm_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,11));
+ const now=()=>Date.now(),today=()=>{const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));return parts.year+'-'+parts.month+'-'+parts.day},uid=()=>('gm_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,11));
  const fromHQ=()=>shared.bouquets.filter(x=>x.from==='Mikael').length;
  const fromLizzy=()=>shared.bouquets.filter(x=>x.from==='Lizzy').length;
  const deliveries=()=>{const r=shared.deliveries||{};return {total:Math.max(Number(r.total||0),shared.bouquets.length),fromMikael:Math.max(Number(r.fromMikael||0),fromHQ()),fromLizzy:Math.max(Number(r.fromLizzy||0),fromLizzy())}};
@@ -75,7 +79,28 @@
  function treeStage(){const total=deliveries().total,opened=(shared.surprises||[]).filter(x=>x.openedAt).length;return Math.min(4,1+Math.floor(Math.max(0,total-5)/3)+Math.floor(opened/3))}
  const progress=()=>({flowersGrown:grown(),butterfly:canButter(),moonlight:canMoon(),hiddenUnlocked:hidden(),butterfliesFound:found(),butterflyEmblem:found()>=10,
  moonEmblem:local.constellation&&Object.keys(local.harvested).filter(x=>species[x]?.zone==='moon').length>=3,
- fireflies:Object.values(local.fireflies).reduce((a,b)=>a+Number(b),0),stardust:local.stardust,moonFlowers:local.beds.filter(x=>x.stage>=3&&species[x.flowerId]?.zone==='moon').length,memoryTreeStage:treeStage()});
+ fireflies:Object.values(local.fireflies).reduce((a,b)=>a+Number(b),0),stardust:local.stardust,walletStardust:balance('stardust'),walletNectar:balance('nectar'),lastWish:(local.wishHistory||[])[0]||null,moonFlowers:local.beds.filter(x=>x.stage>=3&&species[x.flowerId]?.zone==='moon').length,memoryTreeStage:treeStage()});
+ // TEST-only game economy: Nectar is earned in the Sanctuary, Stardust in Moonlight.
+ const nectarPrices={butterflyBloom:4,roseNectarFlower:12,emeraldPetalVine:25};
+ const stardustPrices={lunarLavender:4,midnightTulip:7,moonlightOrchid:12,starLily:16,silverRose:27,celestialBlossom:52,secretRose:9,memoryVine:21,wishingLily:18,eternalBlossom:58};
+ const decorPrices={moonLantern:12,gardenBench:18,starPlanter:16,topiary:22,miniFountain:30};
+ const priceOf=id=>id in nectarPrices?{currency:'nectar',cost:nectarPrices[id]}:id in stardustPrices?{currency:'stardust',cost:stardustPrices[id]}:null;
+ const currencyName=kind=>kind==='nectar'?'🍯 Nectar':'✨ Stardust';
+ const balance=kind=>Math.max(0,Number(local[kind])||0);
+ function spend(kind,cost){if(balance(kind)<cost)return false;local[kind]=balance(kind)-cost;return true;}
+ function purchaseSeed(id){const p=species[id],price=priceOf(id);if(!p||!price||!growAllowed(p.zone))return 'That seed is not available yet.';
+  if(!spend(price.currency,price.cost))return 'Not enough '+currencyName(price.currency)+'. Earn more through sanctuary or moonlit activities.';
+  grantSeed(id);save();return '🌱 Bought 1 '+p.name+' seed for '+price.cost+' '+currencyName(price.currency)+'.';}
+ function purchaseDecor(id){const cost=decorPrices[id];if(!hidden()||!cost)return 'That decoration is not available.';
+  if(!spend('stardust',cost))return 'Not enough Stardust. Catch fireflies and shooting stars in Moonlight Garden.';
+  local.decor.push({id,source:'hidden-shop',giftId:uid()});save();return '🏡 Bought '+decorations[id][0]+' for '+cost+' Stardust. It is now in your decorations.';}
+ // This triangle-wave position matches the alternate CSS sweep period in the challenge card.
+ function cursorPosition(start,period){const half=period/2,cycle=Math.max(0,now()-start)%period;return cycle<half?cycle/half:2-cycle/half;}
+ function timingGame(width,period,label){return `<div class="gm-timing" aria-label="${esc(label)}: stop the moving marker inside the golden zone"><div class="gm-target" style="width:${Math.round(width*100)}%"></div><div class="gm-marker" style="animation-duration:${period/2}ms"></div></div>`;}
+ function timingHit(start,period,width){if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return true;return Math.abs(cursorPosition(start,period)-.5)<=width/2;}
+ const fireflyStats={Golden:{width:.22,period:2100,hits:2,reward:3},Blue:{width:.17,period:1740,hits:2,reward:4},Violet:{width:.13,period:1480,hits:3,reward:5},Silver:{width:.11,period:1250,hits:3,reward:7}};
+ const constellationPath=['Moon','Owl','Comet','Star','Butterfly','Sun'];
+ const constellationNodes=[['Star','⭐'],['Cloud','☁️'],['Sun','☀️'],['Butterfly','🦋'],['Moon','🌙'],['Crown','👑'],['Comet','☄️'],['Owl','🦉']];
  function grantSeed(id,n=1){if(!species[id])return;local.seeds[id]=(local.seeds[id]||0)+n;}
  function grantOnce(key,fn){if(local.milestones.includes(key))return;local.milestones.push(key);fn();save()}
  function unlockSeeds(){if(canButter())grantOnce('butterSeeds',()=>{grantSeed('butterflyBloom',2);grantSeed('roseNectarFlower');});
@@ -135,31 +160,48 @@
  }
  function scene(){const night=local.light==='night'||local.light==='auto'&&Math.floor(now()/90000)%2===1;document.querySelector('#lizzyGardenWindow')?.classList.toggle('gm-evening',night);if($('gmLight'))$('gmLight').textContent=night?'☀️ Preview Daylight':'🌙 Preview Moonlight'}
  function plantBeds(zone){const plants=special.filter(p=>p.zone===zone),beds=local.beds.filter(p=>species[p.flowerId]?.zone===zone);
-  return `<div class="gm-card"><h3>🌱 Exclusive ${zone==='butterfly'?'Sanctuary':zone==='moon'?'Moonlight':'Hidden Garden'} plants</h3><p class="gm-caption">Water new plants three times to grow them. Mature plants can produce another blossom after resting. New seeds are earned by completing garden activities.</p><div class="gm-seedlist">${plants.map(p=>`<div class="gm-seedcard">${img(p.img)}<b>${esc(p.name)}</b><small>${esc(p.rarity)} · Seeds: ${local.seeds[p.id]||0}</small><button data-plant-seed="${p.id}" ${(local.seeds[p.id]||0)>0?'':'disabled'}>Plant seed</button></div>`).join('')}</div><h4>Growing beds</h4><div class="gm-grid">${beds.length?beds.map(p=>{const info=species[p.flowerId];const mature=p.stage>=3;const ready=mature&&now()-(p.lastHarvest||0)>=20000;return `<div class="gm-tile gm-plantbed">${img(info.img)}<b>${esc(info.name)}</b><small>${mature?'🌸 Fully grown · Blooming':`🌱 Growth ${p.stage}/3`}</small>${mature?`<button data-harvest="${p.id}" ${ready?'':'disabled'}>${ready?'Collect a blossom':'Resting…'}</button>`:`<button data-water-special="${p.id}" ${now()-(p.lastCare||0)>=1200?'':'disabled'}>💧 Water plant</button>`}</div>`}).join(''):'<p class="gm-caption">Your garden beds are empty. Plant a seed above.</p>'}</div></div>`;
+  const isButterfly=zone==='butterfly',kind=isButterfly?'nectar':'stardust';
+  const earning=isButterfly?'Catch butterflies (more Nectar for rarer species), or use the daily Pollinate action. Starter seeds and milestone seeds are free.':'Catch fireflies, successfully tap shooting stars, solve constellations, receive gifts from HQ, or make a wish at the fountain.';
+  const cards=plants.map(p=>{const price=priceOf(p.id),afford=price&&balance(price.currency)>=price.cost;return `<div class="gm-seedcard">${img(p.img)}<b>${esc(p.name)}</b><small>${esc(p.rarity)} · Owned seeds: ${local.seeds[p.id]||0}</small><button data-plant-seed="${p.id}" ${(local.seeds[p.id]||0)>0?'':'disabled'}>🌱 Plant owned seed</button>${price?`<button data-buy-seed="${p.id}" ${afford?'':'disabled'}>Buy seed · ${price.cost} ${currencyName(price.currency)}</button>`:''}</div>`}).join('');
+  return `<div class="gm-card"><div class="gm-shop-heading"><div><h3>🌱 ${isButterfly?'Sanctuary':zone==='moon'?'Moonlight':'Hidden Garden'} Seed Shop & Growing Beds</h3><p class="gm-caption">Seeds can be bought, earned through milestones and wishes, or gifted by Mikael through Test HQ.</p></div><strong class="gm-wallet">${currencyName(kind)}: ${balance(kind)}</strong></div><p class="gm-caption">${earning}</p><p class="gm-caption">Water each new plant 3 times to grow it. Once mature, plants can produce more blossoms; a purchased seed is consumed when planted.</p><div class="gm-seedlist">${cards}</div><h4>Growing beds · ${beds.length}/18</h4><div class="gm-grid">${beds.length?beds.map(p=>{const info=species[p.flowerId];const mature=p.stage>=3;const ready=mature&&now()-(p.lastHarvest||0)>=20000;return `<div class="gm-tile gm-plantbed">${img(info.img)}<b>${esc(info.name)}</b><small>${mature?'🌸 Fully grown · Blooming':`🌱 Growth ${p.stage}/3`}</small>${mature?`<button data-harvest="${p.id}" ${ready?'':'disabled'}>${ready?'Collect a blossom':'Resting…'}</button>`:`<button data-water-special="${p.id}" ${now()-(p.lastCare||0)>=1200?'':'disabled'}>💧 Water plant</button>`}<button class="gm-uproot" data-uproot="${p.id}">Remove plant · free bed</button></div>`}).join(''):'<p class="gm-caption">Your garden beds are empty. Plant a seed above.</p>'}</div></div>`;
  }
  function butterflyPage(){const n=found();const established=local.beds.filter(p=>p.stage>=3&&species[p.flowerId]?.zone==='butterfly').length;
   const ready=canButter();const items=butterflies.map(x=>{const rec=local.butterflies[x.id];return `<div class="gm-species ${rec?'gm-discovered':'gm-undiscovered'}">${img(x.img)}<b>${rec?esc(x.name):'Undiscovered'}</b><small>${rec?esc(x.rarity)+' · '+rec.sightings+' sighting(s)':'???'}</small>${rec?`<small>First seen ${new Date(rec.first).toLocaleDateString()}</small>`:''}</div>`}).join('');
-  return `<h3>🦋 Butterfly Sanctuary ${ready?'· Unlocked':'· Locked'}</h3><p>Discover 20 individual butterflies, grow nectar plants, collect photographs and earn sanctuary rewards.</p><div class="gm-grid">${tile(grown()>=12,`Grow 12 flowers (${grown()}/12)`)}${tile(deliveries().total>=1,`Deliver 1 bouquet (${deliveries().total}/1)`)}${tile(n>=10,`Butterfly Emblem (${n}/10)`)}</div>
-  ${ready?`<div class="gm-card"><h3>🦋 A butterfly is visiting!</h3><div id="gmEncounter">${encounter?encounterHTML():`<p class="gm-caption">Butterflies visit when you call them. Rare visitors become more likely around mature sanctuary plants.</p><button id="gmVisit">Look for butterflies</button>`}</div><p class="gm-caption">Found ${n}/20 butterflies · Mature nectar plants: ${established}</p><button id="gmPollinate">🌿 Pollinate one existing plant (daily)</button></div>${plantBeds('butterfly')}<h3>📸 Butterfly Album</h3><div class="gm-butterfly-album">${items}</div>`:'<p class="gm-warning">Both unlock requirements must be complete. Bouquet deliveries from either person count.</p>'}`;
+  return `<h3>🦋 Butterfly Sanctuary ${ready?'· Unlocked':'· Locked'}</h3><p>Discover 20 butterfly species. Catching now requires precision and consecutive successful taps; rarer butterflies move faster and need more perfect hits.</p><div class="gm-grid">${tile(grown()>=12,`Grow 12 flowers (${grown()}/12)`)}${tile(deliveries().total>=1,`Deliver 1 bouquet (${deliveries().total}/1)`)}${tile(n>=10,`Butterfly Emblem (${n}/10)`)}</div>
+  ${ready?`<div class="gm-card"><div class="gm-shop-heading"><h3>🦋 Butterfly-catching challenge</h3><strong class="gm-wallet">🍯 Nectar: ${balance('nectar')}</strong></div><div id="gmEncounter">${encounter?encounterHTML():`<p class="gm-caption">Watch the timing bar. Common butterflies need one hit; Rare need two; Epic and Legendary need three. A miss lets the butterfly escape.</p><button id="gmVisit" ${now()-local.lastArrival<4500?'disabled':''}>Search for butterflies</button>`}</div><p class="gm-caption">Discovered ${n}/20 · Mature nectar plants ${established} · Catching butterflies awards Nectar to buy more sanctuary seeds.</p><button id="gmPollinate" ${local.lastPollinateDay===today()?'disabled':''}>🌿 Daily pollination · +3 Nectar and a plant bonus</button></div>${plantBeds('butterfly')}<h3>📸 Butterfly Album</h3><div class="gm-butterfly-album">${items}</div>`:'<p class="gm-warning">Grow 12 flowers and deliver one bouquet (from either person) first.</p>'}`;
  }
- function encounterHTML(){const x=butterflyIndex[encounter.id];return `<div class="gm-encounter">${img(x.img)}<div><b>${esc(x.name)}</b> <small>${esc(x.rarity)}</small><p class="gm-caption">Catch it when the moving marker enters the central golden zone.</p><div class="gm-timing"><div class="gm-target" style="width:${x.rarity==='Common'?38:x.rarity==='Rare'?26:x.rarity==='Epic'?18:12}%"></div><div class="gm-marker"></div></div><button id="gmCatch" class="gm-primary">🦋 Catch / photograph</button><button id="gmLeave">Let it fly</button></div></div>`}
+ function encounterHTML(){const x=butterflyIndex[encounter.id];const hits={Common:1,Rare:2,Epic:3,Legendary:3}[x.rarity]||2;
+  const widths={Common:.26,Rare:.18,Epic:.13,Legendary:.095},periods={Common:3900,Rare:3000,Epic:2300,Legendary:1850};
+  return `<div class="gm-encounter">${img(x.img)}<div><b>${esc(x.name)}</b> <small>${esc(x.rarity)}</small><p class="gm-caption">Precise catches: ${encounter.hits||0}/${hits}. Hit the narrow golden zone ${hits} time(s) without missing.</p>${timingGame(widths[x.rarity],periods[x.rarity],'Butterfly catch')}<button id="gmCatch" class="gm-primary">🦋 Time your catch</button><button id="gmLeave">Let it fly</button></div></div>`;
+ }
  function moonPage(){const ready=canMoon(),f=Object.values(local.fireflies).reduce((s,x)=>s+x,0);const phaseNames=['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];const phase=phaseNames[Math.floor(now()/86400000)%8];
-  return `<h3>🌙 Moonlight Garden ${ready?'· Unlocked':'· Locked'}</h3><p>A permanent moonlit garden with glowing plants, firefly collecting and celestial puzzles. You do not need to log in after dark.</p><div class="gm-grid">${tile(grown()>=15,`Grow 15 flowers (${grown()}/15)`)}${tile(deliveries().fromLizzy>=3,`Lizzy sends 3 bouquets (${deliveries().fromLizzy}/3)`)}</div>
-  ${ready?`<div class="gm-card gm-moon-scene"><h3>🌒 ${phase}</h3><div class="gm-statline"><span>✨ Stardust: ${local.stardust}</span><span>🪲 Fireflies caught: ${f}</span><span>🌠 Shooting stars: ${local.starsCaught}</span></div><div class="gm-two-actions"><button id="gmFirefly">🪲 Catch a firefly</button><button id="gmMeteor">🌠 Watch for shooting star</button></div><p class="gm-caption">New events appear after a short rest. Moon phases cycle automatically.</p></div><div class="gm-card"><h3>⭐ Constellation Puzzle</h3><p>Connect the symbols in their secret order: <b>Moon → Star → Butterfly</b>.</p><div class="gm-starline">${['Moon','Star','Butterfly'].map((n,i)=>`<button data-star="${n}" ${local.constellation?'disabled':''}>${['🌙','⭐','🦋'][i]} ${n}</button>`).join('')}</div><p>${local.constellation?'✅ Constellation solved! Silver Rose unlocked.':'Connected stars: '+local.constellationIndex+'/3'}</p></div>${plantBeds('moon')}<p class="gm-caption">Using Moonlight Garden flowers in a bouquet unlocks its glowing presentation. HQ can also send glowing bouquets.</p>`:'<p class="gm-warning">Grow flowers in your main garden and send three bouquets to Mikael to unlock this area.</p>'}`;
+  const ff=fireflyEncounter,fc=ff&&fireflyStats[ff.color],met=meteorEncounter;
+  const fireflyArea=ff?`<div class="gm-challenge"><h4>🪲 ${esc(ff.color)} Firefly</h4><p class="gm-caption">Catch ${ff.hits||0}/${fc.hits} flashes before it vanishes. Time your tap in the narrow glowing zone. One miss and it escapes.</p>${timingGame(fc.width,fc.period,'Firefly catch')}<button id="gmCatchFirefly" class="gm-primary">🪲 Catch flash</button><button id="gmCancelFirefly">Let it fly</button></div>`:`<button id="gmFirefly" ${now()-local.lastFireflyAt<8500?'disabled':''}>🪲 Search for a firefly</button>`;
+  const meteorArea=met?`<div class="gm-challenge"><h4>🌠 A shooting star!</h4><p class="gm-caption">You have ${Math.ceil((met.expires-now())/1000)>0?Math.ceil((met.expires-now())/1000):0} seconds to stop the fast marker inside the tiny golden zone. Miss or run out of time and the star disappears.</p>${timingGame(.105,1420,'Shooting star catch')}<button id="gmCatchMeteor" class="gm-primary">🌠 Catch the shooting star!</button></div>`:`<button id="gmMeteor" ${now()-local.lastStarAt<12000?'disabled':''}>🌠 Watch for a shooting star</button>`;
+  const puzzleButtons=constellationNodes.map(([id,emoji])=>`<button data-star="${id}" ${local.constellation||now()<Number(local.constellationLockUntil||0)?'disabled':''}>${emoji} ${id}</button>`).join('');
+  const puzzleStatus=local.constellation?'✅ Constellation solved! A free Silver Rose seed and 12 Stardust earned.':`Connected ${local.constellationIndex||0}/6 · Mistakes ${(local.constellationMistakes||0)}/3 ${now()<Number(local.constellationLockUntil||0)?'· Stars realigning; try again shortly.':''}`;
+  return `<h3>🌙 Moonlight Garden ${ready?'· Unlocked':'· Locked'}</h3><p>Grow unique moonlit flowers and master three skill-based challenges. You don't need to log in at night.</p><div class="gm-grid">${tile(grown()>=15,`Grow 15 flowers (${grown()}/15)`)}${tile(deliveries().fromLizzy>=3,`Lizzy sends 3 bouquets (${deliveries().fromLizzy}/3)`)}</div>
+  ${ready?`<div class="gm-card gm-moon-scene"><h3>🌒 ${phase}</h3><div class="gm-statline"><span>✨ Stardust: ${balance('stardust')}</span><span>🪲 Fireflies: ${f}</span><span>🌠 Stars caught: ${local.starsCaught}</span></div><p class="gm-caption">You earn Stardust only after a successful catch. Use it to buy Moonlight and Hidden Garden seeds and decorations.</p><div class="gm-challenge-grid">${fireflyArea}${meteorArea}</div><p class="gm-caption">Firefly misses have a short retry pause. Shooting stars are fast, time-limited and less forgiving.</p></div><div class="gm-card"><h3>⭐ Constellation Puzzle — The Night's Secret</h3><p>Trace a <b>six-symbol path</b> through eight symbols; two are decoys. The clues do not reveal the answer directly. Three wrong selections make the stars realign for 15 seconds.</p><div class="gm-clue"><b>The astronomer's clue</b><p>Begin with the night's silver guardian. A watchful creature sees what others cannot. Follow the traveler with a blazing tail toward a fixed point of light. Wings carry the last message to the rising day.</p></div><div class="gm-starline">${puzzleButtons}</div><p>${puzzleStatus}</p>${local.constellationHint&&!local.constellation?`<p class="gm-hint">💡 ${esc(local.constellationHint)}</p>`:''}${!local.constellation?`<button id="gmHint" ${balance('stardust')>=2&&now()>=Number(local.constellationLockUntil||0)?'':'disabled'}>💡 Reveal next symbol · 2 Stardust</button>`:''}</div>${plantBeds('moon')}<p class="gm-caption">Moonflower bouquets glow when you include an eligible moonlit blossom. HQ can also send glowing bouquets.</p>`:'<p class="gm-warning">Grow 15 flowers and send 3 bouquets to Mikael to unlock the Moonlight Garden.</p>'}`;
  }
  function giftCard(g){const opened=!!g.openedAt,info=catalog[g.itemId],name=info?.name||decorations[g.itemId]?.[0]||(g.kind==='letter'?'Secret Letter':'Surprise');return `<div class="gm-card gm-giftcard"><b>${opened?'💝 Discovered':'🎁 A hidden surprise'}</b>${opened?`${info?img(info.img):''}<p>${esc(name)}</p><p>${esc(g.message||'A thoughtful gift from Mikael')}</p>`:`<p>Something is waiting near the ${esc(giftPlaces[g.location]||'garden')}.</p><button data-open-gift="${esc(g.id)}">Unwrap gift</button>`}</div>`}
  function hiddenPage(){const d=deliveries();const steps=[['Butterfly Sanctuary',canButter()],['Moonlight Garden',canMoon()],['Grow 20 flowers',grown()>=20],['Complete 5 bouquet deliveries',d.total>=5],['At least 1 bouquet from Mikael',d.fromMikael>=1]];
-  if(!hidden())return `<h3>🔐 The Hidden Garden</h3><p>A secret place for your memories, rare plants and surprises from Mikael.</p><div class="gm-grid">${steps.map(([l,b])=>tile(b,esc(l))).join('')}</div>${canHidden()?`<div class="gm-card"><h3>🌳 You've found the secret gate!</h3><p>The butterfly and moon symbols are etched into its lock.</p><button id="gmGate">${local.gateStep===0?'🦋 Turn the Butterfly Key':'🌙 Turn the Moon Key'}</button></div>`:'<p class="gm-caption">All five conditions must be complete before the secret gate can be opened by Lizzy.</p>'}`;
+  if(!hidden())return `<h3>🔐 The Hidden Garden</h3><p>A secret place for your memories, rare plants and surprises from Mikael.</p><div class="gm-grid">${steps.map(([l,b])=>tile(b,esc(l))).join('')}</div>${canHidden()?`<div class="gm-card"><h3>🌳 You've found the secret gate!</h3><p>The butterfly and moon symbols are etched into its lock.</p><button id="gmGate">${local.gateStep===0?'🦋 Turn the Butterfly Key':'🌙 Turn the Moon Key'}</button></div>`:'<p class="gm-caption">All five conditions must be complete before Lizzy can open the secret gate.</p>'}`;
   const stage=treeStage(),gifts=(shared.surprises||[]).filter(x=>x.revealed),potted=local.potted,decor=local.decor;
-  return `<h3>🌳 The Hidden Garden · Unlocked</h3><p>Mikael can leave real plants, seeds, decorations, letters and surprises from Test HQ.</p><div class="gm-memory-tree gm-card">${img(A+'tree/memoryTree'+stage+'.webp')}<div><h3>🌸 Memory Tree — Stage ${stage} of 4</h3><p>Its branches grow as bouquets and gifts are exchanged.</p><p class="gm-caption">${d.total} bouquet deliveries · ${gifts.filter(x=>x.openedAt).length} gifts discovered</p></div></div><div class="gm-card"><h3>⛲ Wishing Fountain</h3><p>Make one wish each day for Stardust or a rare seed.</p><button id="gmWish" ${local.lastWishDay===today()?'disabled':''}>${local.lastWishDay===today()?"Today's wish granted":"Make today's wish"}</button></div>
-  ${plantBeds('hidden')}<h3>🎁 Gifts from Mikael</h3><div class="gm-gifts">${gifts.length?gifts.slice().reverse().map(giftCard).join(''):'<p>No gifts waiting yet. Mikael can prepare surprises through Test HQ.</p>'}</div><h3>🪴 Potted plants placed in your Hidden Garden</h3><div class="gm-seedlist">${potted.length?potted.map(p=>`<div class="gm-seedcard">${smallImg(p.flowerId)}<b>${esc(catalog[p.flowerId]?.name||p.flowerId)}</b><small>Gift from Mikael · ${esc(giftPlaces[p.location]||'Garden')}</small></div>`).join(''):'<p class="gm-caption">Potted plants Mikael sends will appear here when you unwrap them.</p>'}</div><h3>✨ Garden decorations</h3><div class="gm-statline">${decor.length?decor.map(p=>`<span>${decorations[p.id]?.[1]||'🌷'} ${esc(decorations[p.id]?.[0]||p.id)}</span>`).join(''):'<span>No decorations yet</span>'}</div>`;
+  const wishes=(local.wishHistory||[]).slice(0,7);
+  const recent=wishes.map(x=>`<div class="gm-wish-result"><span class="gm-wish-icon">${x.rewardKind==='seed'?smallImg(x.rewardId):x.rewardKind==='decor'?'🏡':'✨'}</span><div><b>${x.granted?'✅ Wish granted':'🌙 Wish not granted — consolation received'}</b><small>${esc(x.day)} · Asked for ${esc(x.wishName)}</small><p><strong>Received: ${esc(x.rewardLabel)}</strong></p></div></div>`).join('');
+  const previousWishToday=local.lastWishDay===today()&&!wishes.some(w=>w.day===today());
+  const decorCards=Object.entries(decorPrices).map(([id,cost])=>`<div class="gm-seedcard"><span class="gm-decor-icon">${decorations[id][1]}</span><b>${esc(decorations[id][0])}</b><small>${cost} Stardust · Owned ${decor.filter(x=>x.id===id).length}</small><button data-buy-decor="${id}" ${balance('stardust')>=cost?'':'disabled'}>Buy decoration · ${cost} ✨</button></div>`).join('');
+  return `<h3>🌳 The Hidden Garden · Unlocked</h3><p>Make wishes, grow rare flowers, buy decorations, and find real gifts sent by Mikael from Test HQ.</p><div class="gm-memory-tree gm-card">${img(A+'tree/memoryTree'+stage+'.webp')}<div><h3>🌸 Memory Tree — Stage ${stage} of 4</h3><p>Its branches grow as bouquets and gifts are exchanged.</p><p class="gm-caption">${d.total} bouquet deliveries · ${gifts.filter(x=>x.openedAt).length} gifts discovered</p></div></div>
+  <div class="gm-card"><h3>⛲ Wishing Fountain — choose your wish</h3><p>Make <b>one wish per day</b>. Choose what you hope for; the fountain may grant it or give a small consolation reward. You will always see the exact result and recent wish history.</p><label class="gm-wish-picker">I wish for… <select id="gmWishType" ${local.lastWishDay===today()?'disabled':''}><option value="stardust" ${local.wishChoice==='stardust'?'selected':''}>✨ Stardust (80% chance for 8)</option><option value="seed" ${local.wishChoice==='seed'?'selected':''}>🌱 Rare Hidden Garden seed (65% chance)</option><option value="decor" ${local.wishChoice==='decor'?'selected':''}>🏡 Garden decoration (45% chance)</option></select></label><button id="gmWish" ${local.lastWishDay===today()?'disabled':''}>${local.lastWishDay===today()?'Wish used today · return tomorrow':'⛲ Make my wish'}</button>${previousWishToday?'<p class="gm-caption">A wish was made today on the previous version; the earlier reward was not recorded. New wishes will appear below.</p>':''}<h4>My wishes & rewards</h4><div class="gm-wishes">${wishes.length?recent:'<p class="gm-caption">No recorded wishes yet. Make your first wish to see what you receive.</p>'}</div></div>
+  ${plantBeds('hidden')}<div class="gm-card"><div class="gm-shop-heading"><div><h3>🏡 Hidden Garden Decoration Shop</h3><p class="gm-caption">Buy decorations with Stardust earned in Moonlight Garden, receive decorations from HQ, win them at the fountain, or discover butterfly milestone rewards.</p></div><strong class="gm-wallet">✨ Stardust: ${balance('stardust')}</strong></div><div class="gm-seedlist">${decorCards}</div></div>
+  <h3>🎁 Gifts from Mikael</h3><div class="gm-gifts">${gifts.length?gifts.slice().reverse().map(giftCard).join(''):'<p>No gifts waiting yet. Mikael can prepare surprises through Test HQ.</p>'}</div><h3>🪴 Potted plants placed in your Hidden Garden</h3><div class="gm-seedlist">${potted.length?potted.map(p=>`<div class="gm-seedcard">${smallImg(p.flowerId)}<b>${esc(catalog[p.flowerId]?.name||p.flowerId)}</b><small>Gift from Mikael · ${esc(giftPlaces[p.location]||'Garden')}</small></div>`).join(''):'<p class="gm-caption">Potted plants Mikael sends appear here after unwrapping.</p>'}</div><h3>✨ My decorations (${decor.length})</h3><div class="gm-statline">${decor.length?decor.map(p=>`<span>${decorations[p.id]?.[1]||'🌷'} ${esc(decorations[p.id]?.[0]||p.id)}${p.source==='hidden-shop'?' · Bought':p.source==='milestone'?' · Earned':' · Gifted'}</span>`).join(''):'<span>No decorations yet. Purchase them above or receive gifts from Mikael.</span>'}</div>`;
  }
  function available(){const g=garden(),arr=[];for(const o of flowerOptions){const count=Number(species[o.id]?local.harvested[o.id]:g.flowers?.[o.id])||0;if(count>0)arr.push({...o,count})}return arr}
  function flowerSelection(){const valid=available();return `<div class="gm-flower-choices">${valid.length?valid.map(o=>`<button data-flower="${o.id}" class="${chosen.includes(o.id)?'gm-on':''}">${img(o.img)}<b>${esc(o.name)}</b><small>Available: ${o.count}</small></button>`).join(''):'<p>No harvested flowers available. Grow plants in your main garden or one of the special gardens.</p>'}</div>`}
  function bouquetCard(b){const isIn=b.to==='Lizzy',glow=b.glow===true||false;return `<div class="gm-card ${glow?'gm-glowing-bouquet':''}"><b>${isIn?'🎁 From Mikael':'💌 Sent to Mikael'} ${glow?'· ✨ Glowing':''}</b><div class="gm-gift-header">${(b.flowers||[]).map(smallImg).join('')}</div><p>${esc((b.flowers||[]).map(id=>catalog[id]?.name||id).join(', '))}</p><p class="gm-caption">${esc(b.wrapping||'')} · ${esc(b.ribbon||'')} · ${b.openedAt?'Opened':'Delivered'}</p><div class="gm-message">${esc(b.note||'A bouquet with love')}</div>${isIn&&!b.openedAt?`<button data-open-bouquet="${esc(b.id)}">${glow?'✨ Open glowing bouquet':'💐 Open bouquet'}</button>`:''}</div>`}
  function studioPage(){const gl=chosen.some(id=>glowIds.has(id));const c=deliveries();return `<h3>💐 Bouquet Studio</h3><p>Choose up to six harvested flowers, wrapping and a ribbon. Glowing bouquets require a moonlit flower. Mikael can send bouquets directly from HQ.</p><div class="gm-statline"><span>Sent: ${c.fromLizzy}</span><span>From Mikael: ${c.fromMikael}</span><span>Total deliveries: ${c.total}</span></div><div class="gm-card"><h3>🌷 Pick flowers</h3>${flowerSelection()}<p class="gm-caption">Selected: ${chosen.length}/6 · ${gl?'✨ Glowing bouquet available':'Choose a moonlit flower for glow'}</p><div class="gm-formgrid"><label>Wrapping<select id="gmWrapping" class="gm-select">${wrapOptions.map(x=>`<option ${x===wrapping?'selected':''}>${x}</option>`).join('')}</select></label><label>Ribbon<select id="gmRibbon" class="gm-select">${ribbonOptions.map(x=>`<option ${x===ribbon?'selected':''}>${x}</option>`).join('')}</select></label></div><label>Personal note<textarea id="gmNote" maxlength="300" class="gm-textarea" placeholder="Write Mikael a note…">${esc(note)}</textarea></label><label class="gm-check"><input id="gmGlow" type="checkbox" ${gl?'checked':''} ${gl?'':'disabled'}> ✨ Glowing bouquet</label><button id="gmSend" class="gm-primary" ${chosen.length&&!local.pendingDelivery?'':'disabled'}>💌 Send to Mikael</button>${local.pendingDelivery?'<div class="gm-warning">The previous delivery may have reached HQ. Retry the same reference to finish safely.</div><button id="gmRetry">↻ Retry / confirm previous delivery</button>':''}</div><h3>📖 Bouquet & Gift Memory Book</h3><div class="gm-letters">${shared.bouquets.length?shared.bouquets.slice().reverse().map(bouquetCard).join(''):'<p class="gm-caption">Your delivered bouquets will be kept here.</p>'}</div>`}
  function passportPage(){const c=deliveries(),photos=Object.values(local.butterflies).reduce((s,x)=>s+Number(x.photos||0),0),moon=local.beds.filter(p=>p.stage>=3&&species[p.flowerId]?.zone==='moon').length;
-  return `<h3>📖 Garden Passport</h3><p>Your milestones across all four garden areas.</p><div class="gm-grid">${tile(canButter(),`Butterfly Sanctuary · 12 flowers + 1 bouquet`)}${tile(canMoon(),`Moonlight Garden · 15 flowers + 3 bouquets sent`)}${tile(hidden(),`Hidden Garden · 20 flowers + 5 deliveries, 1 from Mikael`)}</div><div class="gm-statline"><span>🌷 ${grown()} flowers grown</span><span>💌 ${c.total} deliveries</span><span>🦋 ${found()}/20 butterflies</span><span>📸 ${photos} photos</span><span>🌙 ${moon} moon plants</span><span>✨ ${local.stardust} Stardust</span></div>${bar(found(),20)}<p>Butterfly Emblem: ${found()>=10?'✅ Awarded':'🔒 10 unique species required'} · Moon Emblem: ${progress().moonEmblem?'✅ Awarded':'🔒 Three Moon flower varieties harvested and constellation solved'}</p><p class="gm-caption">Only flowers matured in the garden count. Potted HQ gift plants and trees do not increase the flower-grown total.</p>`}
+  return `<h3>📖 Garden Passport</h3><p>Your milestones across all four garden areas.</p><div class="gm-grid">${tile(canButter(),`Butterfly Sanctuary · 12 flowers + 1 bouquet`)}${tile(canMoon(),`Moonlight Garden · 15 flowers + 3 bouquets sent`)}${tile(hidden(),`Hidden Garden · 20 flowers + 5 deliveries, 1 from Mikael`)}</div><div class="gm-statline"><span>🌷 ${grown()} flowers grown</span><span>💌 ${c.total} deliveries</span><span>🦋 ${found()}/20 butterflies</span><span>📸 ${photos} photos</span><span>🌙 ${moon} moon plants</span><span>✨ ${balance('stardust')} Stardust</span><span>🍯 ${balance('nectar')} Nectar</span><span>⛲ ${(local.wishHistory||[]).length} wishes recorded</span></div>${bar(found(),20)}<p>Butterfly Emblem: ${found()>=10?'✅ Awarded':'🔒 10 unique species required'} · Moon Emblem: ${progress().moonEmblem?'✅ Awarded':'🔒 Three Moon flower varieties harvested and constellation solved'}</p><p class="gm-caption">Only flowers matured in the garden count. Potted HQ gift plants and trees do not increase the flower-grown total.</p>`}
  function render(){makeUI();scan();unlockSeeds();scene();const body=$('gmBody');if(!body)return;document.querySelectorAll('#gmHub [data-tab]').forEach(x=>x.classList.toggle('gm-on',x.dataset.tab===local.tab));const tabs={butterfly:butterflyPage,moon:moonPage,hidden:hiddenPage,studio:studioPage,passport:passportPage};body.innerHTML=(tabs[local.tab]||butterflyPage)();wire(body)}
  function growAllowed(zone){return zone==='butterfly'?canButter():zone==='moon'?canMoon():hidden()}
  function chooseVisitor(){const n=found(),mature=new Set(local.beds.filter(p=>p.stage>=3).map(p=>p.flowerId));
@@ -169,35 +211,47 @@
  }
  function popupBouquet(b){$('gmOpenOverlay')?.remove();const el=document.createElement('div');el.id='gmOpenOverlay';el.className='gm-overlay';el.innerHTML=`<div class="gm-reveal ${b.glow?'gm-reveal-glow':''}"><button id="gmCloseReveal" aria-label="Close">✕</button><h2>${b.glow?'✨ A Moonlit Bouquet':'💐 A Bouquet for Lizzy'}</h2><div class="gm-reveal-flowers">${(b.flowers||[]).map(smallImg).join('')}</div><p>${esc(b.note||'With love from Mikael')}</p><small>${esc(b.wrapping||'')} · ${esc(b.ribbon||'')}</small></div>`;document.body.append(el);$('gmCloseReveal').onclick=()=>el.remove();el.addEventListener('click',e=>{if(e.target===el)el.remove()});}
  function wire(body){
-  body.onchange=e=>{if(e.target.id==='gmWrapping')wrapping=e.target.value;if(e.target.id==='gmRibbon')ribbon=e.target.value};
+  body.onchange=e=>{if(e.target.id==='gmWrapping')wrapping=e.target.value;if(e.target.id==='gmRibbon')ribbon=e.target.value;if(e.target.id==='gmWishType'){local.wishChoice=e.target.value;save()}};
   body.oninput=e=>{if(e.target.id==='gmNote')note=e.target.value};
   body.onclick=async e=>{
    const b=e.target.closest('button');if(!b||!body.contains(b))return;
    const key=(name)=>b.dataset[name];
    if(b.id==='gmVisit'){
     if(now()-local.lastArrival<4500){status('🦋 The butterflies need a few seconds before another visit.');return}
-    const v=chooseVisitor();if(!v)return;encounter={id:v.id,started:now()};render();status('🦋 '+v.name+' is visiting. Time your catch!');return;
+    const v=chooseVisitor();if(!v)return;encounter={id:v.id,started:now(),hits:0};render();status('🦋 '+v.name+' is visiting. Time your catch!');return;
    }
    if(b.id==='gmLeave'){encounter=null;local.lastArrival=now();save();render();return}
    if(b.id==='gmCatch'){
-    if(!encounter)return;const x=butterflyIndex[encounter.id];const delta=now()-encounter.started;const f=(delta%5200)/2600;const p=f>1?2-f:f;
-    const width={Common:.38,Rare:.26,Epic:.18,Legendary:.12}[x.rarity]||.2;
-    const hit=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||Math.abs(p-.5)<=width/2;
-    if(hit){let rec=local.butterflies[x.id];if(!rec)rec={first:new Date().toISOString(),sightings:0,photos:0};rec.sightings++;rec.photos++;rec.last=new Date().toISOString();local.butterflies[x.id]=rec;status('📸 '+x.name+' photographed! '+found()+'/20 species discovered.');}
-    else status('🦋 The butterfly fluttered away. Try again when another visits.');
+    if(!encounter)return;const x=butterflyIndex[encounter.id];if(!x)return;
+    const widths={Common:.26,Rare:.18,Epic:.13,Legendary:.095},periods={Common:3900,Rare:3000,Epic:2300,Legendary:1850};
+    const needed={Common:1,Rare:2,Epic:3,Legendary:3}[x.rarity]||2;
+    if(timingHit(encounter.started,periods[x.rarity],widths[x.rarity])){
+     encounter.hits=(encounter.hits||0)+1;
+     if(encounter.hits<needed){encounter.started=now();render();status('🎯 Perfect catch! '+encounter.hits+'/'+needed+' hits. Stay focused!');return;}
+     let rec=local.butterflies[x.id];if(!rec)rec={first:new Date().toISOString(),sightings:0,photos:0};rec.sightings++;rec.photos++;rec.last=new Date().toISOString();local.butterflies[x.id]=rec;
+     const reward={Common:3,Rare:6,Epic:10,Legendary:16}[x.rarity]||3;local.nectar=balance('nectar')+reward;
+     status('📸 '+x.name+' caught and photographed! +'+reward+' Nectar · '+found()+'/20 species.');
+    }else status('🦋 Missed the narrow zone — the butterfly escaped! Try again after a short rest.');
     local.lastArrival=now();encounter=null;unlockSeeds();save();render();await sendProgress();return;
    }
    if(b.id==='gmPollinate'){
     if(local.lastPollinateDay===today())return status('The butterflies have already visited your plants today.');
-    local.lastPollinateDay=today();const p=local.beds.find(x=>x.stage>=3&&species[x.flowerId]?.zone==='butterfly');
-    if(p){local.harvested[p.flowerId]=(local.harvested[p.flowerId]||0)+1;status('🦋 Butterfly pollination produced an extra '+species[p.flowerId].name+' blossom!')}
-    else{grantSeed('butterflyBloom');status('🦋 The butterflies left you an extra Butterfly Bloom seed!')}
-    save();render();return;
+    local.lastPollinateDay=today();local.nectar=balance('nectar')+3;const p=local.beds.find(x=>x.stage>=3&&species[x.flowerId]?.zone==='butterfly');
+    if(p){local.harvested[p.flowerId]=(local.harvested[p.flowerId]||0)+1;status('🦋 +3 Nectar and an extra '+species[p.flowerId].name+' blossom from pollination!')}
+    else{grantSeed('butterflyBloom');status('🦋 +3 Nectar and a free Butterfly Bloom seed!')}
+    save();render();await sendProgress();return;
    }
+   if(key('buySeed')){const msg=purchaseSeed(b.dataset.buySeed);render();status(msg);if(msg.includes('Bought'))await sendProgress();return;}
+   if(key('buyDecor')){const msg=purchaseDecor(b.dataset.buyDecor);render();status(msg);if(msg.includes('Bought'))await sendProgress();return;}
    if(key('plantSeed')){
     const id=b.dataset.plantSeed,p=species[id];if(!p||!growAllowed(p.zone)||!(local.seeds[id]>0))return;
     if(local.beds.filter(x=>species[x.flowerId]?.zone===p.zone).length>=18)return status('This garden has reached its 18-bed limit.');
     local.seeds[id]--;local.beds.push({id:uid(),flowerId:id,stage:0,lastCare:0,lastHarvest:0});save();render();status('🌱 '+p.name+' planted!');return;
+   }
+   if(key('uproot')){
+    const id=b.dataset.uproot,p=local.beds.find(x=>x.id===id);if(!p)return;
+    if(typeof window.confirm==='function'&&!window.confirm('Remove '+(species[p.flowerId]?.name||'this plant')+'? You will not get the seed back, but grown-flower and harvested-blossom totals stay saved.'))return;
+    local.beds=local.beds.filter(x=>x.id!==id);save();render();status('🌿 Plant removed and garden bed freed. Your previous blossoms and milestones are preserved.');return;
    }
    if(key('waterSpecial')){
     const p=local.beds.find(x=>x.id===b.dataset.waterSpecial);if(!p||p.stage>=3)return;
@@ -212,20 +266,43 @@
     p.lastHarvest=now();local.harvested[p.flowerId]=(local.harvested[p.flowerId]||0)+1;save();render();status('🌷 Another '+species[p.flowerId].name+' blossom harvested!');return;
    }
    if(b.id==='gmFirefly'){
-    if(now()-local.lastFireflyAt<9000)return status('🌙 Give the fireflies a little time to return.');
-    const colors=['Golden','Blue','Violet','Silver'],c=colors[Math.floor(Math.random()*colors.length)];local.fireflies[c]=(local.fireflies[c]||0)+1;local.lastFireflyAt=now();local.stardust+=Math.random()<.25?2:1;
-    unlockSeeds();save();render();status('🪲 You collected a '+c+' firefly and Stardust!');await sendProgress();return;
+    if(now()-local.lastFireflyAt<8500)return status('🌙 Fireflies are resting. Return shortly.');
+    const colors=['Golden','Blue','Violet','Silver'],c=colors[Math.floor(Math.random()*colors.length)];fireflyEncounter={color:c,hits:0,started:now(),expires:now()+7000};render();status('🪲 A '+c+' firefly is flashing. Catch the flashes in the narrow zone!');return;
+   }
+   if(b.id==='gmCancelFirefly'){fireflyEncounter=null;local.lastFireflyAt=now();save();render();status('🪲 You let the firefly escape.');return;}
+   if(b.id==='gmCatchFirefly'){
+    const ff=fireflyEncounter;if(!ff)return;const rules=fireflyStats[ff.color];
+    if(now()>ff.expires||!timingHit(ff.started,rules.period,rules.width)){fireflyEncounter=null;local.lastFireflyAt=now();save();render();status('🪲 The firefly darted away after a missed flash. No Stardust earned.');return;}
+    ff.hits++;if(ff.hits<rules.hits){ff.started=now();ff.expires=now()+7000;render();status('✨ Flash '+ff.hits+'/'+rules.hits+' caught. Keep your timing!');return;}
+    local.fireflies[ff.color]=(local.fireflies[ff.color]||0)+1;local.lastFireflyAt=now();local.stardust=balance('stardust')+rules.reward;
+    fireflyEncounter=null;unlockSeeds();save();render();status('🪲 '+ff.color+' firefly caught! +'+rules.reward+' Stardust.');await sendProgress();return;
    }
    if(b.id==='gmMeteor'){
-    if(now()-local.lastStarAt<35000)return status('🌠 The shooting stars need time to return.');
-    local.lastStarAt=now();local.starsCaught++;local.stardust+=3;unlockSeeds();save();render();status('🌠 Shooting star caught! +3 Stardust.');await sendProgress();return;
+    if(now()-local.lastStarAt<12000)return status('🌠 No shooting stars are visible yet.');
+    meteorEncounter={started:now(),expires:now()+3400};render();status('🌠 A shooting star! Hit the tiny golden zone before it disappears!');return;
+   }
+   if(b.id==='gmCatchMeteor'){
+    if(!meteorEncounter)return;const met=meteorEncounter;meteorEncounter=null;
+    if(now()>met.expires){local.lastStarAt=now();save();render();status('🌠 Too late — the shooting star faded. No Stardust earned.');return;}
+    if(timingHit(met.started,1420,.105)){local.lastStarAt=now();local.starsCaught++;local.stardust=balance('stardust')+7;unlockSeeds();save();render();status('🌠 Perfect timing! Shooting star caught · +7 Stardust.');await sendProgress();return;}
+    local.lastStarAt=now();save();render();status('🌠 Missed! The shooting star vanished. No reward.');return;
+   }
+   if(b.id==='gmHint'){
+    if(local.constellation||now()<Number(local.constellationLockUntil||0))return;
+    if(!spend('stardust',2)){status('You need 2 Stardust for a clue.');return;}
+    local.constellationHint='Next symbol: '+constellationPath[local.constellationIndex||0]+'.';save();render();status('💡 Next symbol revealed for 2 Stardust.');return;
    }
    if(key('star')){
-    if(local.constellation)return;const seq=['Moon','Star','Butterfly'];if(b.dataset.star===seq[local.constellationIndex]){
-     local.constellationIndex++;
-     if(local.constellationIndex===3){local.constellation=true;status('⭐ The constellation is complete! A Silver Rose seed is now yours.');unlockSeeds();}
-     else status('⭐ Correct star! '+local.constellationIndex+'/3 connected.');
-    }else{local.constellationIndex=0;status('The stars scattered — connect Moon, then Star, then Butterfly.');}
+    if(local.constellation)return;if(now()<Number(local.constellationLockUntil||0))return status('⭐ The stars are still realigning.');
+    if(b.dataset.star===constellationPath[local.constellationIndex||0]){
+     local.constellationIndex=(local.constellationIndex||0)+1;local.constellationHint='';
+     if(local.constellationIndex===constellationPath.length){local.constellation=true;local.constellationMistakes=0;local.stardust=balance('stardust')+12;status('⭐ All six symbols connected! Free Silver Rose seed awarded and +12 Stardust.');unlockSeeds();}
+     else status('⭐ Correct star! '+local.constellationIndex+'/'+constellationPath.length+' connected.');
+    }else{
+     local.constellationIndex=0;local.constellationHint='';local.constellationMistakes=(local.constellationMistakes||0)+1;
+     if(local.constellationMistakes>=3){local.constellationLockUntil=now()+15000;local.constellationMistakes=0;status('☁️ Three errors! The constellation needs 15 seconds to realign.');}
+     else status('☁️ Wrong symbol. Your path reset; review the astronomer’s clue.');
+    }
     save();render();await sendProgress();return;
    }
    if(b.id==='gmGate'){
@@ -234,9 +311,18 @@
    }
    if(b.id==='gmWish'){
     if(!hidden()||local.lastWishDay===today())return;
-    local.lastWishDay=today();if(Math.random()<.6){local.stardust+=3;status('⛲ Your wish brought 3 Stardust!')}
-    else{const ids=['secretRose','wishingLily','memoryVine'];const id=ids[Math.floor(Math.random()*ids.length)];grantSeed(id);status('⛲ Your wish brought a '+species[id].name+' seed!')}
-    save();render();await sendProgress();return;
+    const wish=['stardust','seed','decor'].includes($('gmWishType')?.value)?$('gmWishType').value:local.wishChoice;
+    const names={stardust:'Stardust',seed:'a rare Hidden Garden seed',decor:'a garden decoration'};
+    const chance={stardust:.8,seed:.65,decor:.45};const granted=Math.random()<chance[wish];
+    let award={rewardKind:'stardust',rewardId:'',rewardLabel:'2 Stardust (consolation)'};
+    if(granted&&wish==='stardust'){local.stardust=balance('stardust')+8;award={rewardKind:'stardust',rewardId:'',rewardLabel:'8 Stardust'};}
+    else if(granted&&wish==='seed'){const ids=['secretRose','wishingLily','memoryVine','eternalBlossom'];const id=ids[Math.floor(Math.random()*ids.length)];grantSeed(id);award={rewardKind:'seed',rewardId:id,rewardLabel:'1 '+species[id].name+' seed'};}
+    else if(granted&&wish==='decor'){const ids=Object.keys(decorPrices),id=ids[Math.floor(Math.random()*ids.length)];local.decor.push({id,source:'wish',giftId:uid()});award={rewardKind:'decor',rewardId:id,rewardLabel:'1 '+decorations[id][0]};}
+    else local.stardust=balance('stardust')+2;
+    const record={day:today(),wish, wishName:names[wish],granted,...award};
+    local.wishChoice=wish;local.lastWishDay=today();local.wishHistory=[record,...(local.wishHistory||[])].slice(0,60);
+    save();render();status(granted?'⛲ Wish GRANTED! Received: '+award.rewardLabel:'⛲ Wish not granted this time. Consolation received: '+award.rewardLabel);
+    await sendProgress();return;
    }
    if(key('openGift')){
     b.disabled=true;try{const r=await api('garden_test_collect_surprise',{id:b.dataset.openGift});shared.surprises=shared.surprises.map(x=>x.id===r.item.id?r.item:x);
@@ -277,6 +363,12 @@
   setInterval(()=>{if(document.hidden)return;const body=$('gmBody');if(!body)return;
    body.querySelectorAll('[data-water-special]').forEach(b=>{const p=local.beds.find(x=>x.id===b.dataset.waterSpecial);if(p)b.disabled=p.stage>=3||now()-(p.lastCare||0)<1200;});
    body.querySelectorAll('[data-harvest]').forEach(b=>{const p=local.beds.find(x=>x.id===b.dataset.harvest);if(p){b.disabled=p.stage<3||now()-(p.lastHarvest||0)<20000;b.textContent=b.disabled?'Resting…':'Collect a blossom';}});
+   if($('gmVisit'))$('gmVisit').disabled=now()-local.lastArrival<4500;
+   if($('gmFirefly'))$('gmFirefly').disabled=now()-local.lastFireflyAt<8500;
+   if($('gmMeteor'))$('gmMeteor').disabled=now()-local.lastStarAt<12000;
+   if(now()>=Number(local.constellationLockUntil||0)&&Number(local.constellationLockUntil||0)>0){local.constellationLockUntil=0;save();if(local.tab==='moon')render();}
+   if(meteorEncounter&&now()>meteorEncounter.expires){meteorEncounter=null;local.lastStarAt=now();save();render();status('🌠 The shooting star disappeared before you caught it. No reward.');}
+   if(fireflyEncounter&&now()>fireflyEncounter.expires){fireflyEncounter=null;local.lastFireflyAt=now();save();render();status('🪲 The firefly escaped — the catch window closed.');}
   },750);
   setInterval(()=>{const open=!$('lizzyGardenWindow')?.classList.contains('hidden')&&!document.hidden;if(!open)return;
    const change=scan();if(change){unlockSeeds();render();sendProgress()}refresh(false);

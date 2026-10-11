@@ -107,3 +107,34 @@
 #lizzyGardenWindow .gm-hub h4{margin:9px 0}
 @media(max-width:680px){#lizzyGardenWindow .gm-encounter{grid-template-columns:1fr}#lizzyGardenWindow .gm-encounter>img{height:160px}#lizzyGardenWindow .gm-memory-tree{grid-template-columns:1fr}#lizzyGardenWindow .gm-memory-tree>img{max-height:220px}#lizzyGardenWindow .gm-formgrid{grid-template-columns:1fr}#lizzyGardenWindow .gm-butterfly-album{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){#lizzyGardenWindow .gm-encounter>img,#lizzyGardenWindow .gm-glowing-bouquet,#lizzyGardenWindow .gm-marker{animation:none!important;left:50%!important}#lizzyGardenWindow .gm-encounter>img,#lizzyGardenWindow .gm-glowing-bouquet,.gm-reveal-flowers img{animation:none!important}}
+
+/* ===== Garden Magic v2.1: skill challenges, earnable seeds, wishing journal ===== */
+#lizzyGardenWindow .gm-shop-heading{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+#lizzyGardenWindow .gm-shop-heading h3{margin:0 0 5px}
+#lizzyGardenWindow .gm-wallet{white-space:nowrap;background:linear-gradient(135deg,#d7ba74,#f7eac8);color:#3e3151;border-radius:999px;padding:8px 13px;font-size:13px;box-shadow:0 4px 14px #261e3150}
+#lizzyGardenWindow .gm-seedcard button{font-size:12px;line-height:1.3;min-height:37px}
+#lizzyGardenWindow .gm-seedcard button+button{margin-top:3px;background:linear-gradient(125deg,#d8a66e,#eed9a9);color:#3c2b40;border-color:#f6e2be}
+#lizzyGardenWindow .gm-seedcard button:disabled{opacity:.5;cursor:not-allowed}
+#lizzyGardenWindow .gm-challenge-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:14px 0}
+#lizzyGardenWindow .gm-challenge-grid>button{width:100%;min-height:90px}
+#lizzyGardenWindow .gm-challenge{min-width:0;border:1px solid #e1d9ff87;background:#101c465e;border-radius:15px;padding:12px;min-height:160px}
+#lizzyGardenWindow .gm-challenge h4{margin:0 0 5px}
+#lizzyGardenWindow .gm-challenge .gm-timing{height:29px;margin:14px 0 10px}
+#lizzyGardenWindow .gm-target{border-left:1px solid #fffad8;border-right:1px solid #fffad8}
+#lizzyGardenWindow .gm-clue{background:linear-gradient(120deg,#292b5480,#574a7880);border:1px solid #d9cbff75;border-radius:13px;padding:12px 14px;margin:12px 0}
+#lizzyGardenWindow .gm-clue p{margin:5px 0;line-height:1.7;font-style:italic}
+#lizzyGardenWindow .gm-hint{border-left:4px solid #f4cb72;padding:7px 10px;background:#ebd7ac22;border-radius:8px}
+#lizzyGardenWindow .gm-starline button{min-width:85px;min-height:43px}
+#lizzyGardenWindow .gm-wish-picker{display:flex;flex-direction:column;gap:8px;margin:12px 0 15px;max-width:450px}
+#lizzyGardenWindow .gm-wish-picker select{background:#fdf9f5;color:#40334e;border-radius:9px;border:1px solid #bdaec9;padding:10px;max-width:100%}
+#lizzyGardenWindow .gm-wishes{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:11px;margin-top:12px}
+#lizzyGardenWindow .gm-wish-result{display:flex;align-items:center;gap:12px;min-height:91px;border:1px solid #f1d5b685;border-radius:14px;padding:11px;background:linear-gradient(120deg,#fffbf216,#ded9ff17)}
+#lizzyGardenWindow .gm-wish-result b{display:block;font-size:13px;line-height:1.4}
+#lizzyGardenWindow .gm-wish-result small{display:block;opacity:.8;font-size:11px;margin:3px 0}
+#lizzyGardenWindow .gm-wish-result p{margin:4px 0 0;font-size:12px}
+#lizzyGardenWindow .gm-wish-icon{flex:0 0 56px;font-size:30px;text-align:center}
+#lizzyGardenWindow .gm-wish-icon img{width:56px;height:58px;object-fit:contain}
+#lizzyGardenWindow .gm-decor-icon{font-size:47px;min-height:96px;display:grid;place-items:center}
+@media(max-width:680px){#lizzyGardenWindow .gm-challenge-grid{grid-template-columns:1fr}#lizzyGardenWindow .gm-wallet{font-size:12px}#lizzyGardenWindow .gm-wishes{grid-template-columns:1fr}}
+#lizzyGardenWindow .gm-plantbed button.gm-uproot{background:transparent!important;border:1px dashed #dbaead8a!important;font-size:11px;opacity:.85;margin-top:5px}
+#lizzyGardenWindow .gm-plantbed button.gm-uproot:hover{opacity:1}
