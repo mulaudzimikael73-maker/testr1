@@ -2854,6 +2854,59 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         cacaoTree:    {name:"Cacao Tree",emoji:"🍫",img:"assets/flowers/cacaoTree.png",type:"tree",rarity:"Epic"}
     };
 
+    /* HARVEST TEST V1: Mature plants stay planted; all new flower stock is harvested deliberately.
+       Flowering trees yield cut blossoms; fruit trees yield produce; seed-bearing trees yield plantable seeds.
+       Existing collection and rewards remain intact. */
+    const HARVEST_COOLDOWN_MS=72*60*60*1000;
+    const TREE_YIELDS={
+      bananaTree:{kind:'produce',id:'bananas',name:'Bananas'},
+      jacaranda:{kind:'flower',id:'jacarandaBlossom',name:'Jacaranda Blossoms'},
+      willow:{kind:'seed',id:'willowSeed',name:'Willow Seeds'},
+      cherryTree:{kind:'flower',id:'cherryTreeBlossom',name:'Cherry Blossoms'},
+      lemonTree:{kind:'produce',id:'lemons',name:'Lemons'},
+      pinkDogwood:{kind:'flower',id:'pinkDogwoodBlossom',name:'Dogwood Blossoms'},
+      bottlebrush:{kind:'flower',id:'bottlebrushBlossom',name:'Bottlebrush Blooms'},
+      silkTree:{kind:'flower',id:'silkTreeBlossom',name:'Silk Tree Blossoms'},
+      japaneseMaple:{kind:'seed',id:'japaneseMapleSeed',name:'Maple Seeds'},
+      saucerMagnolia:{kind:'flower',id:'saucerMagnoliaBlossom',name:'Magnolia Blossoms'},
+      weepingCherry:{kind:'flower',id:'weepingCherryBlossom',name:'Weeping Cherry Blossoms'},
+      redwood:{kind:'seed',id:'redwoodSeed',name:'Redwood Seeds'},
+      baobab:{kind:'seed',id:'baobabSeed',name:'Baobab Seeds'},
+      wisteriaArch:{kind:'flower',id:'wisteriaBlossom',name:'Wisteria Blossoms'},
+      cacaoTree:{kind:'produce',id:'cacaoPods',name:'Cacao Pods'}
+    };
+    for(const [treeId,yielding] of Object.entries(TREE_YIELDS)){
+        if(yielding.kind==='flower')FLOWERS[yielding.id]={name:yielding.name,img:FLOWERS[treeId].img,emoji:'🌸',type:'flower',rarity:FLOWERS[treeId].rarity};
+    }
+    const PRODUCE_LABELS={bananas:{name:'Bananas',source:'bananaTree'},lemons:{name:'Lemons',source:'lemonTree'},cacaoPods:{name:'Cacao Pods',source:'cacaoTree'}};
+    function harvestRemaining(p){const at=Date.parse(p.lastHarvestAt||'');return Number.isFinite(at)?Math.max(0,HARVEST_COOLDOWN_MS-(Date.now()-at)):0}
+    function harvestCountdown(ms){const hours=Math.ceil(ms/3600000);return hours>=24?Math.floor(hours/24)+'d '+hours%24+'h':Math.max(1,hours)+'h';}
+    function harvestPlant(id){
+        const p=garden.plants.find(x=>x.id===id);if(!p)return false;
+        const f=FLOWERS[p.flowerId],yielding=f.type==='tree'?TREE_YIELDS[p.flowerId]:{kind:'flower',id:p.flowerId,name:f.name};
+        if(!yielding||growthStage(p)<4){gardenComment('🌱 Wait until this plant is fully grown before harvesting.');return false;}
+        if(harvestRemaining(p)>0){gardenComment('⏳ '+yielding.name+' will be ready in '+harvestCountdown(harvestRemaining(p))+'.');return false;}
+        if(currentHealth(p)<45||p.pest){gardenComment('💧 Treat pests and restore plant health before collecting new blossoms.');return false;}
+        if(yielding.kind==='flower')garden.flowers[yielding.id]=Math.max(0,Number(garden.flowers[yielding.id]||0))+1;
+        else if(yielding.kind==='seed')garden.seeds[yielding.id]=Math.max(0,Number(garden.seeds[yielding.id]||0))+1;
+        else garden.produce[yielding.id]=Math.max(0,Number(garden.produce[yielding.id]||0))+1;
+        p.lastHarvestAt=nowISO();p.harvestCount=Math.max(0,Number(p.harvestCount||0))+1;
+        garden.harvestHistory.push({id:p.id,flowerId:p.flowerId,yieldId:yielding.id,kind:yielding.kind,at:p.lastHarvestAt});
+        garden.harvestHistory=garden.harvestHistory.slice(-100);
+        saveGarden();gardenComment('🌸 Harvested '+yielding.name+'! '+(yielding.kind==='flower'?'Added to Flower Storage.':yielding.kind==='seed'?'Added to Seed Inventory.':'Added to Garden Produce.')+' Next harvest in 3 days.');
+        renderGarden();
+        window.dispatchEvent(new CustomEvent('lizzyGardenHarvested',{detail:{plantId:p.id,kind:yielding.kind,itemId:yielding.id}}));
+        return true;
+    }
+    function consumeFlowers(ids,clientTx){
+        if(!Array.isArray(ids)||!ids.length)return false;
+        if(clientTx && garden.bouquetTx.includes(clientTx))return true;
+        const needed={};for(const id of ids){if(!FLOWERS[id]||FLOWERS[id].type!=='flower')return false;needed[id]=(needed[id]||0)+1;}
+        if(Object.entries(needed).some(([id,n])=>Number(garden.flowers[id]||0)<n))return false;
+        for(const [id,n] of Object.entries(needed))garden.flowers[id]-=n;
+        if(clientTx){garden.bouquetTx.push(clientTx);garden.bouquetTx=garden.bouquetTx.slice(-150)}
+        saveGarden();renderGarden();return true;
+    }
     const STANDARD_FLOWERS = [
         "tulip","redRose","pinkRose","whiteRose","lilyValley","cryingLily","snapdragon",
         "sunflower","daisy","lavender","orchid","peony","hydrangea","carnation",
@@ -3026,6 +3079,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             plants:[],
             seeds:{},
             flowers:{},
+            produce:{},
+            harvestHistory:[],
+            bouquetTx:[],
             selectedSeed:null,
             lastWeatherApplied:"",
             lastPestApplied:"",
@@ -3041,6 +3097,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     let garden = Object.assign(defaultGarden(), safeRead(KEYS.garden, {}));
     garden.seeds = garden.seeds || {};
     garden.flowers = garden.flowers || {};
+    garden.produce = garden.produce || {};
+    garden.harvestHistory = Array.isArray(garden.harvestHistory)?garden.harvestHistory:[];
+    garden.bouquetTx = Array.isArray(garden.bouquetTx)?garden.bouquetTx:[];
     garden.plants = Array.isArray(garden.plants) ? garden.plants : [];
     let tokens = Object.assign(defaultTokens(), safeRead(KEYS.tokens, {}));
     tokens.inventory = tokens.inventory || {};
@@ -3197,9 +3256,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     }
     function addFlower(flowerId,count=1,reason=""){
         if(!FLOWERS[flowerId]) return;
-        garden.flowers[flowerId]=(garden.flowers[flowerId]||0)+count;
+        garden.flowers[flowerId]=Math.max(0,Number(garden.flowers[flowerId]||0)+Number(count||0));
         saveGarden();
-        gardenComment(`${FLOWERS[flowerId].img?"🌸":FLOWERS[flowerId].emoji} ${FLOWERS[flowerId].name} added to the collection${reason?` — ${reason}`:""}.`);
+        gardenComment(`${FLOWERS[flowerId].img?"🌸":FLOWERS[flowerId].emoji} ${FLOWERS[flowerId].name} ${count<0?"used from storage":"added to storage"}${reason?` — ${reason}`:""}.`);
         renderGarden();
     }
     function randomStandardFlower(){
@@ -3393,9 +3452,11 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
                     ${dying?`<small class="plantDyingWarning">⏳ Wilts away in ~${hoursLeft}h without water</small>`:""}
                     <div class="plantHealthBar"><div class="plantHealthFill" style="width:${health}%"></div></div>
                     <small>💧 Last watered: ${new Date(p.lastWatered).toLocaleString()}</small>
+                    ${growthStage(p)===4?`<small class="harvest-status">${harvestRemaining(p)>0?'🌱 Next harvest: '+harvestCountdown(harvestRemaining(p)):health<45||p.pest?'💧 Restore health to harvest':'🌸 Ready to harvest'}</small>`:''}
                     <div class="plantActions">
                         <button data-water="${p.id}">💧 Water</button>
                         <button data-boost="${p.id}">✨ Check</button>
+                        ${growthStage(p)===4?`<button data-harvest-main="${p.id}" ${harvestRemaining(p)>0||health<45||p.pest?'disabled':''}>${harvestRemaining(p)>0?'⏳ '+harvestCountdown(harvestRemaining(p)):f.type==='tree'?'🌳 Collect '+TREE_YIELDS[p.flowerId].name:'✂️ Harvest Flower'}</button>`:''}
                         ${pestType?`<button data-spray="${p.id}" ${Number(garden.bugSpray||0)<=0?"disabled":""}>🧴 Bug Spray (${Number(garden.bugSpray||0)})</button><button data-quickfix="${p.id}">🎯 Quick Fix</button>`:""}
                     </div>
                 </div>
@@ -3407,6 +3468,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
 
         host.querySelectorAll("[data-empty-slot]").forEach(el=>el.onclick=()=>plantSelectedSeed(Number(el.dataset.emptySlot)));
         host.querySelectorAll("[data-water]").forEach(b=>b.onclick=e=>{e.stopPropagation();waterPlant(b.dataset.water)});
+        host.querySelectorAll("[data-harvest-main]").forEach(b=>b.onclick=e=>{e.stopPropagation();harvestPlant(b.dataset.harvestMain)});
         host.querySelectorAll("[data-boost]").forEach(b=>b.onclick=e=>{e.stopPropagation();inspectPlant(b.dataset.boost)});
         host.querySelectorAll("[data-spray]").forEach(b=>b.onclick=e=>{e.stopPropagation();useBugSpray(b.dataset.spray)});
         host.querySelectorAll("[data-quickfix]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPestMiniGame(b.dataset.quickfix)});
@@ -3414,12 +3476,14 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
 
     function renderCollection(){
         const host=$("gardenFlowerCollection");
+        const panel=host?.closest('.gardenCollectionPanel');
+        if(panel){const heading=panel.querySelector('h3');if(heading)heading.textContent='Flower Storage & Garden Produce 🌸';const sub=panel.querySelector('.gardenPanelHeading small');if(sub)sub.textContent='HARVESTED INVENTORY';}
         const entries=Object.entries(garden.flowers).filter(([,n])=>n>0);
-        host.innerHTML=entries.length?entries.map(([id,n])=>`
-            <div class="flowerCollectionChip">
-                <b>${flowerIcon(FLOWERS[id],28)} ${FLOWERS[id].name} ×${n}</b>
-                <small>${FLOWERS[id].rarity}</small>
-            </div>`).join(""):`<div class="memoryMessage">Your collection will grow as flowers bloom and rewards drop. 🌷</div>`;
+        const inventory=entries.filter(([id])=>FLOWERS[id]);
+        const crops=Object.entries(garden.produce||{}).filter(([,n])=>Number(n)>0);
+        host.innerHTML=`<div class="harvest-storage-note">✂️ Cut flowers in storage can be used in Bouquet Studio. Mature plants remain planted and can be harvested again after 72 hours. Previously earned flowers are preserved.</div>`+
+          (inventory.length?inventory.map(([id,n])=>`<div class="flowerCollectionChip"><b>${flowerIcon(FLOWERS[id],28)} ${FLOWERS[id].name} ×${n}</b><small>${FLOWERS[id].rarity} · Ready for bouquets</small></div>`).join(""):`<div class="memoryMessage">No cut flowers in storage yet. Grow and harvest a plant, or earn flowers through rewards.</div>`)+
+          (crops.length?`<div class="harvest-storage-note">🍋 Fruit & produce (not bouquet flowers)</div>`+crops.map(([id,n])=>{const data=PRODUCE_LABELS[id];return `<div class="flowerCollectionChip"><b>${flowerIcon(FLOWERS[data.source],28)} ${data.name} ×${n}</b><small>Harvested garden produce</small></div>`}).join(''):'');
     }
 
     function renderGarden(){
@@ -3561,7 +3625,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         p.waterCount=(p.waterCount||0)+1;
         const after=growthStage(p);
         if(after===4 && before<4){
-            addFlower(p.flowerId,1,"Fully grown in the Garden");
+            gardenComment('🌸 '+FLOWERS[p.flowerId].name+' is fully grown! Use the Harvest button when you are ready to collect its flowers.');
         }
         saveGarden();
         window.dispatchEvent(new CustomEvent("lizzyJobProof",{detail:{type:"plant_watered",plantId:id}}));
@@ -4208,7 +4272,7 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
 
     // Public helper for the upcoming Cloudflare/Telegram setup:
     // localStorage.setItem("lizzyTelegramWorkerURL","https://YOUR-WORKER.workers.dev")
-    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken};
+    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken,harvestPlant,consumeFlowers};
 
     /* ---------------------------------------------------------------
        EXTERNAL REWARD SYNC (Vault / Secret Shelf / Daily Rewards)
@@ -4222,6 +4286,9 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
             garden=Object.assign(defaultGarden(),g);
             garden.seeds=garden.seeds||{};
             garden.flowers=garden.flowers||{};
+            garden.produce=garden.produce||{};
+            garden.harvestHistory=Array.isArray(garden.harvestHistory)?garden.harvestHistory:[];
+            garden.bouquetTx=Array.isArray(garden.bouquetTx)?garden.bouquetTx:[];
             garden.plants=Array.isArray(garden.plants)?garden.plants:[];
         }
         const t=safeRead(KEYS.tokens,null);

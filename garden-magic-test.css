@@ -138,3 +138,27 @@
 @media(max-width:680px){#lizzyGardenWindow .gm-challenge-grid{grid-template-columns:1fr}#lizzyGardenWindow .gm-wallet{font-size:12px}#lizzyGardenWindow .gm-wishes{grid-template-columns:1fr}}
 #lizzyGardenWindow .gm-plantbed button.gm-uproot{background:transparent!important;border:1px dashed #dbaead8a!important;font-size:11px;opacity:.85;margin-top:5px}
 #lizzyGardenWindow .gm-plantbed button.gm-uproot:hover{opacity:1}
+
+/* ===== TEST Garden Harvest & Florist V1 ===== */
+#lizzyGardenWindow .harvest-status{display:block;color:#c7e9b0;font-weight:800;padding:4px 0}
+#lizzyGardenWindow .harvest-storage-note{grid-column:1/-1;margin:5px 0 12px;padding:10px 13px;background:#27483729;border-left:3px solid #b1dfac;border-radius:8px;font-size:13px;line-height:1.5}
+#lizzyGardenWindow .gardenPlot .plantActions button[data-harvest-main]{background:linear-gradient(120deg,#448b66,#83b985);color:white;border:1px solid #bbdaba;font-weight:800}
+#lizzyGardenWindow .gardenPlot .plantActions button[data-harvest-main]:disabled{opacity:.6;cursor:not-allowed}
+#lizzyGardenWindow .gm-flower-qty{border:1px solid #ead5ff6b;background:#ffffff20;border-radius:12px;padding:8px;min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;text-align:center}
+#lizzyGardenWindow .gm-flower-qty.gm-on{outline:2px solid #d7eea1;background:#ffffff34}
+#lizzyGardenWindow .gm-flower-qty img{width:60px;height:60px;object-fit:contain}
+#lizzyGardenWindow .gm-flower-qty b{font-size:12px}
+#lizzyGardenWindow .gm-flower-qty small{font-size:11px;opacity:.9}
+#lizzyGardenWindow .gm-qty-actions{display:flex;align-items:center;gap:8px;width:100%;margin-top:auto}
+#lizzyGardenWindow .gm-qty-actions button{flex:1;min-width:28px;font-size:19px;min-height:32px;padding:2px 8px}
+#lizzyGardenWindow .gm-bouquet-preview{min-height:120px;display:grid;justify-items:center;align-items:center;border:1px solid #ecd3b878;border-radius:16px;padding:12px;margin:12px 0;background:radial-gradient(circle,#f9dfe552,#d9c6f51a)}
+#lizzyGardenWindow .gm-bouquet-preview.gm-preview-glow{box-shadow:0 0 20px #eccbff88;background:radial-gradient(circle,#edd4ff55,#5e599445)}
+#lizzyGardenWindow .gm-bouquet-stems{display:flex;justify-content:center;flex-wrap:wrap;gap:0;min-height:67px;align-items:center}
+#lizzyGardenWindow .gm-bouquet-stems img{width:58px;height:72px;object-fit:contain;margin-right:-6px;filter:drop-shadow(1px 5px 3px #29202a54)}
+#lizzyGardenWindow .gm-bouquet-paper{border-radius:100px;background:#f5e5e1;color:#593c48;padding:6px 13px;font-size:12px;margin-top:9px;text-align:center}
+#lizzyGardenWindow .gm-storage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin:14px 0}
+#lizzyGardenWindow .gm-stock-item{padding:10px;border-radius:13px;border:1px solid #d3bbeb79;background:#ffffff21;text-align:center;display:grid;justify-items:center;gap:4px}
+#lizzyGardenWindow .gm-stock-item img{width:90px;height:90px;object-fit:contain}
+#lizzyGardenWindow .gm-stock-item span{font-weight:900;font-size:21px;color:#f2e6b1}
+#lizzyGardenWindow .gm-stock-item small{font-size:11px;opacity:.9}
+@media(max-width:600px){#lizzyGardenWindow .gm-flower-choices{grid-template-columns:repeat(2,minmax(0,1fr))}#lizzyGardenWindow .gm-storage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
