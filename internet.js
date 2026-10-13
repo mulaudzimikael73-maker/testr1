@@ -857,6 +857,7 @@ function news(){
     <button id="newsBackHome" class="newsHomeBtn">← Back to LizzySearch</button>
   </footer>
  </div>`;
+ window.DailyGobshiteTest?.attach();
 }
 
 function newsBackHome(){ home(); }
