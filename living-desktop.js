@@ -888,7 +888,10 @@ async function notifyAssistantTelegram(question,answer){
  try{await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"assistant_activity",question,answer,createdAt:new Date().toISOString()})})}
  catch(e){console.warn("Assistant Telegram failed",e)}
 }
-function openAssistant(){const w=win("lizzyAssistantWindow","✨ LIZZY ASSISTANT",`<div class="assistantOrb">✨</div><h2>Lizzy Assistant</h2><p>How may the operating system be unnecessarily helpful?</p><div class="assistantQuestions">${Object.keys(qa).map(q=>`<button data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div><div id="assistantAnswer">Select a question.</div>`);w.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const question=b.dataset.q,a=qa[question],answer=a[Math.floor(Math.random()*a.length)];$("assistantAnswer").textContent=answer;notifyAssistantTelegram(question,answer)})}
+function openAssistant(){
+ if(window.LizzyAssistantV2)return window.LizzyAssistantV2.open({qa,win,notifyAssistantTelegram});
+ const w=win("lizzyAssistantWindow","✨ LIZZY ASSISTANT",`<h3>Assistant is loading.</h3><p>Refresh the page if this does not disappear.</p>`);return w;
+}
 icon("lizzyAssistantIcon","✨","Lizzy Assistant",openAssistant);
 window.LizzyFunApps={openCourt,openRps,openAssistant,openDay};
 
