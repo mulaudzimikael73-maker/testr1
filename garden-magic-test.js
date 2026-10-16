@@ -35,11 +35,11 @@
  const butterflyIndex=Object.fromEntries(butterflies.map(x=>[x.id,x]));
  const flowerOptions=Object.entries(catalog).filter(([id,v])=>v.type==='flower').map(([id,v])=>({id,...v}));
  const glowIds=new Set(['moonflower','lunarLavender','midnightTulip','moonlightOrchid','starLily','silverRose','celestialBlossom','eternalBlossom']);
- const wrapOptions=['Blush Pink','Classic Cream','Midnight Blue','Starlight Silver'];
- const ribbonOptions=['White Satin','Gold','Pink','Moonbeam'];
+ const wrapOptions=['Blush Pink','Classic Cream','Midnight Blue','Starlight Silver','Sage Green','Lavender','Burgundy','Champagne','Matte Black'];
+ const ribbonOptions=['White Satin','Gold','Pink','Moonbeam','Sage Satin','Burgundy Satin','Royal Blue','Black Satin','Peach Satin'];
  const bouquetUi='assets/bouquet-ui/';
- const wrapArt={'Blush Pink':bouquetUi+'wrap-blush-pink.webp','Classic Cream':bouquetUi+'wrap-classic-cream.webp','Midnight Blue':bouquetUi+'wrap-midnight-blue.webp','Starlight Silver':bouquetUi+'wrap-starlight-silver.webp'};
- const ribbonArt={'White Satin':bouquetUi+'ribbon-white-satin.webp','Gold':bouquetUi+'ribbon-gold.webp','Pink':bouquetUi+'ribbon-pink.webp','Moonbeam':bouquetUi+'ribbon-moonbeam.webp'};
+ const wrapArt={'Blush Pink':bouquetUi+'wrap-blush-pink.webp','Classic Cream':bouquetUi+'wrap-classic-cream.webp','Midnight Blue':bouquetUi+'wrap-midnight-blue.webp','Starlight Silver':bouquetUi+'wrap-starlight-silver.webp','Sage Green':bouquetUi+'wrap-sage-green.webp','Lavender':bouquetUi+'wrap-lavender.webp','Burgundy':bouquetUi+'wrap-burgundy.webp','Champagne':bouquetUi+'wrap-champagne.webp','Matte Black':bouquetUi+'wrap-matte-black.webp'};
+ const ribbonArt={'White Satin':bouquetUi+'ribbon-white-satin.webp','Gold':bouquetUi+'ribbon-gold.webp','Pink':bouquetUi+'ribbon-pink.webp','Moonbeam':bouquetUi+'ribbon-moonbeam.webp','Sage Satin':bouquetUi+'ribbon-sage.webp','Burgundy Satin':bouquetUi+'ribbon-burgundy.webp','Royal Blue':bouquetUi+'ribbon-royal-blue.webp','Black Satin':bouquetUi+'ribbon-black.webp','Peach Satin':bouquetUi+'ribbon-peach.webp'};
  const giftPlaces={memoryTree:'Memory Tree',fountain:'Wishing Fountain',hedge:'Secret Hedge'};
  const decorations={butterflyFountain:['Butterfly Fountain','⛲'],moonLantern:['Moon Lantern','🏮'],gardenBench:['Garden Bench','🪑'],starPlanter:['Star Planter','✨'],butterflyStatue:['Butterfly Statue','🦋'],topiary:['Flower Topiary','🌳'],miniFountain:['Mini Fountain','⛲']};
  const seedDefault={};
