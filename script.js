@@ -2062,7 +2062,7 @@ document.addEventListener("keydown", (event) => {
 // Telegram notification handling is now in letter-notifications.js.
 // =========================================================
 
-// WOULD MIKAEL RATHER — 104 mixed questions, original 40 + 64 approved Presidential choices.
+// WOULD MIKAEL RATHER — 64 approved Presidential questions ONLY (the old 40 are retired).
 // All correct answers are private in the separate TEST Worker, not this website file.
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
@@ -2080,8 +2080,8 @@ document.addEventListener("keydown", (event) => {
  async function start(){if(busy)return;busy=true;mode='loading';round=null;picks=[];
   $('wouldRatherIntro').classList.add('hidden');$('wouldRatherResult').classList.add('hidden');$('wouldRatherPlay').classList.remove('hidden');
   $('wouldRatherProgress').textContent='Connecting to TEST Worker…';$('wouldRatherScore').textContent='';$('wouldRatherA').disabled=$('wouldRatherB').disabled=true;
-  $('wouldRatherA').textContent='Preparing your questions…';$('wouldRatherB').textContent='';status('Mixing original questions with the approved Presidential questions.');
-  try{const result=await api('assistant_test_wyr_start');round=result.round;if(!round?.questions?.length)throw Error('No questions were returned.');mode='question';render()}
+  $('wouldRatherA').textContent='Preparing your questions…';$('wouldRatherB').textContent='';status('Selecting questions exclusively from the 64 approved Presidential dilemmas.');
+  try{const result=await api('assistant_test_wyr_start');round=result.round;if(result.bankVersion!=='presidential-only-64-20261018'||Number(result.questionCount)!==64)throw Error('The TEST Worker still has the old questions. Deploy the Presidential-Only TEST Worker update.');if(!round?.questions?.length)throw Error('No approved questions were returned.');mode='question';render()}
   catch(error){mode='start-error';status('⚠️ '+error.message+' Please check the separate TEST Worker, then try again.');$('wouldRatherProgress').textContent='Unable to start';$('wouldRatherA').textContent='Try Again';$('wouldRatherB').textContent='Return';$('wouldRatherA').disabled=$('wouldRatherB').disabled=false;return}
   finally{busy=false}
  }
@@ -2107,7 +2107,7 @@ document.addEventListener("keydown", (event) => {
   $('wouldRatherPlay').classList.add('hidden');$('wouldRatherResult').classList.remove('hidden');
   const result=score===total?'DANGEROUSLY HIGH CLEARANCE 🕵️❤️':score>=4?'Very Suspicious 👀':score>=3?'Respectable 😌':score>=2?'Further Investigation Required 😂':'SECURITY CLEARANCE DENIED 🚨';
   $('wouldRatherResultTitle').textContent=`${score}/${total} — ${result}`;
-  $('wouldRatherResultText').textContent=`${score===total?'Agent Yelizaveta knows Mr Perfect suspiciously well.':'Play another random round and prove yourself.'} Your round mixed classic and new Presidential questions.`;
+  $('wouldRatherResultText').textContent=`${score===total?'Agent Yelizaveta knows Mr Perfect suspiciously well.':'Play another random round and prove yourself.'} Only approved Presidential Mind Games questions were included.`;
   const log=outcome.details.map((q,i)=>{const guessed=q.guess==='A'?q.a:q.b;const correct=q.correct==='BOTH'?'Either / Both':q.correct==='A'?q.a:q.b;return {questionNumber:q.n,question:`${q.a} OR ${q.b}`,lizzyAnswer:guessed,mikaelAnswer:correct,correct:q.ok?'Yes':'No'}});
   const message=log.map((q,i)=>`${i+1}. ${q.question}\nLizzy: ${q.lizzyAnswer}\nMikael: ${q.mikaelAnswer}\nCorrect: ${q.correct}`).join('\n\n');
   fetch('https://formspree.io/f/mrpzlzkw',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({game:'Would Mikael Rather?',score:`${score}/${total}`,result,questions_and_answers:message})}).catch(()=>{});
@@ -2119,7 +2119,7 @@ document.addEventListener("keydown", (event) => {
  $('startWouldRather')?.addEventListener('click',start);$('playWouldRatherAgain')?.addEventListener('click',start);
  $('wouldRatherA')?.addEventListener('click',()=>pick('A'));
  $('wouldRatherB')?.addEventListener('click',()=>pick('B'));
- window.MixedWouldRatherTEST={open:()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()},start};
+ window.PresidentialWouldRatherTEST={open:()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()},start};
 })();
 // TIC-TAC-TOE VS MR PERFECT
 // Easy = mostly random
