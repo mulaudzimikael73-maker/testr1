@@ -890,9 +890,19 @@ async function notifyAssistantTelegram(question,answer){
 }
 function openAssistant(){
  if(window.LizzyAssistantV2)return window.LizzyAssistantV2.open({qa,win,notifyAssistantTelegram});
- const w=win("lizzyAssistantWindow","✨ LIZZY ASSISTANT",`<h3>Assistant is loading.</h3><p>Refresh the page if this does not disappear.</p>`);return w;
+ // The original release could silently show the old assistant when the JS file
+ // was missing or cached. Retry the standalone module and surface a clear error.
+ const w=win("lizzyAssistantWindow","✨ LIZZY ASSISTANT 2.1",`<h3>Preparing Lizzy Assistant 2.1…</h3><p>If this remains, the updated assistant-v2-test.js was not published in the TESTR root.</p>`);
+ if(!window.__lizzyAssistantRetry){
+  window.__lizzyAssistantRetry=true;
+  const s=document.createElement('script');s.src='assistant-v2-test.js?v=20261016-assistant21-retry';
+  s.onload=()=>{window.__lizzyAssistantRetry=false;if(window.LizzyAssistantV2&&w.classList.contains('open'))window.LizzyAssistantV2.open({qa,win,notifyAssistantTelegram});else if(!window.LizzyAssistantV2)w.querySelector('.v46Body').innerHTML='<h3>Assistant update was not loaded</h3><p>Upload index.html, living-desktop.js, assistant-v2-test.js and its CSS from the same TESTR ZIP. Then hard-refresh.</p>'};
+  s.onerror=()=>{window.__lizzyAssistantRetry=false;w.querySelector('.v46Body').innerHTML='<h3>Assistant update file missing</h3><p>Could not load assistant-v2-test.js. Upload the updated TESTR ZIP to the root of your test site, then hard-refresh.</p>'};
+  document.body.appendChild(s);
+ }
+ return w;
 }
-icon("lizzyAssistantIcon","✨","Lizzy Assistant",openAssistant);
+icon("lizzyAssistantIcon","✨","Lizzy Assistant 2.1",openAssistant);
 window.LizzyFunApps={openCourt,openRps,openAssistant,openDay};
 
 /* DYNAMIC WALLPAPER + BAT SIGNAL TAKEOVER */

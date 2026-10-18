@@ -2062,14 +2062,65 @@ document.addEventListener("keydown", (event) => {
 // Telegram notification handling is now in letter-notifications.js.
 // =========================================================
 
-// WOULD MIKAEL RATHER 40Q
-(()=>{const bank=[{"a": "🏀 Basketball", "b": "⚽ Soccer", "correct": "A", "n": 1}, {"a": "❄️ Winter", "b": "☀️ Summer", "correct": "A", "n": 2}, {"a": "🍕 Pizza", "b": "🍔 Burgers", "correct": "B", "n": 3}, {"a": "📺 The Office", "b": "🚔 Brooklyn Nine-Nine", "correct": "A", "n": 4}, {"a": "🦇 Batman", "b": "🕷️ Spider-Man", "correct": "A", "n": 5}, {"a": "🎤 Dave", "b": "🎤 J. Cole", "correct": "B", "n": 6}, {"a": "🎵 Kwesta", "b": "🎵 Sjava", "correct": "A", "n": 7}, {"a": "⚽ Liverpool", "b": "☠️ Orlando Pirates", "correct": "A", "n": 8}, {"a": "🏠 Movies at home", "b": "🌃 Night out", "correct": "A", "n": 9}, {"a": "✈️ 6 months in Dagestan", "b": "🌍 5 different countries", "correct": "A", "n": 10}, {"a": "💰 1,000,000 MB now", "b": "💼 Dream job for life", "correct": "B", "n": 11}, {"a": "🏀 Meet Michael Jordan", "b": "🔥 1v1 Steph Curry", "correct": "B", "n": 12}, {"a": "🍽️ Fancy restaurant", "b": "🎳 Fun activity date", "correct": "B", "n": 13}, {"a": "📞 Call all night", "b": "💬 Text all day", "correct": "A", "n": 14}, {"a": "🎁 Thoughtful gift", "b": "❤️ Thoughtful message", "correct": "A", "n": 15}, {"a": "🎳 Lose to Lizzy at bowling", "b": "😩 Admit Lizzy was right", "correct": "A", "n": 16}, {"a": "😂 Lizzy roasts you all day", "b": "👔 Lizzy chooses your outfits for a week", "correct": "A", "n": 17}, {"a": "👓 Never say Four Eyes", "b": "😏 Never say Little Miss Attitude", "correct": "A", "n": 18}, {"a": "🔎 Lizzy reads your search history", "b": "📸 Lizzy reads your camera roll", "correct": "B", "n": 19}, {"a": "💕 One huge romantic surprise", "b": "🌸 Lots of little surprises", "correct": "B", "n": 20}, {"a": "🌅 Wake up really early", "b": "🌙 Stay up ridiculously late", "correct": "B", "n": 21}, {"a": "🏀 Courtside NBA Finals tickets", "b": "⚽ Champions League Final tickets", "correct": "B", "n": 22}, {"a": "🎤 J. Cole concert", "b": "🎤 Dave concert", "correct": "BOTH", "n": 23}, {"a": "🦇 Live in Gotham for a month", "b": "🏀 Train with Michael Jordan for a week", "correct": "B", "n": 24}, {"a": "🎮 Gaming night", "b": "🎬 Movie marathon", "correct": "B", "n": 25}, {"a": "🍳 Breakfast date", "b": "🍽️ Dinner date", "correct": "A", "n": 26}, {"a": "🏖️ Beach holiday", "b": "🏔️ Mountain holiday", "correct": "B", "n": 27}, {"a": "💵 Extremely rich but unknown", "b": "🌟 Famous but comfortably wealthy", "correct": "A", "n": 28}, {"a": "🏆 Liverpool win Champions League", "b": "🏆 Orlando Pirates win CAF Champions League", "correct": "B", "n": 29}, {"a": "🏀 Michael Jordan in his prime", "b": "🏀 Steph Curry in his prime", "correct": "A", "n": 30}, {"a": "😂 Make Lizzy laugh", "b": "😳 Make Lizzy blush", "correct": "B", "n": 31}, {"a": "💌 Long paragraph from Lizzy", "b": "🎁 Surprise from Lizzy", "correct": "BOTH", "n": 32}, {"a": "🫂 30-minute cuddle", "b": "📞 3-hour late-night call", "correct": "BOTH", "n": 33}, {"a": "🎳 Beat Lizzy badly at bowling", "b": "😏 Let her win and never tell her", "correct": "B", "n": 34}, {"a": "🪪 Full government name for a week", "b": "👑 Only Mr Perfect for a week", "correct": "B", "n": 35}, {"a": "👀 Lizzy knows everything you've said about her", "b": "📱 Lizzy gets your unlocked phone for 30 minutes", "correct": "B", "n": 36}, {"a": "💕 Plan the entire date yourself", "b": "👸 Let Lizzy plan everything", "correct": "B", "n": 37}, {"a": "💋 One perfect kiss", "b": "🫂 Unlimited hugs for a week", "correct": "BOTH", "n": 38}, {"a": "😤 Win every argument against Lizzy", "b": "🥺 Never have Lizzy annoyed with you again", "correct": "A", "n": 39}, {"a": "❤️ Hear Lizzy say “I miss you”", "b": "👀 Hear Lizzy admit “You were right”", "correct": "A", "n": 40}],$=x=>document.getElementById(x);let round=[],i=0,score=0,answerLog=[];
-function intro(){$("wouldRatherIntro").classList.remove("hidden");$("wouldRatherPlay").classList.add("hidden");$("wouldRatherResult").classList.add("hidden")}
-function start(){round=[...bank].sort(()=>Math.random()-.5).slice(0,5);i=score=0;answerLog=[];$("wouldRatherIntro").classList.add("hidden");$("wouldRatherResult").classList.add("hidden");$("wouldRatherPlay").classList.remove("hidden");render()}
-function render(){let q=round[i];$("wouldRatherProgress").textContent=`${i+1}/5 • Q${q.n}`;$("wouldRatherScore").textContent=`Score: ${score}`;$("wouldRatherA").textContent=q.a;$("wouldRatherB").textContent=q.b;$("wouldRatherA").disabled=$("wouldRatherB").disabled=false;$("wouldRatherReaction").textContent=""}
-function pick(x){let q=round[i],ok=q.correct==="BOTH"||q.correct===x;if(ok)score++;answerLog.push({questionNumber:q.n,question:`${q.a} OR ${q.b}`,lizzyAnswer:x==="A"?q.a:q.b,mikaelAnswer:q.correct==="BOTH"?"Either / Both":q.correct==="A"?q.a:q.b,correct:ok?"Yes":"No"});$("wouldRatherA").disabled=$("wouldRatherB").disabled=true;$("wouldRatherReaction").textContent=ok?"Correct 👀❤️":"Wrong 😭 Mr Perfect disagrees.";setTimeout(()=>{i++;i<5?render():finish()},650)}
-function finish(){window.dispatchEvent(new CustomEvent("lizzyJobProof",{detail:{type:"would_rather_complete"}}));window.dispatchEvent(new CustomEvent("lizzyJobProof",{detail:{type:"game_complete",game:"would_rather",perfect:score===5}}));$("wouldRatherPlay").classList.add("hidden");$("wouldRatherResult").classList.remove("hidden");let t=score===5?"DANGEROUSLY HIGH CLEARANCE 🕵️❤️":score>=4?"Very Suspicious 👀":score>=3?"Respectable 😌":score>=2?"Further Investigation Required 😂":"SECURITY CLEARANCE DENIED 🚨";$("wouldRatherResultTitle").textContent=`${score}/5 — ${t}`;$("wouldRatherResultText").textContent=score===5?"Agent Yelizaveta knows Mr Perfect suspiciously well.":"Play another random five and prove yourself.";fetch("https://formspree.io/f/mrpzlzkw",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({game:"Would Mikael Rather?",score:`${score}/5`,result:t,questions_and_answers:answerLog.map((a,n)=>`${n+1}. ${a.question}\nLizzy: ${a.lizzyAnswer}\nMikael: ${a.mikaelAnswer}\nCorrect: ${a.correct}`).join("\n\n")})}).catch(()=>{});lizzyTelegramNotify("🤔 WOULD MIKAEL RATHER COMPLETED",`${score}/5 — ${t}`,answerLog.map((a,n)=>`${n+1}. ${a.question}\nLizzy: ${a.lizzyAnswer}\nMikael: ${a.mikaelAnswer}\nCorrect: ${a.correct}`).join("\n\n"))}
-$("wouldMikaelRatherIcon")?.addEventListener("click",()=>{$("wouldMikaelRatherWindow").classList.remove("hidden");intro()});$("wouldMikaelRatherClose")?.addEventListener("click",()=>$("wouldMikaelRatherWindow").classList.add("hidden"));$("closeWouldMikaelRather")?.addEventListener("click",()=>$("wouldMikaelRatherWindow").classList.add("hidden"));$("startWouldRather")?.addEventListener("click",start);$("playWouldRatherAgain")?.addEventListener("click",start);$("wouldRatherA")?.addEventListener("click",()=>pick("A"));$("wouldRatherB")?.addEventListener("click",()=>pick("B"));})();
+// WOULD MIKAEL RATHER — 104 mixed questions, original 40 + 64 approved Presidential choices.
+// All correct answers are private in the separate TEST Worker, not this website file.
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ let round=null,picks=[],busy=false,mode='intro';
+ const endpoint=()=>String(localStorage.getItem('lizzyos_test_worker_url_v1')||window.LIZZY_TELEGRAM_WORKER_URL||'').trim().replace(/\/+$/,'');
+ async function api(action,payload={}){
+  const base=endpoint();if(!base)throw Error('Your TEST Worker is not connected. Tap the TEST badge to enter its URL.');
+  const ctrl=new AbortController(),clock=setTimeout(()=>ctrl.abort(),15000);
+  try{const res=await fetch(base+'/?action='+encodeURIComponent(action),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload}),signal:ctrl.signal,cache:'no-store'});
+   const data=await res.json();if(!res.ok||data.success===false)throw Error(data.error||'The TEST Worker could not load the questions.');return data}
+  finally{clearTimeout(clock)}
+ }
+ function intro(){mode='intro'; $('wouldRatherIntro')?.classList.remove('hidden');$('wouldRatherPlay')?.classList.add('hidden');$('wouldRatherResult')?.classList.add('hidden');$('wouldRatherReaction').textContent=''; }
+ function status(message){const el=$('wouldRatherReaction');if(el)el.textContent=message}
+ async function start(){if(busy)return;busy=true;mode='loading';round=null;picks=[];
+  $('wouldRatherIntro').classList.add('hidden');$('wouldRatherResult').classList.add('hidden');$('wouldRatherPlay').classList.remove('hidden');
+  $('wouldRatherProgress').textContent='Connecting to TEST Worker…';$('wouldRatherScore').textContent='';$('wouldRatherA').disabled=$('wouldRatherB').disabled=true;
+  $('wouldRatherA').textContent='Preparing your questions…';$('wouldRatherB').textContent='';status('Mixing original questions with the approved Presidential questions.');
+  try{const result=await api('assistant_test_wyr_start');round=result.round;if(!round?.questions?.length)throw Error('No questions were returned.');mode='question';render()}
+  catch(error){mode='start-error';status('⚠️ '+error.message+' Please check the separate TEST Worker, then try again.');$('wouldRatherProgress').textContent='Unable to start';$('wouldRatherA').textContent='Try Again';$('wouldRatherB').textContent='Return';$('wouldRatherA').disabled=$('wouldRatherB').disabled=false;return}
+  finally{busy=false}
+ }
+ function render(){if(!round)return;
+  const q=round.questions[picks.length];$('wouldRatherProgress').textContent=`${picks.length+1}/${round.questions.length} • Q${q.n}`;
+  $('wouldRatherScore').textContent='Answers checked at the end';$('wouldRatherA').textContent=q.a;$('wouldRatherB').textContent=q.b;
+  $('wouldRatherA').disabled=$('wouldRatherB').disabled=false;status('Which would Mikael rather choose? Your score will be revealed after all five answers.');
+ }
+ async function pick(choice){if(mode==='start-error'){if(choice==='A')start();else intro();return}if(mode==='submit-error'){submit();return}if(busy||mode!=='question'||!round)return;
+  if(!round.questions[picks.length])return;
+  picks.push(choice);
+  if(picks.length<round.questions.length){render();return}
+  await submit()
+ }
+ async function submit(){if(busy||!round)return;busy=true;mode='submitting';$('wouldRatherA').disabled=$('wouldRatherB').disabled=true;status('Checking your answers against Mikael’s private answer key…');
+  try{const outcome=await api('assistant_test_wyr_submit',{id:round.id,picks});finish(outcome)}
+  catch(error){mode='submit-error';status('⚠️ '+error.message+' Try checking again.');$('wouldRatherA').disabled=false;$('wouldRatherB').disabled=true;$('wouldRatherA').textContent='Retry Results'}
+  finally{busy=false}
+ }
+ function finish(outcome){mode='result';const score=Number(outcome.score),total=Number(outcome.total)||5;
+  window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'would_rather_complete'}}));
+  window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'game_complete',game:'would_rather',perfect:score===total}}));
+  $('wouldRatherPlay').classList.add('hidden');$('wouldRatherResult').classList.remove('hidden');
+  const result=score===total?'DANGEROUSLY HIGH CLEARANCE 🕵️❤️':score>=4?'Very Suspicious 👀':score>=3?'Respectable 😌':score>=2?'Further Investigation Required 😂':'SECURITY CLEARANCE DENIED 🚨';
+  $('wouldRatherResultTitle').textContent=`${score}/${total} — ${result}`;
+  $('wouldRatherResultText').textContent=`${score===total?'Agent Yelizaveta knows Mr Perfect suspiciously well.':'Play another random round and prove yourself.'} Your round mixed classic and new Presidential questions.`;
+  const log=outcome.details.map((q,i)=>{const guessed=q.guess==='A'?q.a:q.b;const correct=q.correct==='BOTH'?'Either / Both':q.correct==='A'?q.a:q.b;return {questionNumber:q.n,question:`${q.a} OR ${q.b}`,lizzyAnswer:guessed,mikaelAnswer:correct,correct:q.ok?'Yes':'No'}});
+  const message=log.map((q,i)=>`${i+1}. ${q.question}\nLizzy: ${q.lizzyAnswer}\nMikael: ${q.mikaelAnswer}\nCorrect: ${q.correct}`).join('\n\n');
+  fetch('https://formspree.io/f/mrpzlzkw',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({game:'Would Mikael Rather?',score:`${score}/${total}`,result,questions_and_answers:message})}).catch(()=>{});
+  if(typeof lizzyTelegramNotify==='function')lizzyTelegramNotify('🤔 WOULD MIKAEL RATHER COMPLETED',`${score}/${total} — ${result}`,message);
+ }
+ $('wouldMikaelRatherIcon')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()});
+ $('wouldMikaelRatherClose')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.add('hidden')});
+ $('closeWouldMikaelRather')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.add('hidden')});
+ $('startWouldRather')?.addEventListener('click',start);$('playWouldRatherAgain')?.addEventListener('click',start);
+ $('wouldRatherA')?.addEventListener('click',()=>pick('A'));
+ $('wouldRatherB')?.addEventListener('click',()=>pick('B'));
+ window.MixedWouldRatherTEST={open:()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()},start};
+})();
 // TIC-TAC-TOE VS MR PERFECT
 // Easy = mostly random
 // Medium = tactical
@@ -2854,59 +2905,6 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         cacaoTree:    {name:"Cacao Tree",emoji:"🍫",img:"assets/flowers/cacaoTree.png",type:"tree",rarity:"Epic"}
     };
 
-    /* HARVEST TEST V1: Mature plants stay planted; all new flower stock is harvested deliberately.
-       Flowering trees yield cut blossoms; fruit trees yield produce; seed-bearing trees yield plantable seeds.
-       Existing collection and rewards remain intact. */
-    const HARVEST_COOLDOWN_MS=72*60*60*1000;
-    const TREE_YIELDS={
-      bananaTree:{kind:'produce',id:'bananas',name:'Bananas'},
-      jacaranda:{kind:'flower',id:'jacarandaBlossom',name:'Jacaranda Blossoms'},
-      willow:{kind:'seed',id:'willowSeed',name:'Willow Seeds'},
-      cherryTree:{kind:'flower',id:'cherryTreeBlossom',name:'Cherry Blossoms'},
-      lemonTree:{kind:'produce',id:'lemons',name:'Lemons'},
-      pinkDogwood:{kind:'flower',id:'pinkDogwoodBlossom',name:'Dogwood Blossoms'},
-      bottlebrush:{kind:'flower',id:'bottlebrushBlossom',name:'Bottlebrush Blooms'},
-      silkTree:{kind:'flower',id:'silkTreeBlossom',name:'Silk Tree Blossoms'},
-      japaneseMaple:{kind:'seed',id:'japaneseMapleSeed',name:'Maple Seeds'},
-      saucerMagnolia:{kind:'flower',id:'saucerMagnoliaBlossom',name:'Magnolia Blossoms'},
-      weepingCherry:{kind:'flower',id:'weepingCherryBlossom',name:'Weeping Cherry Blossoms'},
-      redwood:{kind:'seed',id:'redwoodSeed',name:'Redwood Seeds'},
-      baobab:{kind:'seed',id:'baobabSeed',name:'Baobab Seeds'},
-      wisteriaArch:{kind:'flower',id:'wisteriaBlossom',name:'Wisteria Blossoms'},
-      cacaoTree:{kind:'produce',id:'cacaoPods',name:'Cacao Pods'}
-    };
-    for(const [treeId,yielding] of Object.entries(TREE_YIELDS)){
-        if(yielding.kind==='flower')FLOWERS[yielding.id]={name:yielding.name,img:FLOWERS[treeId].img,emoji:'🌸',type:'flower',rarity:FLOWERS[treeId].rarity};
-    }
-    const PRODUCE_LABELS={bananas:{name:'Bananas',source:'bananaTree'},lemons:{name:'Lemons',source:'lemonTree'},cacaoPods:{name:'Cacao Pods',source:'cacaoTree'}};
-    function harvestRemaining(p){const at=Date.parse(p.lastHarvestAt||'');return Number.isFinite(at)?Math.max(0,HARVEST_COOLDOWN_MS-(Date.now()-at)):0}
-    function harvestCountdown(ms){const hours=Math.ceil(ms/3600000);return hours>=24?Math.floor(hours/24)+'d '+hours%24+'h':Math.max(1,hours)+'h';}
-    function harvestPlant(id){
-        const p=garden.plants.find(x=>x.id===id);if(!p)return false;
-        const f=FLOWERS[p.flowerId],yielding=f.type==='tree'?TREE_YIELDS[p.flowerId]:{kind:'flower',id:p.flowerId,name:f.name};
-        if(!yielding||growthStage(p)<4){gardenComment('🌱 Wait until this plant is fully grown before harvesting.');return false;}
-        if(harvestRemaining(p)>0){gardenComment('⏳ '+yielding.name+' will be ready in '+harvestCountdown(harvestRemaining(p))+'.');return false;}
-        if(currentHealth(p)<45||p.pest){gardenComment('💧 Treat pests and restore plant health before collecting new blossoms.');return false;}
-        if(yielding.kind==='flower')garden.flowers[yielding.id]=Math.max(0,Number(garden.flowers[yielding.id]||0))+1;
-        else if(yielding.kind==='seed')garden.seeds[yielding.id]=Math.max(0,Number(garden.seeds[yielding.id]||0))+1;
-        else garden.produce[yielding.id]=Math.max(0,Number(garden.produce[yielding.id]||0))+1;
-        p.lastHarvestAt=nowISO();p.harvestCount=Math.max(0,Number(p.harvestCount||0))+1;
-        garden.harvestHistory.push({id:p.id,flowerId:p.flowerId,yieldId:yielding.id,kind:yielding.kind,at:p.lastHarvestAt});
-        garden.harvestHistory=garden.harvestHistory.slice(-100);
-        saveGarden();gardenComment('🌸 Harvested '+yielding.name+'! '+(yielding.kind==='flower'?'Added to Flower Storage.':yielding.kind==='seed'?'Added to Seed Inventory.':'Added to Garden Produce.')+' Next harvest in 3 days.');
-        renderGarden();
-        window.dispatchEvent(new CustomEvent('lizzyGardenHarvested',{detail:{plantId:p.id,kind:yielding.kind,itemId:yielding.id}}));
-        return true;
-    }
-    function consumeFlowers(ids,clientTx){
-        if(!Array.isArray(ids)||!ids.length)return false;
-        if(clientTx && garden.bouquetTx.includes(clientTx))return true;
-        const needed={};for(const id of ids){if(!FLOWERS[id]||FLOWERS[id].type!=='flower')return false;needed[id]=(needed[id]||0)+1;}
-        if(Object.entries(needed).some(([id,n])=>Number(garden.flowers[id]||0)<n))return false;
-        for(const [id,n] of Object.entries(needed))garden.flowers[id]-=n;
-        if(clientTx){garden.bouquetTx.push(clientTx);garden.bouquetTx=garden.bouquetTx.slice(-150)}
-        saveGarden();renderGarden();return true;
-    }
     const STANDARD_FLOWERS = [
         "tulip","redRose","pinkRose","whiteRose","lilyValley","cryingLily","snapdragon",
         "sunflower","daisy","lavender","orchid","peony","hydrangea","carnation",
@@ -3079,9 +3077,6 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             plants:[],
             seeds:{},
             flowers:{},
-            produce:{},
-            harvestHistory:[],
-            bouquetTx:[],
             selectedSeed:null,
             lastWeatherApplied:"",
             lastPestApplied:"",
@@ -3097,9 +3092,6 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     let garden = Object.assign(defaultGarden(), safeRead(KEYS.garden, {}));
     garden.seeds = garden.seeds || {};
     garden.flowers = garden.flowers || {};
-    garden.produce = garden.produce || {};
-    garden.harvestHistory = Array.isArray(garden.harvestHistory)?garden.harvestHistory:[];
-    garden.bouquetTx = Array.isArray(garden.bouquetTx)?garden.bouquetTx:[];
     garden.plants = Array.isArray(garden.plants) ? garden.plants : [];
     let tokens = Object.assign(defaultTokens(), safeRead(KEYS.tokens, {}));
     tokens.inventory = tokens.inventory || {};
@@ -3256,9 +3248,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     }
     function addFlower(flowerId,count=1,reason=""){
         if(!FLOWERS[flowerId]) return;
-        garden.flowers[flowerId]=Math.max(0,Number(garden.flowers[flowerId]||0)+Number(count||0));
+        garden.flowers[flowerId]=(garden.flowers[flowerId]||0)+count;
         saveGarden();
-        gardenComment(`${FLOWERS[flowerId].img?"🌸":FLOWERS[flowerId].emoji} ${FLOWERS[flowerId].name} ${count<0?"used from storage":"added to storage"}${reason?` — ${reason}`:""}.`);
+        gardenComment(`${FLOWERS[flowerId].img?"🌸":FLOWERS[flowerId].emoji} ${FLOWERS[flowerId].name} added to the collection${reason?` — ${reason}`:""}.`);
         renderGarden();
     }
     function randomStandardFlower(){
@@ -3452,11 +3444,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
                     ${dying?`<small class="plantDyingWarning">⏳ Wilts away in ~${hoursLeft}h without water</small>`:""}
                     <div class="plantHealthBar"><div class="plantHealthFill" style="width:${health}%"></div></div>
                     <small>💧 Last watered: ${new Date(p.lastWatered).toLocaleString()}</small>
-                    ${growthStage(p)===4?`<small class="harvest-status">${harvestRemaining(p)>0?'🌱 Next harvest: '+harvestCountdown(harvestRemaining(p)):health<45||p.pest?'💧 Restore health to harvest':'🌸 Ready to harvest'}</small>`:''}
                     <div class="plantActions">
                         <button data-water="${p.id}">💧 Water</button>
                         <button data-boost="${p.id}">✨ Check</button>
-                        ${growthStage(p)===4?`<button data-harvest-main="${p.id}" ${harvestRemaining(p)>0||health<45||p.pest?'disabled':''}>${harvestRemaining(p)>0?'⏳ '+harvestCountdown(harvestRemaining(p)):f.type==='tree'?'🌳 Collect '+TREE_YIELDS[p.flowerId].name:'✂️ Harvest Flower'}</button>`:''}
                         ${pestType?`<button data-spray="${p.id}" ${Number(garden.bugSpray||0)<=0?"disabled":""}>🧴 Bug Spray (${Number(garden.bugSpray||0)})</button><button data-quickfix="${p.id}">🎯 Quick Fix</button>`:""}
                     </div>
                 </div>
@@ -3468,7 +3458,6 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
 
         host.querySelectorAll("[data-empty-slot]").forEach(el=>el.onclick=()=>plantSelectedSeed(Number(el.dataset.emptySlot)));
         host.querySelectorAll("[data-water]").forEach(b=>b.onclick=e=>{e.stopPropagation();waterPlant(b.dataset.water)});
-        host.querySelectorAll("[data-harvest-main]").forEach(b=>b.onclick=e=>{e.stopPropagation();harvestPlant(b.dataset.harvestMain)});
         host.querySelectorAll("[data-boost]").forEach(b=>b.onclick=e=>{e.stopPropagation();inspectPlant(b.dataset.boost)});
         host.querySelectorAll("[data-spray]").forEach(b=>b.onclick=e=>{e.stopPropagation();useBugSpray(b.dataset.spray)});
         host.querySelectorAll("[data-quickfix]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPestMiniGame(b.dataset.quickfix)});
@@ -3476,14 +3465,12 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
 
     function renderCollection(){
         const host=$("gardenFlowerCollection");
-        const panel=host?.closest('.gardenCollectionPanel');
-        if(panel){const heading=panel.querySelector('h3');if(heading)heading.textContent='Flower Storage & Garden Produce 🌸';const sub=panel.querySelector('.gardenPanelHeading small');if(sub)sub.textContent='HARVESTED INVENTORY';}
         const entries=Object.entries(garden.flowers).filter(([,n])=>n>0);
-        const inventory=entries.filter(([id])=>FLOWERS[id]);
-        const crops=Object.entries(garden.produce||{}).filter(([,n])=>Number(n)>0);
-        host.innerHTML=`<div class="harvest-storage-note">✂️ Cut flowers in storage can be used in Bouquet Studio. Mature plants remain planted and can be harvested again after 72 hours. Previously earned flowers are preserved.</div>`+
-          (inventory.length?inventory.map(([id,n])=>`<div class="flowerCollectionChip"><b>${flowerIcon(FLOWERS[id],28)} ${FLOWERS[id].name} ×${n}</b><small>${FLOWERS[id].rarity} · Ready for bouquets</small></div>`).join(""):`<div class="memoryMessage">No cut flowers in storage yet. Grow and harvest a plant, or earn flowers through rewards.</div>`)+
-          (crops.length?`<div class="harvest-storage-note">🍋 Fruit & produce (not bouquet flowers)</div>`+crops.map(([id,n])=>{const data=PRODUCE_LABELS[id];return `<div class="flowerCollectionChip"><b>${flowerIcon(FLOWERS[data.source],28)} ${data.name} ×${n}</b><small>Harvested garden produce</small></div>`}).join(''):'');
+        host.innerHTML=entries.length?entries.map(([id,n])=>`
+            <div class="flowerCollectionChip">
+                <b>${flowerIcon(FLOWERS[id],28)} ${FLOWERS[id].name} ×${n}</b>
+                <small>${FLOWERS[id].rarity}</small>
+            </div>`).join(""):`<div class="memoryMessage">Your collection will grow as flowers bloom and rewards drop. 🌷</div>`;
     }
 
     function renderGarden(){
@@ -3625,7 +3612,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         p.waterCount=(p.waterCount||0)+1;
         const after=growthStage(p);
         if(after===4 && before<4){
-            gardenComment('🌸 '+FLOWERS[p.flowerId].name+' is fully grown! Use the Harvest button when you are ready to collect its flowers.');
+            addFlower(p.flowerId,1,"Fully grown in the Garden");
         }
         saveGarden();
         window.dispatchEvent(new CustomEvent("lizzyJobProof",{detail:{type:"plant_watered",plantId:id}}));
@@ -4272,7 +4259,7 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
 
     // Public helper for the upcoming Cloudflare/Telegram setup:
     // localStorage.setItem("lizzyTelegramWorkerURL","https://YOUR-WORKER.workers.dev")
-    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken,harvestPlant,consumeFlowers};
+    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken};
 
     /* ---------------------------------------------------------------
        EXTERNAL REWARD SYNC (Vault / Secret Shelf / Daily Rewards)
@@ -4286,9 +4273,6 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
             garden=Object.assign(defaultGarden(),g);
             garden.seeds=garden.seeds||{};
             garden.flowers=garden.flowers||{};
-            garden.produce=garden.produce||{};
-            garden.harvestHistory=Array.isArray(garden.harvestHistory)?garden.harvestHistory:[];
-            garden.bouquetTx=Array.isArray(garden.bouquetTx)?garden.bouquetTx:[];
             garden.plants=Array.isArray(garden.plants)?garden.plants:[];
         }
         const t=safeRead(KEYS.tokens,null);
