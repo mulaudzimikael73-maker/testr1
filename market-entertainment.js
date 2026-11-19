@@ -2,8 +2,8 @@
 "use strict";
 const core=window.LizzyInternetCore;if(!core)return;
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const WORKER=core.worker;
-const MARKET_KEY="lizzyFictionalStockMarketTESTV1",ENT_KEY="lizzyEntertainmentTicketsTESTV1";
+const WORKER=(core.worker||window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/").trim();
+const MARKET_KEY="lizzyFictionalStockMarketV1",ENT_KEY="lizzyEntertainmentTicketsV1";
 const MARKET_TICK_MS=30*60*1000;
 const STOCKS=[
  {ticker:"CEH",name:"Chocolate Emergency Holdings",industry:"Emergency Confectionery",price:42,vol:.055,logo:"chocolate-emergency.webp",desc:"Sweet solutions for situations that probably did not require a holding company."},
@@ -124,7 +124,18 @@ function market(){
  const news=s.news.slice(0,5).map(n=>`<div class="marketNewsItem ${esc(n.sentiment||"neutral")}"><b>${sentIcon(n)} ${esc(n.ticker)}</b><span>${esc(n.headline)}</span></div>`).join("")||'<div class="marketEmpty">No ridiculous market news yet.</div>';
  $("browserPage").innerHTML=`<div class="marketSite"><header class="marketHero"><div><small>100% FICTIONAL • FAKE MONEY</small><h1>Micky Stock Exchange</h1><p>Invest MB in extremely questionable companies.</p></div><div class="marketTotals"><span>Spendable cash <b>${fmt(cash)}</b></span><span>Portfolio <b>${fmt(portfolio)}</b></span><span>Portfolio P/L <b class="${portfolioPL>=0?"gain":"loss"}">${portfolioPL>=0?"+":""}${fmt(portfolioPL)}</b></span></div></header><div class="marketTicker">${STOCKS.slice(0,8).map(st=>`<span>${st.ticker} <b>${fmt(s.prices[st.ticker])}</b></span>`).join("")}</div><section class="marketNews"><h3>Market News</h3>${news}</section><div class="stockGrid">${cards}</div></div>`;
  }
-function buyStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const price=s.prices[ticker],cost=round(q*price);if(!core.bankSpend(cost,`Bought ${q} ${ticker} share${q===1?"":"s"}`,"stock-buy")){alert(`Not enough MB. You need ${fmt(cost)}.`);return}const h=s.holdings[ticker]||{shares:0,avg:0},newShares=h.shares+q;h.avg=round(((h.avg*h.shares)+(price*q))/newShares);h.shares=newShares;s.holdings[ticker]=h;saveMarket(s);market();pushSnapshot();}
+function buyStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const price=s.prices[ticker],cost=round(q*price);if(!core.bankSpend(cost,`Bought ${q} ${ticker} share${q===1?"":"s"}`,"stock-buy")){alert(`Not enough MB. You need ${fmt(cost)}.`);return}const h=s.holdings[ticker]||{shares:0,avg:0},newShares=h.shares+q;h.avg=round(((h.avg*h.shares)+(price*q))/newShares);h.shares=newShares;s.holdings[ticker]=h;saveMarket(s);market();pushSnapshot();
+ // TESTR ONLY: confirmed local stock purchase was saved successfully.
+ // Outbox persists offline; auth is provided through the TEST Lab setup.
+ if(window.LizzyTestShareNotificationBridge){
+   const holdings=Object.fromEntries(Object.entries(s.holdings).filter(([,v])=>Number(v?.shares)>0).map(([t,v])=>[STOCKS.find(x=>x.ticker===t)?.name||t,Number(v.shares)]));
+   window.LizzyTestShareNotificationBridge.recordConfirmedPurchase({
+      tradeId:'testr-stock-'+crypto.randomUUID(),company:st.name,quantity:q,unitPrice:price,
+      holdingsAfter:newShares,portfolioHoldings:holdings,
+      portfolioValue:totalPortfolio(s),walletBalance:core.bankSpendable()
+   }).catch(e=>console.warn('TEST share alert queued:',e));
+ }
+}
 function sellStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const h=s.holdings[ticker]||{shares:0,avg:0};if(h.shares<q){alert(`You only own ${h.shares} ${ticker} share${h.shares===1?"":"s"}.`);return}const proceeds=round(q*s.prices[ticker]);h.shares-=q;if(!h.shares)delete s.holdings[ticker];else s.holdings[ticker]=h;core.bankCredit(proceeds,`Sold ${q} ${ticker} share${q===1?"":"s"}`,"stock-sell");saveMarket(s);market();pushSnapshot();}
 
 const ENT_ITEMS={
@@ -169,7 +180,7 @@ async function playEntertainment(id){
  }
 }
 
-async function worldApi(action,body={}){if(!WORKER)throw new Error("Test Worker not configured");const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...body}),cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)throw new Error(d.error||`Request failed (${r.status})`);return d}
+async function worldApi(action,body={}){if(!WORKER)throw new Error("LizzyOS Worker not configured");const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...body}),cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)throw new Error(d.error||`Request failed (${r.status})`);return d}
 async function getWorldQueue(){if(!WORKER)return[];const r=await fetch(WORKER+"?action=world_queue",{cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok)return[];return d.commands||[]}
 function marketMove(s,tickers,pct){for(const ticker of tickers){if(s.frozen[ticker]&&pct!==0)continue;const p=Math.max(1,round(s.prices[ticker]*(1+pct/100)));s.prices[ticker]=p;(s.history[ticker]||(s.history[ticker]=[])).push({t:Date.now(),p});s.history[ticker]=s.history[ticker].slice(-72)}}
 function applyMarketCommand(c){const s=marketState(),all=STOCKS.map(x=>x.ticker),ticker=String(c.ticker||"").toUpperCase(),targets=c.scope==="market"?all:(STOCKS.some(x=>x.ticker===ticker)?[ticker]:[]);if(!targets.length&&c.action!=="set_mode")return;let pct=Number(c.percent);if(!Number.isFinite(pct)||pct<=0)pct=undefined;switch(c.action){case"pump":marketMove(s,targets,pct||12);break;case"drop":marketMove(s,targets,-(pct||12));break;case"crash":marketMove(s,targets,-(pct||35));break;case"rally":marketMove(s,targets,pct||22);break;case"recover":marketMove(s,targets,pct||15);break;case"gradual_rise":{const total=pct||12,steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"gradual_decline":{const total=-(pct||12),steps=6;marketMove(s,targets,total/steps);targets.forEach(t=>s.trends[t]={perTick:(total/100)/steps,remaining:steps-1});break}case"freeze":targets.forEach(t=>s.frozen[t]=true);break;case"unfreeze":targets.forEach(t=>delete s.frozen[t]);break;case"set_mode":s.mode=c.mode||"normal";break;default:return}
@@ -178,13 +189,62 @@ function applyMarketCommand(c){const s=marketState(),all=STOCKS.map(x=>x.ticker)
  const headline=String(c.headline||autoHeadline||"").trim();
  if(headline){s.news.unshift({id:"hq"+Date.now()+Math.random().toString(36).slice(2,6),t:Date.now(),ticker:c.scope==="market"?"MARKET":ticker,headline:headline.slice(0,220),sentiment:c.headline?(c.sentiment||marketEventSentiment(automaticAction)):marketEventSentiment(automaticAction),hq:true});s.news=s.news.slice(0,15)}
  saveMarket(s);if(document.querySelector(".marketSite"))market();}
-async function applyDelivery(c){const s=entState(),p=s.purchases.find(x=>x.id===c.purchaseId);if(!p)return;const d=await worldApi("world_media_get",{mediaId:c.mediaId});if(!d.media?.data)return;await MediaDB.put(p.id,d.media);p.status="ready";p.mediaId=p.id;p.deliveredAt=Date.now();p.mediaType=d.media.mediaType||p.mediaType;saveEnt(s);await worldApi("world_media_delete",{mediaId:c.mediaId}).catch(()=>{});if(document.querySelector(".entSite"))entertainment();}
-let lastWorldSnapshotHash="";function worldSnapHash(raw){let h=2166136261;for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
-async function pushSnapshot(){try{const s=marketTick(),e=entState(),meaningful={cash:core.bankSpendable(),stocks:STOCKS.map(st=>({ticker:st.ticker,name:st.name,price:s.prices[st.ticker],frozen:!!s.frozen[st.ticker]})),marketMode:s.mode,purchases:e.purchases.map(p=>({id:p.id,type:p.type,title:p.title,tier:p.tier,price:p.price,boughtAt:p.boughtAt,status:p.status,mediaType:p.mediaType}))},raw=JSON.stringify(meaningful),hash=worldSnapHash(raw);if(hash===lastWorldSnapshotHash)return;await worldApi("world_snapshot_put",{snapshot:{at:Date.now(),...meaningful},clientHash:hash});lastWorldSnapshotHash=hash}catch{}}
-async function syncWorld(){try{const cmds=await getWorldQueue();const ids=[];for(const c of cmds){try{if(c.kind==="market")applyMarketCommand(c);else if(c.kind==="ent_delivery")await applyDelivery(c);ids.push(c.id)}catch{}}if(ids.length)await worldApi("world_ack",{ids});await pushSnapshot()}catch{}}
+// Only confirm delivery after the matching ticket exists and the media was saved locally.
+// Do not delete the cloud copy before the delivery queue has been acknowledged.
+async function applyDelivery(c){
+ const s=entState(),p=s.purchases.find(x=>x.id===c.purchaseId);
+ if(!p){console.warn("Entertainment delivery held: ticket not found on this browser",c.purchaseId);return false;}
+ const d=await worldApi("world_media_get",{mediaId:c.mediaId});
+ if(!d.media?.data){console.warn("Entertainment delivery held: media not available yet",c.mediaId);return false;}
+ await MediaDB.put(p.id,d.media);
+ p.status="ready";p.mediaId=p.id;p.deliveredAt=Date.now();p.mediaType=d.media.mediaType||p.mediaType;
+ saveEnt(s);
+ if(document.querySelector(".entSite"))entertainment();
+ return true;
+}
+const purchaseAttempts=new Map();
+let purchaseSyncRunning=false;
+async function syncEntertainmentPurchases(){
+ if(purchaseSyncRunning)return;
+ purchaseSyncRunning=true;
+ try{
+  for(const p of entState().purchases){
+   if(p.remoteTicketSaved&&p.remoteTelegramNotified)continue;
+   const attempted=Number(purchaseAttempts.get(p.id)||0);
+   if(attempted&&Date.now()-attempted<45000)continue;
+   purchaseAttempts.set(p.id,Date.now());
+   try{
+    const answer=await worldApi('world_ent_purchase',{purchase:p});
+    if(answer?.stored){
+     const fresh=entState(),row=fresh.purchases.find(x=>x.id===p.id);
+     if(row){row.remoteTicketSaved=true;if(answer.notified)row.remoteTelegramNotified=true;saveEnt(fresh)}
+    }
+    if(!answer?.notified&&answer?.telegramError)console.warn('Entertainment Telegram alert pending:',answer.telegramError);
+   }catch(e){console.warn('Entertainment ticket syncing will retry:',e?.message||e)}
+  }
+ }finally{purchaseSyncRunning=false}
+}
+async function pushSnapshot(){await syncEntertainmentPurchases();try{const s=marketTick(),e=entState();await worldApi("world_snapshot_put",{snapshot:{at:Date.now(),cash:core.bankSpendable(),stocks:STOCKS.map(st=>({ticker:st.ticker,name:st.name,price:s.prices[st.ticker],frozen:!!s.frozen[st.ticker]})),marketMode:s.mode,purchases:e.purchases.map(p=>({id:p.id,type:p.type,title:p.title,tier:p.tier,price:p.price,boughtAt:p.boughtAt,status:p.status,mediaType:p.mediaType}))}})}catch{}}
+async function syncWorld(){
+ try{
+  const cmds=await getWorldQueue(),ids=[];
+  for(const c of cmds){
+   try{
+    if(c.kind==="market"){applyMarketCommand(c);ids.push(c.id);}
+    else if(c.kind==="ent_delivery"){
+     // Do not acknowledge a missing ticket, missing media or failed IndexedDB write.
+     if(await applyDelivery(c))ids.push(c.id);
+    }
+    else ids.push(c.id);
+   }catch(e){console.warn("Entertainment/market delivery will retry",c.id,e?.message||e);}
+  }
+  if(ids.length)await worldApi("world_ack",{ids});
+  await pushSnapshot();
+ }catch(e){console.warn("Entertainment sync error",e?.message||e);}
+}
 function open(site){site==="market"?market():entertainment()}
 $("browserPage")?.addEventListener("click",e=>{const buy=e.target.closest("[data-market-buy]")?.dataset.marketBuy;if(buy)return buyStock(buy);const sell=e.target.closest("[data-market-sell]")?.dataset.marketSell;if(sell)return sellStock(sell);const eb=e.target.closest("[data-ent-buy]");if(eb)return purchaseEntertainment(eb.dataset.entBuy,eb.dataset.entTier,eb.dataset.entPrice);const play=e.target.closest("[data-ent-play]")?.dataset.entPlay;if(play)playEntertainment(play)});
 window.LizzyMarketEntertainment={open,market,entertainment,sync:syncWorld};
 window.addEventListener("bankOfMickyUpdated",()=>{if(document.querySelector(".marketSite"))market();if(document.querySelector(".entSite"))entertainment()});
-marketTick();syncWorld();setInterval(()=>{if(!document.hidden)syncWorld()},30000);setInterval(()=>{marketTick();if(document.querySelector(".marketSite"))market()},MARKET_TICK_MS);window.addEventListener("focus",syncWorld);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncWorld()});
+marketTick();syncWorld();setInterval(syncWorld,10000);setInterval(()=>{marketTick();if(document.querySelector(".marketSite"))market()},MARKET_TICK_MS);window.addEventListener("focus",syncWorld);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncWorld()});
 })();

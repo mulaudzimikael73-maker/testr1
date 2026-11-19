@@ -855,7 +855,7 @@ const CONFIG={
 
 /* ---------- matching cartoon art for the TV-character fake accounts ---------- */
 const TV_CARTOON_COUNTS={"michael":9,"jim":9,"pam":9,"dwight":9,"oscar":9,"angela":9,"stanley":9,"toby":9,"kelly":9,"kevin":9,"creed":9,"lorelai":13,"rory":13,"luke":13,"emily":13,"richard":13,"sookie":13,"michel":13,"paris":13,"lane":13,"jess":13,"kirk":13,"jake":15,"amy":15,"rosa":15,"terry":15,"holt":15,"boyle":15,"gina":15,"hitchcock":15,"scully":15,"troy":14,"gabriella":14,"sharpay":14,"ryan":14,"chad":14,"taylor":14,"kelsi":14,"zeke":14};
-const ENTERTAINMENT_MEDIA_COUNTS={bonang:10,msaki:8,sjava:7,jabulilemajola:7,jesseclegg:8,raye:8,sunelmusician:7,dave:7,jcole:7,maleh:8,yebba:6,muzi:7,onedirection:6,micasa:8,liquideep:8};
+const ENTERTAINMENT_MEDIA_COUNTS={thepresident:64,bonang:10,msaki:8,sjava:7,jabulilemajola:7,jesseclegg:8,raye:8,sunelmusician:7,dave:7,jcole:7,maleh:8,yebba:6,muzi:7,onedirection:6,micasa:8,liquideep:8};
 const TV_CARTOON_POST_CHANCE=.6;
 for(const [id,count] of Object.entries(TV_CARTOON_COUNTS)){
   const u=CONFIG.users[id];if(!u)continue;
@@ -865,7 +865,7 @@ for(const [id,count] of Object.entries(TV_CARTOON_COUNTS)){
 }
 for(const [id,count] of Object.entries(ENTERTAINMENT_MEDIA_COUNTS)){
   const u=CONFIG.users[id];if(!u)continue;
-  u.mediaDir=`assets/mizzygram/entertainment/${id}`;
+  u.mediaDir=id==="thepresident"?`assets/mizzygram/president`:`assets/mizzygram/entertainment/${id}`;
   u.mediaCount=count;
   u.avatar=`${u.mediaDir}/1.webp`;
   u.feedMediaChance=id==="bonang"?.82:.64;
@@ -887,13 +887,58 @@ function botImageFor(u,caption,chance=TV_CARTOON_POST_CHANCE){
   return mediaImageFor(u)||cartoonImageFor(u,chance)||cardImage(caption,u.tile[0],u.tile[1],u.tile[2]);
 }
 
+const PRESIDENT_GENERIC_CAPTIONS=(CONFIG.users.thepresident?.posts||[]).slice();
+const PRESIDENT_IMAGE_TAGS={
+  1:"desk",2:"hyrox",3:"travel",4:"dogdesk",5:"podium",6:"beach",7:"sleep",8:"drive",9:"plans",10:"mountain",
+  11:"hyrox",12:"laptop",13:"city",14:"dog",15:"travel",16:"formal",17:"podcast",18:"reading",19:"city",20:"sleep",
+  21:"desk",22:"dog",23:"dog",24:"podium",25:"travel",26:"plans",27:"newspaper",28:"sleep",29:"formal",30:"laptop",
+  31:"mountain",32:"travel",33:"hyrox",34:"city",35:"dog",36:"dog",37:"writing",38:"podcast",39:"soccer",40:"city",
+  41:"sleep",42:"beach",43:"plans",44:"desk",45:"dogdesk",46:"city",47:"dog",48:"podium",49:"sleep",50:"writing",
+  51:"travel",52:"desk",53:"laptop",54:"beach",55:"formal",56:"soccer",57:"city",58:"dog",59:"plans",60:"hyrox",
+  61:"sleep",62:"podium",63:"mountain",64:"desk"
+};
+const PRESIDENT_FEED_POOLS={
+  desk:["Another productive day of pointing at documents while someone takes photos.","I hear your concerns. My assistant has put them in a folder I find intimidating.","Proud to announce that I have successfully attended a meeting about organising a meeting.","A historic day for our nation. I remembered my password on the first attempt.","Today’s agenda includes plans, progress, and pretending I’ve already answered that email."],
+  dogdesk:["Cabinet update: Deputy President Cody has approved the agenda with a wag.","The nation remains in safe hands. Cody is monitoring the snacks.","Behind every strong administration is a much cuter deputy.","Policy review complete. Cody recommends more treats and fewer emails.","Good ideas. Better results. Outstanding company."],
+  hyrox:["National fitness update: the sled remains hostile, but we move.","My administration is committed to reducing unnecessary paperwork. Starting with my gym contract.","State security briefing: the wall balls were accurate and deeply personal.","Conducted a high-level HYROX summit. The minutes are mostly sweat.","Discipline builds freedom. The freedom, unfortunately, is temporary."],
+  travel:["I’m not on holiday. I’m conducting a detailed inspection of the coastline.","Today I met with world leaders. We all agreed the group photo took too long.","My fellow citizens, boarding has begun. Remain calm and glamorous.","Diplomatic mission underway. The suitcase believes in me more than I do.","The presidential itinerary is strong. Airport snacks remain under review."],
+  podium:["Today’s press conference has been postponed until I think of better answers.","The speech was powerful. Several ministers closed their eyes to absorb it.","The national anthem deserves respect. My entrance music deserves more bass.","My fellow citizens, I have prepared remarks and at least three facial expressions.","I reject allegations that I’m dramatic. Prepare the balcony. I must address the nation."],
+  beach:["I came. I saw. I asked whether lunch was included.","I’m not on holiday. I’m conducting a detailed inspection of the coastline.","State dinner tonight. Finally, a policy I can get behind.","Sun, sea, and statesmanship. Balance is important.","The people asked for transparency, so here is the beach report: excellent."],
+  sleep:["I’m pleased to announce that tomorrow’s problems have been successfully moved to tomorrow.","My fellow citizens, the office is currently observing a strategic period of rest.","Rest. Plan. Execute. Repeat. In roughly that order.","The administration is offline for maintenance and snacks.","No further questions. The President is recharging."],
+  drive:["The country needs direction. My driver says we missed the exit.","The presidential motorcade stopped for chips. This is what accessible leadership looks like.","Every journey starts with a plan and ends with someone asking who has the aux.","Infrastructure update: we are moving, mostly in the correct direction.","Leadership looks different from every angle. This one has traffic."],
+  plans:["Our five-year plan is progressing beautifully. We have chosen the font.","The people have asked for a plan. I have provided a whiteboard and vibes.","We will cross that bridge when the infrastructure department replies.","Health. Wealth. Freedom. Bigger dreams. The minutes are looking excellent.","The to-do list is under control. My handwriting, however, is not."],
+  mountain:["The summit was successful. Literally and emotionally.","The people need perspective. The mountains have provided it.","Leadership retreat complete. Cody carried morale.","Discipline, altitude, and absolutely no committee meetings.","Bigger dreams require stronger legs and better snacks."],
+  laptop:["The presidential budget is balanced. I put an equally heavy book on the other side.","Another productive day of strategy, investments, leadership and suspiciously few actual answers.","Good ideas. Better results. Outstanding coffee.","The economy remains stable as long as nobody touches my tabs.","Building bigger dreams, one open window at a time."],
+  city:["My official portrait has been approved by the only committee that matters: me.","Every handshake is a promise. Mostly a promise that I’ll forget your name immediately.","The city looks wonderful when you pretend your inbox doesn’t exist.","State visit complete. Sunglasses remain classified.","I touched grass this morning. The city will hear about it."],
+  formal:["The red carpet is lovely, but who approved this many stairs?", "State dinner tonight. Finally, a policy I can get behind.","My memoir will contain the truth, the whole truth, and some flattering lighting.","Approval ratings rise sharply in a tuxedo.","Diplomatic relations are strongest where the lighting is good."],
+  podcast:["Welcome back to The Standard. Today’s agenda: plans, progress, and premium nonsense.","The people asked for transparency. I gave them a microphone.","This episode covers leadership, logistics, and why the snacks vanished.","No spin, just standards. Also a very good mug.","Broadcasting live from the Department of Opinions."],
+  reading:["A nation that reads is a nation that dreams bigger.","The briefing has been reduced to coffee and one very important book.","Quiet leadership hours are now officially in session.","Some chapters require courage. Others just require caffeine.","Bigger dreams deserve a reading list."],
+  newspaper:["Today’s headlines are excellent. I assume because I’m in them.","The Daily Gobshite has once again confused confidence with evidence.","The papers are saying big things. I have chosen to believe the flattering parts.","Press freedom remains safe. My feelings remain negotiable.","Bigger dreams today. Croissants pending."],
+  writing:["I have signed the document. Apparently, I was also supposed to read it.","I requested a brief briefing. That was 94 minutes ago.","The notes are organised. The nation is not.","People. Plans. Progress. Handwritten for dramatic effect.","I am drafting policy and pretending the penmanship adds authority."],
+  soccer:["Grassroots leadership starts on the pitch.","Deputy President Cody believes this formation needs more treats.","The people wanted sport. The administration delivered vibes and shin power.","National fitness policy now includes dog-assisted ball control.","State training session complete. Morale is up, defence is questionable."]
+};
+const PRESIDENT_STORY_POOLS={
+  desk:["Office hours.","Policy and coffee.","Working. Allegedly."],dogdesk:["Deputy President Cody is seated.","Cabinet meeting. Treats first.","Good ideas. Better company."],hyrox:["HYROX mode.","Discipline first.","Sled diplomacy underway."],travel:["Official business ✈️","Transit thoughts.","Runway diplomacy."],podium:["Addressing the nation shortly.","Prepared remarks pending.","Statement incoming."],beach:["Coastal inspection.","Ocean approved.","Cabinet by the coast."],sleep:["Strategic rest.","Do not disturb the administration.","Recharging the republic."],drive:["Motorcade thoughts.","On the move.","Direction pending."],plans:["Plan update.","The list is listing.","Blueprint energy."],mountain:["Perspective restored.","Retreat mode.","Bigger dreams."],laptop:["Strategy session.","Numbers and nonsense.","Focused."],city:["City diplomacy.","State visit.","Main character governance."],formal:["Formalities.","Red carpet policy.","Evening brief."],podcast:["The Standard is live.","Mic check.","Broadcast mode."],reading:["Reading hour.","Quiet work.","Book and brew."],newspaper:["Checking the headlines.","Press review.","Front-page behaviour."],writing:["Drafting something important-looking.","Minutes and ideas.","Pen to paper."],soccer:["Pitch-side leadership.","Training with Cody.","Game plan."]
+};
+function presidentTagForIndex(n){return PRESIDENT_IMAGE_TAGS[n]||"desk"}
+function presidentPoolFor(index,kind="feed"){
+  const tag=presidentTagForIndex(index),p=(kind==="story"?PRESIDENT_STORY_POOLS[tag]:PRESIDENT_FEED_POOLS[tag])||PRESIDENT_GENERIC_CAPTIONS;
+  return p&&p.length?p:PRESIDENT_GENERIC_CAPTIONS;
+}
+function presidentMediaPick(kind="feed",preferredIndex=null){
+  const total=(CONFIG.users.thepresident&&CONFIG.users.thepresident.mediaCount)||64;
+  const index=preferredIndex||1+Math.floor(Math.random()*total),dir=(CONFIG.users.thepresident&&CONFIG.users.thepresident.mediaDir)||"assets/mizzygram/president";
+  return {index,tag:presidentTagForIndex(index),image:`${dir}/${index}.webp`,caption:pick(presidentPoolFor(index,kind))};
+}
+function isPresidentAutoCaption(caption){return !caption||caption==="__AUTO_PRESIDENT__"||PRESIDENT_GENERIC_CAPTIONS.includes(String(caption))}
+
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const verifiedMark=u=>u&&u.verified&&u.id!=="lizzy"&&u.id!=="mikael"?'<span class="verifiedBadge" title="Verified" aria-label="Verified">✓</span>':"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const socialHash=s=>{let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
-const CELEB_FOLLOWER_BASE={msaki:486000,sjava:2100000,jabulilemajola:146000,jesseclegg:218000,raye:3900000,sunelmusician:970000,dave:5300000,jcole:9800000,maleh:164000,yebba:1850000,muzi:420000,onedirection:28600000,micasa:610000,liquideep:285000,bonang:5600000,disney:38800000};
+const CELEB_FOLLOWER_BASE={thepresident:1850000,msaki:486000,sjava:2100000,jabulilemajola:146000,jesseclegg:218000,raye:3900000,sunelmusician:970000,dave:5300000,jcole:9800000,maleh:164000,yebba:1850000,muzi:420000,onedirection:28600000,micasa:610000,liquideep:285000,bonang:5600000,disney:38800000};
 const MOVIE_FOLLOWER_BASE={horrorreels:742000,comedyclub:619000,romanceframe:521000,dramadaily:438000,meetcutemovies:688000};
 function setupBotSocialStats(){
   for(const [id,u] of Object.entries(CONFIG.users)){
@@ -934,7 +979,7 @@ const Store=(()=>{
   const open=()=>new Promise(res=>{
     if(!window.indexedDB)return res(false);
     let req;
-    try{req=indexedDB.open("mizzygram-test-lab",2)}catch{return res(false)}
+    try{req=indexedDB.open("mizzygram",2)}catch{return res(false)}
     req.onupgradeneeded=()=>{
       const d=req.result;
       if(!d.objectStoreNames.contains("posts"))d.createObjectStore("posts",{keyPath:"id"});
@@ -1579,7 +1624,15 @@ async function seedNewsIfNeeded(){
 async function botPost(userId,caption,extra={}){
   const u=CONFIG.users[userId];if(!u)return null;
   if(u.bot&&!extra.force&&typeof canScheduleFeedPost==="function"&&!canScheduleFeedPost(userId))return null;
-  const post={id:uid(),userId,image:botImageFor(u,caption),caption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:false,...extra};
+  let resolvedCaption=caption,resolvedImage=extra.image||null;
+  if(userId==="thepresident"){
+    const pm=presidentMediaPick("feed");
+    resolvedImage=resolvedImage||pm.image;
+    if(isPresidentAutoCaption(caption))resolvedCaption=pm.caption;
+  }else if(!resolvedImage){
+    resolvedImage=botImageFor(u,caption);
+  }
+  const post={id:uid(),userId,image:resolvedImage,caption:resolvedCaption,createdAt:Date.now(),reactions:{},comments:[],communityScheduled:false,...extra};
   delete post.force;
   state.posts.push(post);newestFirst();try{await Store.savePost(post)}catch{}
   scheduleCommunityReactions(post);
@@ -1661,10 +1714,12 @@ function homeExtras(){
    Phase 7 — Mikael HQ bridge (HQ queues commands on the Worker; this
    device polls, applies them, and publishes a small snapshot back)
    ===================================================================== */
-const WORKER=(window.LIZZY_TELEGRAM_WORKER_URL||"").trim();
-const hqPost=body=>WORKER?fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})}).then(r=>r.json()):Promise.reject(new Error("Test Worker not configured"));
+const WORKER="https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+const hqPost=async body=>{const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})});const d=await r.json();if(!r.ok||d.success===false)throw new Error(d.error||"HQ sync failed");return d};
 async function applyCommand(c){
-  const p=c.postId?(c.postId==="latest"?state.posts.find(x=>x.userId==="lizzy"):state.posts.find(x=>x.id===c.postId)):null,save=async()=>{try{await Store.savePost(p)}catch{}};
+  const p=c.postId?(c.postId==="latest"?state.posts.find(x=>x.userId==="lizzy"):state.posts.find(x=>x.id===c.postId)):null,save=()=>Store.savePost(p);
+  if(["like","react","comment","reply","pin"].includes(c.kind)&&!p)return false;
+  if(p){p.reactions=p.reactions||{};p.comments=p.comments||[];}
   switch(c.kind){
     case"post":{
       const u=CONFIG.users[c.account];if(!u)return;
@@ -1685,38 +1740,85 @@ async function applyCommand(c){
       if(post.audience!=="lizzy")scheduleCommunityReactions(post);
       break}
     case"like":case"react":
-      if(p){p.reactions.mikael=reactionOf(c.reaction)?c.reaction:"love";reactNotify(p,"mikael");await save()}break;
+      if(p){
+        const version=`${c.createdAt||""}:${c.id||""}`;
+        if(c.id?.startsWith("hq_")&&p.hqReactionVersion&&p.hqReactionVersion>version)return true;
+        p.reactions.mikael=reactionOf(c.reaction)?c.reaction:"love";
+        if(c.id?.startsWith("hq_"))p.hqReactionVersion=version;
+        reactNotify(p,"mikael");await save()
+      }break;
     case"comment":case"reply":
-      if(p&&c.text){const n={id:uid(),userId:"mikael",text:String(c.text).slice(0,CONFIG.maxComment),createdAt:Date.now(),likes:[],parentId:c.parentId||null};p.comments.push(n);notifyComment(p,n);await save()}break;
+      if(p&&c.text){const n={id:c.id||uid(),userId:"mikael",text:String(c.text).slice(0,CONFIG.maxComment),createdAt:Date.now(),likes:[],parentId:c.parentId||null};if(!p.comments.some(x=>x.id===n.id)){p.comments.push(n);notifyComment(p,n)}await save()}break;
     case"pin":
       if(p&&p.comments.some(x=>x.id===c.commentId)){p.comments.forEach(x=>{x.pinned=x.id===c.commentId});notify({to:p.userId,from:"mikael",kind:"pin",postId:p.id});await save()}break;
     case"event":runEvent(c.event);break;
   }
-  render(true);renderSheet();
+  try{render(true);renderSheet()}catch{}
+  return true;
 }
 let hqBusy=false,snapSig="";
-function pushSnapshot(){
+const HQ_MEDIA_SYNC_VERSION="v3-media-1";
+const HQ_MEDIA_MAX_VIDEO_BYTES=16*1024*1024;
+function blobDataURL(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result||""));r.onerror=()=>rej(r.error||new Error("read failed"));r.readAsDataURL(blob)})}
+function imagePreviewDataURL(src,maxSide=640,quality=.72){return new Promise((res,rej)=>{
+  if(!src)return rej(new Error("No image"));
+  const im=new Image(),finish=()=>{try{const scale=Math.min(1,maxSide/Math.max(im.naturalWidth||1,im.naturalHeight||1)),c=document.createElement("canvas");c.width=Math.max(1,Math.round((im.naturalWidth||1)*scale));c.height=Math.max(1,Math.round((im.naturalHeight||1)*scale));const x=c.getContext("2d");x.drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",quality))}catch(e){rej(e)}};
+  im.onload=finish;im.onerror=()=>rej(new Error("Image preview failed"));im.src=src;
+})}
+function videoPosterDataURL(blob,maxSide=640,quality=.7){return new Promise((resolve,reject)=>{
+  if(!(blob instanceof Blob))return reject(new Error("No video blob"));
+  const url=URL.createObjectURL(blob),v=document.createElement("video");let done=false;
+  const cleanup=()=>{try{URL.revokeObjectURL(url)}catch{}};
+  const capture=()=>{if(done)return;done=true;try{const w=v.videoWidth||640,h=v.videoHeight||360,scale=Math.min(1,maxSide/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));c.getContext("2d").drawImage(v,0,0,c.width,c.height);const out=c.toDataURL("image/jpeg",quality);cleanup();resolve(out)}catch(e){cleanup();reject(e)}};
+  v.muted=true;v.playsInline=true;v.preload="metadata";
+  v.onloadedmetadata=()=>{try{v.currentTime=Math.min(Math.max(.15,(Number(v.duration)||1)*.12),Math.max(.15,(Number(v.duration)||1)-.05))}catch{capture()}};
+  v.onseeked=capture;v.onloadeddata=()=>{if(!Number.isFinite(v.duration)||v.duration<=.2)capture()};v.onerror=()=>{cleanup();reject(new Error("Video preview failed"))};v.src=url;
+})}
+async function syncPostMediaToHQ(p){
+  if(!p||!CONFIG.humans.includes(p.userId))return;
+  const marker=`mg-media-synced:${HQ_MEDIA_SYNC_VERSION}:${p.id}`;
+  if(await Store.getMeta(marker,false))return;
+  try{
+    const mediaType=p.mediaType==="video"?"video":"photo";let media={mediaType,duration:Number(p.duration||0)||0,preview:null,video:null,videoType:null,fullVideo:false};
+    if(mediaType==="video"){
+      if(!(p.video instanceof Blob))return;
+      media.preview=await videoPosterDataURL(p.video).catch(()=>null);
+      if(p.video.size<=HQ_MEDIA_MAX_VIDEO_BYTES){media.video=await blobDataURL(p.video);media.videoType=p.videoType||p.video.type||"video/mp4";media.fullVideo=true}
+    }else if(typeof p.image==="string"&&p.image){media.preview=await imagePreviewDataURL(p.image).catch(()=>null)}
+    if(!media.preview&&!media.video)return;
+    const out=await hqPost({action:"mg_media_put",postId:p.id,media});
+    if(out&&out.success!==false)await Store.setMeta(marker,true);
+  }catch{}
+}
+async function pushSnapshot(){
   const latest=state.posts.slice(0,45),lizzy=state.posts.filter(p=>p.userId==="lizzy").slice(0,20),seen=new Set(),picked=[];
   for(const p of [...lizzy,...latest]){if(!seen.has(p.id)){seen.add(p.id);picked.push(p)}}
   picked.sort((a,b)=>b.createdAt-a.createdAt);
-  const posts=picked.slice(0,60).map(p=>({
-    id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,180),mood:p.mood||"",audience:p.audience||"everyone",mediaType:p.mediaType||"photo",
+  const chosen=picked.slice(0,60);
+  const mediaPosts=chosen.filter(p=>CONFIG.humans.includes(p.userId)&&(p.mediaType==="video"||p.image)).slice(0,12);
+  for(const p of mediaPosts)await syncPostMediaToHQ(p);
+  const posts=chosen.map(p=>({
+    id:p.id,userId:p.userId,caption:(p.caption||"").slice(0,180),mood:p.mood||"",audience:p.audience||"everyone",mediaType:p.mediaType||"photo",duration:Number(p.duration||0)||0,
+    mediaAvailable:CONFIG.humans.includes(p.userId)&&!!(p.mediaType==="video"||p.image),
     thumb:(p.mediaType!=="video"&&typeof p.image==="string"&&p.image.length<1800)?p.image:null,
-    mine:p.reactions.mikael||null,rx:Object.values(p.reactions||{}).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{}),createdAt:p.createdAt,
+    hqReactionVersion:p.hqReactionVersion||null,mine:p.reactions.mikael||null,rx:Object.values(p.reactions||{}).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{}),createdAt:p.createdAt,
     comments:(p.comments||[]).slice(-8).map(c=>({id:c.id,userId:c.userId,text:String(c.text||"").slice(0,100),parentId:c.parentId||null,pinned:!!c.pinned}))
   }));
-  const sig=JSON.stringify(posts);if(sig===snapSig)return;snapSig=sig;
-  hqPost({action:"mg_snapshot_put",snapshot:{at:Date.now(),posts}}).catch(()=>{});
+  const sig=JSON.stringify(posts);if(sig===snapSig)return;
+  await hqPost({action:"mg_snapshot_put",snapshot:{at:Date.now(),posts}});snapSig=sig;
 }
 async function pollHQ(){
-  if(hqBusy||!WORKER)return;
+  if(hqBusy)return;
   hqBusy=true;
   try{
     const d=await (await fetch(WORKER+"?action=mg_queue",{cache:"no-store"})).json();
     const done=new Set(await Store.getMeta("mg-handled",[])),ids=[];
-    for(const c of d.commands||[]){ids.push(c.id);if(done.has(c.id))continue;done.add(c.id);try{await applyCommand(c)}catch{}}
-    if(ids.length){await Store.setMeta("mg-handled",[...done].slice(-200));hqPost({action:"mg_ack",ids}).catch(()=>{})}
-    pushSnapshot();
+    for(const c of d.commands||[]){
+      if(done.has(c.id)){ids.push(c.id);continue}
+      try{if(await applyCommand(c)===false)continue;done.add(c.id);ids.push(c.id)}catch{/* Keep failed commands queued for retry. */}
+    }
+    if(ids.length){await Store.setMeta("mg-handled",[...done].slice(-200));{const legacyIds=ids.filter(id=>!id.startsWith("hq_"));if(legacyIds.length)hqPost({action:"mg_ack",ids:legacyIds}).catch(()=>{})}}
+    await pushSnapshot();
   }catch{}finally{hqBusy=false}
 }
 function startHQ(){
@@ -1727,13 +1829,15 @@ function startHQ(){
 
 async function seedPresidentIfNeeded(){
   // existing installs already ran the community seed, so The President gets his own one-time seed
-  if(await Store.getMeta("npc-seed-president-v1",false))return;
-  try{await Store.setMeta("npc-seed-president-v1",true)}catch{}
-  if(state.posts.some(p=>p.userId==="thepresident"))return;
-  const u=CONFIG.users.thepresident;let t=Date.now()-1000*60*60*24*3;
-  for(const caption of u.posts){
-    t+=1000*60*60*(6+Math.random()*14);
-    const post={id:uid(),userId:u.id,image:cardImage(caption,u.tile[0],u.tile[1],u.tile[2]),caption,createdAt:Math.min(t,Date.now()-60000),reactions:{},comments:[],communityScheduled:true};
+  if(await Store.getMeta("npc-seed-president-v2",false))return;
+  try{await Store.setMeta("npc-seed-president-v2",true)}catch{}
+  const existing=state.posts.filter(p=>p.userId==="thepresident");
+  if(existing.length>=4)return;
+  const seedOrder=[2,5,15,17,24,42],u=CONFIG.users.thepresident;let t=Date.now()-1000*60*60*24*4;
+  for(const idx of seedOrder){
+    t+=1000*60*60*(7+Math.random()*10);
+    const pm=presidentMediaPick("feed",idx);
+    const post={id:uid(),userId:u.id,image:pm.image,caption:pm.caption,createdAt:Math.min(t,Date.now()-60000),reactions:{},comments:[],communityScheduled:true};
     state.posts.push(post);try{await Store.savePost(post)}catch{}
   }
   newestFirst();
@@ -1764,11 +1868,22 @@ function storyCaptionText(txt,max=110){
 }
 async function botStory(userId,caption,opts={}){
   const u=CONFIG.users[userId];if(!u)return null;
-  const img=(opts.forceImage?mediaImageFor(u,1):mediaImageFor(u,u.storyMediaChance))||(u.cartoonCount&&Math.random()<.45?cartoonImageFor(u,1):null);
   const common={id:uid(),userId,createdAt:Date.now(),reactions:{},viewers:{},duration:opts.duration||6500};
-  const st=img
-    ?{...common,kind:"photo",image:img,caption:storyCaptionText(caption||pick(u.posts||[""]))}
-    :{...common,kind:"text",text:storyCaptionText(caption||pick(u.posts||[""])),bg:opts.bg??Math.floor(Math.random()*CONFIG.storyBgs.length)};
+  let st;
+  if(userId==="thepresident"){
+    if(Math.random()<0.18&&!opts.forceImage){
+      const txt=storyCaptionText(pick(PRESIDENT_GENERIC_CAPTIONS),110);
+      st={...common,kind:"text",text:txt,bg:opts.bg??Math.floor(Math.random()*CONFIG.storyBgs.length)};
+    }else{
+      const pm=presidentMediaPick("story");
+      st={...common,kind:"photo",image:pm.image,caption:storyCaptionText(isPresidentAutoCaption(caption)?pm.caption:caption,110)};
+    }
+  }else{
+    const img=(opts.forceImage?mediaImageFor(u,1):mediaImageFor(u,u.storyMediaChance))||(u.cartoonCount&&Math.random()<.45?cartoonImageFor(u,1):null);
+    st=img
+      ?{...common,kind:"photo",image:img,caption:storyCaptionText(caption||pick(u.posts||[""]))}
+      :{...common,kind:"text",text:storyCaptionText(caption||pick(u.posts||[""])),bg:opts.bg??Math.floor(Math.random()*CONFIG.storyBgs.length)};
+  }
   state.stories.push(st);
   try{await Store.saveStory(st)}catch{}
   scheduleStoryCommunity(st);
@@ -1886,6 +2001,7 @@ function liveTimedPosts(u,now=Date.now()){
   return (u.timedPosts||[]).filter(x=>!x.from||now>=Date.parse(x.from)).filter(x=>!x.until||now<=Date.parse(x.until));
 }
 function pickAccountPost(u){
+  if(u&&u.id==="thepresident")return "__AUTO_PRESIDENT__";
   const timed=liveTimedPosts(u);
   if(timed.length&&Math.random()<.68)return pick(timed).text;
   return pick((u.posts&&u.posts.length)?u.posts:timed.map(x=>x.text));
@@ -1945,8 +2061,17 @@ async function seedBotEngagementIfNeeded(){
   }
   await Store.setMeta("bot-engagement-seed-v1",true);
 }
+function startPresidentPosts(){
+  setInterval(()=>{
+    if(document.hidden)return;
+    const u=CONFIG.users.thepresident;if(!u)return;
+    if(canScheduleFeedPost(u.id)&&Math.random()<0.0011)botPost(u.id,"__AUTO_PRESIDENT__").catch?.(()=>{});
+    if(canScheduleStory(u.id)&&Math.random()<0.0038)botStory(u.id,"__AUTO_PRESIDENT__",{forceImage:true}).catch(()=>{});
+  },20*60000);
+}
+
 function startPublicBotStories(){
-  const ids=[...OFFICE_IDS,...GILMORE_IDS,...B99_IDS,...HSM_IDS,...MOVIE_IDS,...CELEB_IDS];
+  const ids=["thepresident",...OFFICE_IDS,...GILMORE_IDS,...B99_IDS,...HSM_IDS,...MOVIE_IDS,...CELEB_IDS];
   setInterval(()=>{
     if(document.hidden)return;
     const candidates=shuffle(ids.map(id=>CONFIG.users[id]).filter(Boolean));
@@ -2194,26 +2319,20 @@ async function ensureInfluencerWeek(){
   state.influencer.history=(state.influencer.history||[]).slice(0,40);
   await persistInfluencer();
 }
-const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBTESTV1";
-const INTERNET_BANK_WALLET_KEY="lizzyMickyBucsTESTV1";
-const INTERNET_BANK_INFLUENCER_TOTAL_KEY="bankOfMickyInfluencerTotalTESTV2";
-const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsTESTV2";
+const INTERNET_BANK_CREATOR_KEY="bankOfMickyCreatorMBV1";
+const INTERNET_BANK_LEDGER_KEY="bankOfMickyTransactionsV2";
 function localBankRead(key,fallback){
   try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}
 }
 function creditInternetBank(amount,description,meta={}){
   amount=Math.round((Number(amount)||0)*100)/100;if(amount<=0)return null;
-  const oldWallet=Number(localBankRead(INTERNET_BANK_WALLET_KEY,0))||0;
-  const wallet=Math.round((oldWallet+amount)*100)/100;
-  const oldTotal=Number(localBankRead(INTERNET_BANK_INFLUENCER_TOTAL_KEY,0))||0;
-  const total=Math.round((oldTotal+amount)*100)/100;
+  const oldBalance=Number(localBankRead(INTERNET_BANK_CREATOR_KEY,0))||0;
+  const balance=Math.round((oldBalance+amount)*100)/100;
   const ledger=localBankRead(INTERNET_BANK_LEDGER_KEY,[]);
-  const tx={id:"mizzy-"+uid(),at:Date.now(),amount,description,kind:"influencer",currency:"MB",balanceAfter:wallet,...meta};
-  localStorage.setItem(INTERNET_BANK_WALLET_KEY,JSON.stringify(wallet));
-  localStorage.setItem(INTERNET_BANK_INFLUENCER_TOTAL_KEY,JSON.stringify(total));
+  const tx={id:"mizzy-"+uid(),at:Date.now(),amount,description,kind:"influencer",currency:"MB",balanceAfter:balance,...meta};
+  localStorage.setItem(INTERNET_BANK_CREATOR_KEY,JSON.stringify(balance));
   localStorage.setItem(INTERNET_BANK_LEDGER_KEY,JSON.stringify([tx,...(Array.isArray(ledger)?ledger:[])].slice(0,250)));
   window.dispatchEvent(new Event("bankOfMickyUpdated"));
-  window.dispatchEvent(new Event("lizzyStoreRefresh"));
   return tx;
 }
 async function migrateLegacyMizzyBankIfNeeded(){
@@ -2890,7 +3009,7 @@ function startBotPostCleanup(){
       if(CONFIG.users[uidKey])Object.assign(CONFIG.users[uidKey],profileOverrides[uidKey]);
     }
   }catch{}
-  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();startPublicBotStories();startBotPostCleanup();
+  route();startEvents();startHQ();startOfficePosts();startGilmorePosts();startB99Posts();startHSMPosts();startEntertainmentPosts();startPresidentPosts();startPublicBotStories();startBotPostCleanup();
   if(!Store.persistent)toast("Heads up: this browser can't save posts");
 })();
 })();

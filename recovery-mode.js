@@ -3,7 +3,7 @@
   "use strict";
   const RECOVERY_KEY = "lizzyRecoveryModeAddon";
   const OPENED_KEY = "lizzySickLetterOpenedAddon";
-  const WORKER = window.LIZZY_TELEGRAM_WORKER_URL || "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+  const WORKER = window.LIZZY_TELEGRAM_WORKER_URL || "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 
   const LETTER = `Dear Lizzy,
 

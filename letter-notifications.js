@@ -2,7 +2,7 @@
 "use strict";
 
 const WORKER = window.LIZZY_TELEGRAM_WORKER_URL ||
-  "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+  "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 
 const BUILTIN_NAMES = {
   miss: "❤️ Open When You Miss Me",
@@ -10,7 +10,8 @@ const BUILTIN_NAMES = {
   hug: "🫂 Open When You Need a Hug",
   laugh: "😂 Open When You Need to Laugh",
   sick: "🤒 Open When You’re Sick",
-  butterflies: "🦋 Open When You Need Butterflies"
+  butterflies: "🦋 Open When You Need Butterflies",
+  overthinking: "💜 Open When… You’re Overthinking Everything"
 };
 
 const recentlySent = new Map();
@@ -68,7 +69,7 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("#letterList [data-letter]");
   if (!button) return;
   const key = button.dataset.letter;
-  sendLetterOpened(key, BUILTIN_NAMES[key] || button.textContent.trim() || "Open When Letter", "Built-in");
+  sendLetterOpened(key, BUILTIN_NAMES[key] || button.textContent.trim() || "Open When Letter", "Open When");
 }, true);
 
 // Purchased letters are native <details> elements created dynamically by seed-store.js.
@@ -98,5 +99,14 @@ document.getElementById("openWhenIcon")?.addEventListener("click", () => {
   setTimeout(bindPurchasedLetters, 100);
 });
 
+window.LizzyV3NotifyStandaloneLetter=(id,title)=>sendLetterOpened(id,title,"Special Letter");
+window.LizzyV3NotifyDossierOpened=async function(file){
+ const id=String(file?.id||file?.title||'unknown');
+ const title=String(file?.title||file?.name||'Classified dossier');
+ const now=Date.now(),key='dossier:'+id;
+ if(now-(recentlySent.get(key)||0)<1800)return;
+ recentlySent.set(key,now);
+ try{await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'secret_shelf_dossier_opened',fileId:id,title,folder:'Classified Dossiers',openedAt:new Date().toISOString()})})}catch(e){console.warn('Dossier notification failed',e)}
+};
 console.log("LizzyOS Open When Telegram notifications: ONLINE");
 })();

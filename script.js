@@ -3,11 +3,13 @@
 // LIZZYOS TELEGRAM NOTIFICATION BRIDGE
 // Uses text/plain to avoid browser CORS preflight failures.
 // =====================================================
-const LIZZY_TELEGRAM_WORKER_URL = "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const LIZZY_TELEGRAM_WORKER_URL = "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+// Expose the production Worker URL to modules loaded in separate script files.
+window.LIZZY_TELEGRAM_WORKER_URL = LIZZY_TELEGRAM_WORKER_URL;
 
 async function lizzyTelegramNotify(type, title, details, extra) {
   try {
-    const walletBalance = Number(localStorage.getItem("lizzyMickyBucsTESTV1") || 0);
+    const walletBalance = Number(localStorage.getItem("lizzyMickyBucsV1") || 0);
     const payload = JSON.stringify({
       type: type || "LizzyOS Activity",
       title: title || "New Activity",
@@ -865,6 +867,29 @@ openMemoriesButton?.addEventListener("click", () => {
 // MISSION LOG
 // ========================================
 
+// Mission Archive: preserve the original bowling case while adding the completed Eastgate report.
+function openMissionReport(id){
+    const target = String(id) === "002" ? "002" : "001";
+    document.querySelectorAll("#missionWindow [data-open-mission]").forEach(btn=>{
+        const on=btn.dataset.openMission===target;
+        btn.classList.toggle("isActive",on);
+        btn.setAttribute("aria-pressed",String(on));
+    });
+    ["001","002"].forEach(num=>{
+        const view=document.getElementById("mission"+num+"View");
+        if(!view)return;
+        const on=num===target;
+        view.hidden=!on;
+        view.classList.toggle("hidden",!on);
+    });
+    const scroll=document.querySelector("#missionWindow .windowScroll");
+    if(scroll)scroll.scrollTop=0;
+}
+document.querySelector("#missionWindow .missionArchiveNav")?.addEventListener("click",e=>{
+    const btn=e.target.closest("[data-open-mission]");
+    if(btn)openMissionReport(btn.dataset.openMission);
+});
+
 function renderFirstDateBadge(){
     const box = document.getElementById("firstDateBadgeDisplay");
     const status = document.getElementById("firstDateBadgeStatus");
@@ -877,6 +902,7 @@ function renderFirstDateBadge(){
 missionIcon?.addEventListener("click", () => {
 
     missionWindow?.classList.remove("hidden");
+    openMissionReport("001");
 
     unlockAchievement("Opened Mission Log 🗂️");
 
@@ -1087,6 +1113,13 @@ openWhenLetters.butterflies = {
 };
 
 
+
+// Free, always-available letter in the original V3 Open When reader.
+if(window.LizzyV3SecretContent?.free){
+ const entry=window.LizzyV3SecretContent.free;
+ const encode=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ openWhenLetters[entry.id]={title:encode(entry.title),body:entry.content.split(/\n\n+/).map(p=>`<p>${encode(p).replace(/\n/g,"<br>")}</p>`).join("")};
+}
 
 function showOpenWhenLetter(letterKey) {
 
@@ -2062,64 +2095,108 @@ document.addEventListener("keydown", (event) => {
 // Telegram notification handling is now in letter-notifications.js.
 // =========================================================
 
-// WOULD MIKAEL RATHER — 104 mixed questions, original 40 + 64 approved Presidential choices.
-// All correct answers are private in the separate TEST Worker, not this website file.
-(()=>{'use strict';
- const $=id=>document.getElementById(id);
- let round=null,picks=[],busy=false,mode='intro';
- const endpoint=()=>String(localStorage.getItem('lizzyos_test_worker_url_v1')||window.LIZZY_TELEGRAM_WORKER_URL||'').trim().replace(/\/+$/,'');
- async function api(action,payload={}){
-  const base=endpoint();if(!base)throw Error('Your TEST Worker is not connected. Tap the TEST badge to enter its URL.');
-  const ctrl=new AbortController(),clock=setTimeout(()=>ctrl.abort(),15000);
-  try{const res=await fetch(base+'/?action='+encodeURIComponent(action),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload}),signal:ctrl.signal,cache:'no-store'});
-   const data=await res.json();if(!res.ok||data.success===false)throw Error(data.error||'The TEST Worker could not load the questions.');return data}
-  finally{clearTimeout(clock)}
- }
- function intro(){mode='intro'; $('wouldRatherIntro')?.classList.remove('hidden');$('wouldRatherPlay')?.classList.add('hidden');$('wouldRatherResult')?.classList.add('hidden');$('wouldRatherReaction').textContent=''; }
- function status(message){const el=$('wouldRatherReaction');if(el)el.textContent=message}
- async function start(){if(busy)return;busy=true;mode='loading';round=null;picks=[];
-  $('wouldRatherIntro').classList.add('hidden');$('wouldRatherResult').classList.add('hidden');$('wouldRatherPlay').classList.remove('hidden');
-  $('wouldRatherProgress').textContent='Connecting to TEST Worker…';$('wouldRatherScore').textContent='';$('wouldRatherA').disabled=$('wouldRatherB').disabled=true;
-  $('wouldRatherA').textContent='Preparing your questions…';$('wouldRatherB').textContent='';status('Mixing original questions with the approved Presidential questions.');
-  try{const result=await api('assistant_test_wyr_start');round=result.round;if(!round?.questions?.length)throw Error('No questions were returned.');mode='question';render()}
-  catch(error){mode='start-error';status('⚠️ '+error.message+' Please check the separate TEST Worker, then try again.');$('wouldRatherProgress').textContent='Unable to start';$('wouldRatherA').textContent='Try Again';$('wouldRatherB').textContent='Return';$('wouldRatherA').disabled=$('wouldRatherB').disabled=false;return}
-  finally{busy=false}
- }
- function render(){if(!round)return;
-  const q=round.questions[picks.length];$('wouldRatherProgress').textContent=`${picks.length+1}/${round.questions.length} • Q${q.n}`;
-  $('wouldRatherScore').textContent='Answers checked at the end';$('wouldRatherA').textContent=q.a;$('wouldRatherB').textContent=q.b;
-  $('wouldRatherA').disabled=$('wouldRatherB').disabled=false;status('Which would Mikael rather choose? Your score will be revealed after all five answers.');
- }
- async function pick(choice){if(mode==='start-error'){if(choice==='A')start();else intro();return}if(mode==='submit-error'){submit();return}if(busy||mode!=='question'||!round)return;
-  if(!round.questions[picks.length])return;
-  picks.push(choice);
-  if(picks.length<round.questions.length){render();return}
-  await submit()
- }
- async function submit(){if(busy||!round)return;busy=true;mode='submitting';$('wouldRatherA').disabled=$('wouldRatherB').disabled=true;status('Checking your answers against Mikael’s private answer key…');
-  try{const outcome=await api('assistant_test_wyr_submit',{id:round.id,picks});finish(outcome)}
-  catch(error){mode='submit-error';status('⚠️ '+error.message+' Try checking again.');$('wouldRatherA').disabled=false;$('wouldRatherB').disabled=true;$('wouldRatherA').textContent='Retry Results'}
-  finally{busy=false}
- }
- function finish(outcome){mode='result';const score=Number(outcome.score),total=Number(outcome.total)||5;
-  window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'would_rather_complete'}}));
-  window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'game_complete',game:'would_rather',perfect:score===total}}));
-  $('wouldRatherPlay').classList.add('hidden');$('wouldRatherResult').classList.remove('hidden');
-  const result=score===total?'DANGEROUSLY HIGH CLEARANCE 🕵️❤️':score>=4?'Very Suspicious 👀':score>=3?'Respectable 😌':score>=2?'Further Investigation Required 😂':'SECURITY CLEARANCE DENIED 🚨';
-  $('wouldRatherResultTitle').textContent=`${score}/${total} — ${result}`;
-  $('wouldRatherResultText').textContent=`${score===total?'Agent Yelizaveta knows Mr Perfect suspiciously well.':'Play another random round and prove yourself.'} Your round mixed classic and new Presidential questions.`;
-  const log=outcome.details.map((q,i)=>{const guessed=q.guess==='A'?q.a:q.b;const correct=q.correct==='BOTH'?'Either / Both':q.correct==='A'?q.a:q.b;return {questionNumber:q.n,question:`${q.a} OR ${q.b}`,lizzyAnswer:guessed,mikaelAnswer:correct,correct:q.ok?'Yes':'No'}});
-  const message=log.map((q,i)=>`${i+1}. ${q.question}\nLizzy: ${q.lizzyAnswer}\nMikael: ${q.mikaelAnswer}\nCorrect: ${q.correct}`).join('\n\n');
-  fetch('https://formspree.io/f/mrpzlzkw',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({game:'Would Mikael Rather?',score:`${score}/${total}`,result,questions_and_answers:message})}).catch(()=>{});
-  if(typeof lizzyTelegramNotify==='function')lizzyTelegramNotify('🤔 WOULD MIKAEL RATHER COMPLETED',`${score}/${total} — ${result}`,message);
- }
- $('wouldMikaelRatherIcon')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()});
- $('wouldMikaelRatherClose')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.add('hidden')});
- $('closeWouldMikaelRather')?.addEventListener('click',()=>{$('wouldMikaelRatherWindow').classList.add('hidden')});
- $('startWouldRather')?.addEventListener('click',start);$('playWouldRatherAgain')?.addEventListener('click',start);
- $('wouldRatherA')?.addEventListener('click',()=>pick('A'));
- $('wouldRatherB')?.addEventListener('click',()=>pick('B'));
- window.MixedWouldRatherTEST={open:()=>{$('wouldMikaelRatherWindow').classList.remove('hidden');intro()},start};
+// WOULD MIKAEL RATHER — PRESIDENTIAL EDITION (100 new approved questions).
+// The question bank and correct answers are held ONLY in the production V3 Worker.
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const API = window.LIZZY_TELEGRAM_WORKER_URL || 'https://mickyhq-test.mulaudzimikael73.workers.dev/v3/';
+  const VERSION='presidential-v3-100-20261018';
+  let round=null, current=0, picks=[], busy=false;
+  const app=$('wouldMikaelRatherWindow');
+  if(!app) return;
+  const intro=()=>{
+    $('wouldRatherIntro').classList.remove('hidden');
+    $('wouldRatherPlay').classList.add('hidden');
+    $('wouldRatherResult').classList.add('hidden');
+    $('wouldRatherReaction').textContent='';
+    round=null;current=0;picks=[];busy=false;
+    $('wouldRatherIntro').querySelector('.wouldRatherError')?.remove();
+  };
+  const status=(message)=>{$('wouldRatherReaction').textContent=message;};
+  async function request(action,data={}){
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({action,...data}),cache:'no-store'});
+    const value=await r.json();
+    if(!r.ok||!value?.success)throw Error(value?.error||'Could not contact the V3 game server.');
+    return value;
+  }
+  async function start(){
+    if(busy)return;
+    busy=true;
+    const go=$('startWouldRather'),again=$('playWouldRatherAgain');
+    go.disabled=again.disabled=true;
+    try{
+      const data=await request('would_rather_v3_start');
+      if(data.version!==VERSION||Number(data.totalBank)!==100||data.round?.questions?.length!==5){
+        throw Error('The live Cloudflare Worker needs the Presidential 100-question update.');
+      }
+      round=data.round;current=0;picks=[];
+      $('wouldRatherIntro').classList.add('hidden');
+      $('wouldRatherResult').classList.add('hidden');
+      $('wouldRatherPlay').classList.remove('hidden');
+      render();
+    }catch(e){
+      $('wouldRatherIntro').classList.remove('hidden');
+      $('wouldRatherPlay').classList.add('hidden');
+      $('wouldRatherResult').classList.add('hidden');
+      const text=$('wouldRatherIntro').querySelector('.wouldRatherError')||document.createElement('p');
+      text.className='wouldRatherError';text.setAttribute('role','alert');text.textContent=String(e.message||e);
+      $('wouldRatherIntro').appendChild(text);
+    }finally{busy=false;go.disabled=again.disabled=false;}
+  }
+  function render(){
+    const q=round.questions[current];
+    $('wouldRatherProgress').textContent=`${current+1}/5 • Question ${q.n}`;
+    $('wouldRatherScore').textContent=`Answered ${picks.length}/5`;
+    $('wouldRatherA').textContent=q.a;
+    $('wouldRatherB').textContent=q.b;
+    $('wouldRatherA').disabled=$('wouldRatherB').disabled=false;
+    status('Which would Mikael choose? Results are revealed after all five answers.');
+  }
+  async function pick(answer){
+    if(busy||!round||picks.length!==current)return;
+    busy=true;
+    $('wouldRatherA').disabled=$('wouldRatherB').disabled=true;
+    picks.push(answer);
+    status('Answer locked in 🔒');
+    if(current<4){current++;busy=false;render();return;}
+    status('Checking the Presidential answer key…');
+    try{
+      const outcome=await request('would_rather_v3_submit',{id:round.id,picks});
+      finish(outcome);
+    }catch(e){
+      picks.pop();
+      status('Could not check your answers: '+String(e.message||e)+' — choose your final answer again.');
+      $('wouldRatherA').disabled=$('wouldRatherB').disabled=false;
+    }finally{busy=false;}
+  }
+  function finish(data){
+    const score=data.score,total=data.total,details=data.details||[];
+    $('wouldRatherPlay').classList.add('hidden');
+    $('wouldRatherResult').classList.remove('hidden');
+    const title=score===5?'DANGEROUSLY HIGH CLEARANCE 🕵️❤️':score>=4?'Very Suspicious 👀':score>=3?'Respectable 😌':score>=2?'Further Investigation Required 😂':'SECURITY CLEARANCE DENIED 🚨';
+    $('wouldRatherResultTitle').textContent=`${score}/${total} — ${title}`;
+    const summary=details.map((q,i)=>`${i+1}. Q${q.n} ${q.a} OR ${q.b}\nLizzy: ${q.guess==='A'?q.a:q.b}\nMikael: ${q.correct==='BOTH'?'Either A or B':q.correct==='A'?q.a:q.b}\nCorrect: ${q.ok?'Yes':'No'}`).join('\n\n');
+    const resultText=$('wouldRatherResultText');
+    resultText.textContent=(score===5?'Agent Yelizaveta knows Mr Perfect suspiciously well.':'Play another round and try to outthink the President.')+' Your five questions came from the 100 approved Presidential dilemmas.';
+    // Preserve existing LizzyOS job-proof and game-completion events.
+    window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'would_rather_complete'}}));
+    window.dispatchEvent(new CustomEvent('lizzyJobProof',{detail:{type:'game_complete',game:'would_rather',perfect:score===5}}));
+    // Preserve the game's Formspree and Telegram completion reports. One submission per round.
+    if(!data.alreadySubmitted){
+      fetch('https://formspree.io/f/mrpzlzkw',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({game:'Would Mikael Rather? Presidential Edition',score:`${score}/${total}`,result:title,questions_and_answers:summary})}).catch(()=>{});
+      if(typeof lizzyTelegramNotify==='function')lizzyTelegramNotify('🤔 WOULD MIKAEL RATHER COMPLETED',`${score}/${total} — ${title}`,summary);
+    }
+  }
+  $('wouldMikaelRatherIcon')?.addEventListener('click',()=>{app.classList.remove('hidden');intro();});
+  $('wouldMikaelRatherClose')?.addEventListener('click',()=>app.classList.add('hidden'));
+  $('closeWouldMikaelRather')?.addEventListener('click',()=>app.classList.add('hidden'));
+  $('startWouldRather')?.addEventListener('click',start);
+  $('playWouldRatherAgain')?.addEventListener('click',start);
+  $('wouldRatherA')?.addEventListener('click',()=>pick('A'));
+  $('wouldRatherB')?.addEventListener('click',()=>pick('B'));
+  // The desktop Games folder opens the existing window directly; keep it compatible.
+  window.PresidentialWouldRatherV3={start,open:()=>{app.classList.remove('hidden');intro();}};
 })();
 // TIC-TAC-TOE VS MR PERFECT
 // Easy = mostly random
@@ -2667,7 +2744,24 @@ $("closeCrackCode")?.addEventListener("click",()=>$("crackCodeWindow").classList
 document.querySelectorAll("[data-mission]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.mission)));
 $("crackSubmit")?.addEventListener("click",submit);
 $("crackAnswer")?.addEventListener("keydown",e=>{if(e.key==="Enter")submit()});
-$("crackHint")?.addEventListener("click",()=>{$("crackFeedback").textContent="💡 "+missions[mid].stages[stage].hint});
+$("crackHint")?.addEventListener("click",()=>{
+ const current=missions[mid]?.stages?.[stage];
+ if(!current)return;
+ let perks={};
+ try{perks=JSON.parse(localStorage.getItem("lizzyRewardPerksV1")||"{}")||{}}catch(e){perks={}}
+ const credits=Math.max(0,Number(perks.crackHints||0));
+ if(credits>0){
+   const answers=Array.isArray(current.a)?current.a:[];
+   const sample=String(answers[0]||"").trim();
+   perks.crackHints=credits-1;
+   localStorage.setItem("lizzyRewardPerksV1",JSON.stringify(perks));
+   const extra=sample?` Reward Hint: answer starts with "${sample.charAt(0).toUpperCase()}" and is ${sample.replace(/\s/g,"").length} characters without spaces.`:"";
+   $("crackFeedback").textContent=`🎟️ REWARD HINT USED (${credits-1} left) — ${current.hint}${extra}`;
+   window.dispatchEvent(new Event("lizzyRewardPerksUpdated"));
+ }else{
+   $("crackFeedback").textContent="💡 "+current.hint+" · Earn Crack-the-Code Hint rewards for an extra answer clue.";
+ }
+});
 $("crackBack")?.addEventListener("click",()=>{clearActive();menu()});
 $("crackAnother")?.addEventListener("click",menu);
 
@@ -2689,7 +2783,7 @@ const REVERSE=[["REVERSE TOKEN", "🥤", "Reverse Token — Lizzy Owes Mikael a 
 const NORMAL=[["NORMAL", "💰", "10 Micky Bucs", "A useful little Micky Bucs boost.", {"mb": 10}], ["NORMAL", "💰", "12 Micky Bucs", "Twelve fresh Micky Bucs.", {"mb": 12}], ["NORMAL", "💰", "15 Micky Bucs", "A respectable Micky Bucs reward.", {"mb": 15}], ["NORMAL", "💰", "18 Micky Bucs", "Eighteen Micky Bucs added to the wallet.", {"mb": 18}], ["NORMAL", "💰", "20 Micky Bucs", "Twenty Micky Bucs. Not bad.", {"mb": 20}], ["NORMAL", "🌱", "Uncommon Garden Seed", "Adds a random seed to the Garden.", {"seed": "random"}], ["NORMAL", "🌷", "Pretty Flower Seed", "Adds a random seed to the Garden.", {"seed": "random"}], ["NORMAL", "🌻", "Sunflower Surprise", "Adds a random seed to the Garden.", {"seed": "random"}], ["NORMAL", "🌸", "Pink Flower Surprise", "Adds one random flower to the Garden.", {"flower": "random"}], ["NORMAL", "💧", "Garden Water Pack", "Gives the Garden a useful boost.", {"gardenBoost": true}], ["NORMAL", "🌿", "Garden Boost", "Gives one existing plant a health and growth boost.", {"gardenBoost": true}], ["NORMAL", "🎟️", "Mini Treat Token", "Redeem for one small snack or drink.", {"token": "Mini Treat Token"}], ["NORMAL", "🫂", "Hug Token", "Redeem for one proper Mikael hug.", {"token": "Hug Token"}], ["NORMAL", "🍨", "Dessert Run Token", "A dessert or ice cream run.", {"token": "Mystery Gift Token"}], ["NORMAL", "⚖️", "Argument Token", "One harmless argument advantage.", {"token": "Argument Winner Pass"}], ["NORMAL", "🍦", "Ice Cream Token", "One ice cream request.", {"token": "Mystery Gift Token"}], ["NORMAL", "🍬", "Sweet Treat Token", "One sweet treat.", {"token": "Snack Token"}], ["NORMAL", "☕", "Drink Run Token", "One coffee or hot chocolate.", {"token": "Coffee / Hot Chocolate Token"}], ["NORMAL", "💌", "Compliment Token", "One proper compliment from Mikael.", {"token": "Question Token"}], ["NORMAL", "🎵", "Song Request Token", "One song request.", {}], ["NORMAL", "🎬", "Movie Suggestion Token", "One movie suggestion with strong lobbying rights.", {}], ["NORMAL", "🎮", "Game Choice Token", "Lizzy chooses a game once.", {}], ["NORMAL", "📝", "Mini Letter", "A small personal LizzyOS letter reward.", {}], ["NORMAL", "💌", "Secret Compliment", "LizzyOS confirms you are dangerously adorable today.", {}], ["NORMAL", "📸", "Memory Unlock", "Unlock a memory prompt.", {}], ["NORMAL", "🖼️", "Gallery Surprise", "A gallery-themed surprise reward.", {}], ["NORMAL", "🎧", "Mikael Song Recommendation", "Mikael owes one song recommendation.", {}], ["NORMAL", "😂", "Mikael Joke Pack", "Premium terrible jokes from Mikael.", {}], ["NORMAL", "💡", "Premium Life Lesson", "A suspiciously premium piece of Mikael wisdom.", {}], ["NORMAL", "🏦", "Bank of Micky Bonus — 10 MB", "Ten Micky Bucs added to the wallet.", {"mb": 10}], ["NORMAL", "💸", "+10 MB Wallet Boost", "Ten Micky Bucs added to the wallet.", {"mb": 10}], ["NORMAL", "🎁", "Mystery Mini Reward", "A small LizzyOS surprise.", {}], ["NORMAL", "🌷", "Garden Mystery Item", "Adds one random flower.", {"flower": "random"}], ["NORMAL", "🪴", "Decorative Garden Item", "A small decorative Garden reward.", {}], ["NORMAL", "🎟️", "Second-Chance Token", "Save this to reroll a future Daily Reward.", {"token": "Second Chance Token"}], ["NORMAL", "🎲", "Daily Reward Reroll", "One Second Chance Token.", {"token": "Second Chance Token"}], ["NORMAL", "🔍", "Tiny Classified Clue", "One small classified clue.", {}], ["NORMAL", "🧩", "Crack-the-Code Hint", "One extra hint in a Crack the Code mission.", {}], ["NORMAL", "💌", "Open When Bonus Message", "An extra little Open When-style message.", {}], ["NORMAL", "⭐", "Lucky Star", "A small lucky-day reward.", {}], ["NORMAL", "💜", "Good Day Pass", "Official permission to have a good day.", {}], ["NORMAL", "🍝", "Pasta Appreciation Award", "Recognition for excellent pasta opinions.", {}], ["NORMAL", "🥤", "Coke Appreciation Award", "Official Coke appreciation recognition.", {}], ["NORMAL", "👸", "Little Miss Attitude Bonus", "A fully certified attitude bonus.", {}], ["NORMAL", "🤓", "Specsy Bonus", "The Specsy committee has approved this reward.", {}]];
 const RARE=[["RARE", "💰", "30 Micky Bucs", "Thirty Micky Bucs.", {"mb": 30}], ["RARE", "💰", "35 Micky Bucs", "Thirty-five Micky Bucs.", {"mb": 35}], ["RARE", "💰", "40 Micky Bucs", "Forty Micky Bucs.", {"mb": 40}], ["RARE", "💰", "50 Micky Bucs", "Fifty Micky Bucs.", {"mb": 50}], ["RARE", "🌹", "Rare Garden Seed", "Adds a random Garden seed.", {"seed": "random"}], ["RARE", "🌺", "Exotic Flower", "Adds a random flower.", {"flower": "random"}], ["RARE", "🌸", "Rare Pink Flower", "Adds a random flower.", {"flower": "random"}], ["RARE", "🌱", "Mystery Rare Seed", "Adds a random Garden seed.", {"seed": "random"}], ["RARE", "✨", "Garden Growth Boost", "Boosts an existing plant.", {"gardenBoost": true}], ["RARE", "💎", "Rare Garden Decoration", "A rare Garden decoration.", {}], ["RARE", "🎟️", "Premium Treat Token", "One special treat.", {"token": "Mystery Gift Token"}], ["RARE", "🍦", "Ice Cream Run", "Ice cream on Mikael.", {"token": "Mystery Gift Token"}], ["RARE", "🍰", "Dessert Date", "A dessert-related request.", {"token": "Food Date Token"}], ["RARE", "🎬", "Movie Night Choice", "Lizzy chooses the movie.", {"token": "Movie Night Token"}], ["RARE", "🎳", "Activity Choice", "Lizzy chooses an activity.", {"token": "Activity Date Token"}], ["RARE", "🗂️", "Classified Fragment", "One classified fragment.", {}], ["RARE", "🔐", "Vault Discount", "A rare Vault advantage.", {}], ["RARE", "🏦", "Bank of Micky Bonus — 50 MB", "Fifty Micky Bucs.", {"mb": 50}], ["RARE", "🎲", "Double Daily Reward Tomorrow", "A rare future reward perk.", {}], ["RARE", "🎁", "Mystery Rare Box", "A rare mystery surprise.", {}], ["RARE", "🧩", "Free Crack-the-Code Hint", "One free mission hint.", {}], ["RARE", "🔎", "Classified Hint", "A stronger classified clue.", {}], ["RARE", "💜", "Rare Compliment File", "A rare compliment from Mr Perfect.", {}], ["RARE", "📸", "Hidden Memory Unlock", "Unlock a hidden memory prompt.", {}], ["RARE", "🎵", "Secret Playlist Addition", "A secret playlist/song reward.", {}], ["RARE", "🏆", "Rare LizzyOS Badge", "A rare LizzyOS badge.", {}], ["RARE", "👑", "VIP Status — One Day", "One day of LizzyOS VIP status.", {}], ["RARE", "🌟", "Lucky Day Token", "A particularly lucky-day reward.", {}]];
 const EPIC=[["EPIC", "💰", "75 Micky Bucs", "Seventy-five Micky Bucs.", {"mb": 75}], ["EPIC", "💰", "100 Micky Bucs", "One hundred Micky Bucs.", {"mb": 100}], ["EPIC", "💰", "125 Micky Bucs", "One hundred and twenty-five Micky Bucs.", {"mb": 125}], ["EPIC", "🌹", "Epic Garden Seed", "Adds a random seed.", {"seed": "random"}], ["EPIC", "🌸", "Ultra-Rare Pink Flower", "Adds a random flower.", {"flower": "random"}], ["EPIC", "✨", "Garden Instant Growth", "Boosts the Garden.", {"gardenBoost": true}], ["EPIC", "👑", "Epic Garden Decoration", "An epic Garden decoration.", {}], ["EPIC", "🗂️", "Full Classified Fragment", "A major classified fragment.", {}], ["EPIC", "🔐", "Classified File Preview", "A preview of a classified file.", {}], ["EPIC", "🏦", "100 MB Bank of Micky Bonus", "One hundred Micky Bucs.", {"mb": 100}], ["EPIC", "🎁", "Epic Mystery Box", "An epic LizzyOS surprise.", {}], ["EPIC", "🎟️", "Premium Lizzy Token", "A premium Lizzy token.", {"token": "Mystery Gift Token"}], ["EPIC", "🍦", "Mikael Dessert Run", "Dessert on Mikael.", {"token": "Mystery Gift Token"}], ["EPIC", "🎳", "Activity Date Token", "Lizzy chooses a future activity.", {"token": "Activity Date Token"}], ["EPIC", "🎬", "Movie Night Token", "Lizzy chooses the movie.", {"token": "Movie Night Token"}], ["EPIC", "🍝", "Food Date Token", "Lizzy chooses where or what you eat.", {"token": "Food Date Token"}], ["EPIC", "🔓", "Vault Item Discount — 50%", "A major Vault discount.", {}], ["EPIC", "🎲", "Two Daily Reward Rerolls", "Two reroll credits.", {"token": "Second Chance Token", "count": 2}], ["EPIC", "🌟", "Double Reward Tomorrow", "A future double-reward perk.", {}], ["EPIC", "💎", "Epic LizzyOS Badge", "An epic LizzyOS badge.", {}], ["EPIC", "🕵️", "Secret Shelf Clue", "A major Secret Shelf clue.", {}], ["EPIC", "🔎", "Major Crack-the-Code Hint", "A major Crack the Code hint.", {}], ["EPIC", "💜", "Epic Surprise", "A genuinely good LizzyOS surprise.", {}], ["EPIC", "🌺", "Epic Flower Pack", "Adds three random flowers.", {"flowers": 3}]];
-const LEGENDARY=[["LEGENDARY", "💰", "250 Micky Bucs", "A legendary 250 Micky Bucs jackpot.", {"mb": 250}], ["LEGENDARY", "💰", "500 Micky Bucs", "A ridiculous 500 Micky Bucs jackpot.", {"mb": 500}], ["LEGENDARY", "🏦", "Bank of Micky Jackpot", "A legendary 300 Micky Bucs Bank jackpot.", {"mb": 300}], ["LEGENDARY", "🌱", "Legendary Garden Seed", "Adds a legendary-style Garden seed.", {"seed": "random"}], ["LEGENDARY", "🌹", "One-of-One Garden Flower", "Adds a special Garden flower.", {"flower": "random"}], ["LEGENDARY", "👑", "Legendary Garden Crown", "Unlocks the Garden Crown.", {"gardenCrown": true}], ["LEGENDARY", "🗂️", "Classified File Unlock", "Unlocks a classified file reward.", {}], ["LEGENDARY", "🔐", "Free Vault Item", "One future Vault item can be claimed free.", {}], ["LEGENDARY", "💎", "Legendary Lizzy Token", "A legendary Lizzy token.", {"token": "Mystery Gift Token"}], ["LEGENDARY", "🎁", "Legendary Mystery Box", "A major mystery surprise from Mikael.", {}], ["LEGENDARY", "🍝", "Food Date Reward", "A proper food-date reward.", {"token": "Food Date Token"}], ["LEGENDARY", "🎳", "Activity Date Reward", "A proper activity-date reward.", {"token": "Activity Date Token"}], ["LEGENDARY", "🎬", "Full Movie Night Reward", "Lizzy controls movie night.", {"token": "Movie Night Token"}], ["LEGENDARY", "🍦", "Dessert Adventure", "A proper dessert adventure.", {"token": "Mystery Gift Token"}], ["LEGENDARY", "🎟️", "Choose Your Own Reward", "Choose one reasonable cute or fun reward.", {}], ["LEGENDARY", "🎲", "Triple Reward Tomorrow", "A legendary future reward multiplier.", {}], ["LEGENDARY", "💰", "Micky Bucs ×3 Next Win", "A future Micky Bucs multiplier.", {}], ["LEGENDARY", "🌷", "Instant Garden Legendary Upgrade", "A legendary Garden boost.", {"gardenBoost": true}], ["LEGENDARY", "👑", "LizzyOS VIP Week", "Seven days of LizzyOS VIP bragging rights.", {}], ["LEGENDARY", "💜", "Mikael Surprise", "Mikael owes Lizzy a special surprise.", {}], ["LEGENDARY", "🌟", "The Mr Perfect Special", "A classified Mr Perfect special reward.", {}]];
+const LEGENDARY=[["LEGENDARY", "💰", "250 Micky Bucs", "A legendary 250 Micky Bucs jackpot.", {"mb": 250}], ["LEGENDARY", "💰", "500 Micky Bucs", "A ridiculous 500 Micky Bucs jackpot.", {"mb": 500}], ["LEGENDARY", "🏦", "Bank of Micky Jackpot", "A legendary 300 Micky Bucs Bank jackpot.", {"mb": 300}], ["LEGENDARY", "🌱", "Legendary Garden Seed", "Adds a legendary-style Garden seed.", {"seed": "random"}], ["LEGENDARY", "🌹", "One-of-One Garden Flower", "Adds a one-of-one seed for a special Garden flower.", {"seed": "oneOfOneBloomSeed"}], ["LEGENDARY", "👑", "Legendary Garden Crown", "Unlocks the Garden Crown.", {"gardenCrown": true}], ["LEGENDARY", "🗂️", "Classified File Unlock", "Unlocks a classified file reward.", {}], ["LEGENDARY", "🔐", "Free Vault Item", "One future Vault item can be claimed free.", {}], ["LEGENDARY", "💎", "Legendary Lizzy Token", "A legendary Lizzy token.", {"token": "Mystery Gift Token"}], ["LEGENDARY", "🎁", "Legendary Mystery Box", "A major mystery surprise from Mikael.", {}], ["LEGENDARY", "🍝", "Food Date Reward", "A proper food-date reward.", {"token": "Food Date Token"}], ["LEGENDARY", "🎳", "Activity Date Reward", "A proper activity-date reward.", {"token": "Activity Date Token"}], ["LEGENDARY", "🎬", "Full Movie Night Reward", "Lizzy controls movie night.", {"token": "Movie Night Token"}], ["LEGENDARY", "🍦", "Dessert Adventure", "A proper dessert adventure.", {"token": "Mystery Gift Token"}], ["LEGENDARY", "🎟️", "Choose Your Own Reward", "Choose one reasonable cute or fun reward.", {}], ["LEGENDARY", "🎲", "Triple Reward Tomorrow", "A legendary future reward multiplier.", {}], ["LEGENDARY", "💰", "Micky Bucs ×3 Next Win", "A future Micky Bucs multiplier.", {}], ["LEGENDARY", "🌷", "Instant Garden Legendary Upgrade", "A legendary Garden boost.", {"gardenBoost": true}], ["LEGENDARY", "👑", "LizzyOS VIP Week", "Seven days of LizzyOS VIP bragging rights.", {}], ["LEGENDARY", "💜", "Mikael Surprise", "Mikael owes Lizzy a special surprise.", {}], ["LEGENDARY", "🌟", "The Mr Perfect Special", "A classified Mr Perfect special reward.", {}]];
 const HISTORY_KEY="lizzyMysteryRewardHistoryV4";
 const RECENT_LIMIT=20;
 
@@ -2758,7 +2852,25 @@ function refresh(){
  }else if(sc)sc.classList.add("hidden");
  track(n);renderHistory();
 }
-function rewardOverlay(r,n,isDay7){
+function takeRewardMultiplier(r){
+ const type=Array.isArray(r)?String(r[0]||""):"";
+ // A benefit multiplier never doubles a Reverse Token penalty. It stays armed.
+ if(type==="REVERSE TOKEN")return 1;
+ let perks={};
+ try{perks=JSON.parse(localStorage.getItem("lizzyRewardPerksV1")||"{}")||{}}catch(e){perks={}}
+ let mult=1;
+ if(Number(perks.tripleNext||0)>0){
+   mult=3;perks.tripleNext=Math.max(0,Number(perks.tripleNext)-1);
+ }else if(Number(perks.doubleNext||0)>0){
+   mult=2;perks.doubleNext=Math.max(0,Number(perks.doubleNext)-1);
+ }
+ if(mult>1){
+   localStorage.setItem("lizzyRewardPerksV1",JSON.stringify(perks));
+   window.dispatchEvent(new Event("lizzyRewardPerksUpdated"));
+ }
+ return mult;
+}
+function rewardOverlay(r,n,isDay7,multiplier=1){
  let o=$("dailyRewardRevealOverlay");
  if(!o){o=document.createElement("div");o.id="dailyRewardRevealOverlay";o.className="dailyRewardRevealOverlay hidden";document.body.appendChild(o)}
  const type=r[0];
@@ -2770,7 +2882,7 @@ function rewardOverlay(r,n,isDay7){
  else if(type==="EPIC"){kicker="⚡ EPIC";headline="NOW WE'RE TALKING.";sub="Epic reward unlocked."}
  else if(type==="LEGENDARY"){kicker="🔥 LEGENDARY";headline="WAIT… YOU ACTUALLY HIT IT.";sub=isDay7?"Day 7's 40% Legendary roll came through.":"A 1% ordinary-day Legendary hit."}
  o.className=`dailyRewardRevealOverlay reveal-${type.toLowerCase().replace(/[^a-z]+/g,"-")}`;
- o.innerHTML=`<div class="dailyRewardRevealCard"><small>${kicker}</small><h2>${headline}</h2><div class="dailyRevealEmoji">${r[1]}</div><h3>${r[2]}</h3><p>${r[3]}</p><div class="dailyRevealStreak">🔥 Streak: ${n} day${n===1?"":"s"}</div><button id="closeDailyRewardReveal" type="button">Claimed ✓</button></div>`;
+ o.innerHTML=`<div class="dailyRewardRevealCard"><small>${kicker}</small><h2>${headline}</h2><div class="dailyRevealEmoji">${r[1]}</div><h3>${r[2]}</h3><p>${r[3]}</p>${multiplier>1?`<div class="dailyRewardMultiplier">✨ REWARD EFFECT ×${multiplier}</div>`:""}<div class="dailyRevealStreak">🔥 Streak: ${n} day${n===1?"":"s"}</div><button id="closeDailyRewardReveal" type="button">Claimed ✓</button></div>`;
  o.classList.remove("hidden");
  $("closeDailyRewardReveal").onclick=()=>o.classList.add("hidden");
  if(type==="LEGENDARY"&&typeof confetti==="function")confetti({particleCount:220,spread:130,origin:{y:.62}});
@@ -2779,7 +2891,7 @@ function vipRerollCurrent(){
  if(localStorage.getItem("lizzyVipRewardReroll")!=="1")return;
  const today=key(),current=reward();if(!current)return;const n=st(),day7=n%7===0,[bucket,pool]=day7?daySevenBucket(today,n):ordinaryBucket(today,n),candidates=pool.filter(r=>r[2]!==current[2]);if(!candidates.length)return;
  const replacement=candidates[ix(`${today}-${Date.now()}-vip-reroll`,candidates.length)];localStorage.setItem("lizzyMysteryReward",JSON.stringify(replacement));localStorage.removeItem("lizzyVipRewardReroll");
- const h=history();h.push({date:today,streak:n,reward:replacement,rerolled:true,replaced:current[2]});saveHistory(h);window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:replacement,date:today,streak:n,day7,rerolled:true}}));refresh();rewardOverlay(replacement,n,day7);
+ const h=history();h.push({date:today,streak:n,reward:replacement,rerolled:true,replaced:current[2]});saveHistory(h);window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:replacement,date:today,streak:n,day7,rerolled:true,rewardMultiplier:1}}));refresh();rewardOverlay(replacement,n,day7,1);
 }
 function useSecondChanceReroll(){
  let credits=0;
@@ -2792,8 +2904,8 @@ function useSecondChanceReroll(){
  try{const t=JSON.parse(localStorage.getItem("lizzyTokenJarV1")||"{}");t.rerollCredits=Math.max(0,Number(t.rerollCredits||0)-1);localStorage.setItem("lizzyTokenJarV1",JSON.stringify(t))}catch(e){}
  localStorage.setItem("lizzyMysteryReward",JSON.stringify(replacement));
  const h=history();h.push({date:today,streak:n,reward:replacement,rerolled:true,replaced:current[2],source:"Second Chance Token"});saveHistory(h);
- window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:replacement,date:today,streak:n,day7,rerolled:true}}));
- refresh();rewardOverlay(replacement,n,day7);return true;
+ window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:replacement,date:today,streak:n,day7,rerolled:true,rewardMultiplier:1}}));
+ refresh();rewardOverlay(replacement,n,day7,1);return true;
 }
 function claim(){
  let today=key();if(localStorage.getItem("lizzyMysteryOpened")===today)return;
@@ -2806,14 +2918,15 @@ function claim(){
  localStorage.setItem("lizzyMysteryStreak",String(n));
  localStorage.setItem("lizzyMysteryOpened",today);
  localStorage.setItem("lizzyMysteryReward",JSON.stringify(r));
- const h=history();h.push({date:today,streak:n,reward:r});saveHistory(h);
- window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:r,date:today,streak:n,day7}}));
+ const rewardMultiplier=takeRewardMultiplier(r);
+ const h=history();h.push({date:today,streak:n,reward:r,rewardMultiplier});saveHistory(h);
+ window.dispatchEvent(new CustomEvent("lizzyDailyRewardClaimed",{detail:{reward:r,date:today,streak:n,day7,rewardMultiplier}}));
  if(typeof lizzyTelegramNotify==="function")lizzyTelegramNotify(
    r[0]==="LEGENDARY"?"🚨 LEGENDARY REWARD CLAIMED":r[0]==="REVERSE TOKEN"?"🔄 REVERSE TOKEN AWARDED":"🎁 DAILY REWARD CLAIMED",
-   `${r[1]} ${r[2]}`,
-   `Rarity: ${r[0]}\nReward: ${r[2]}\nDetails: ${r[3]}\nStreak: ${n} day${n===1?"":"s"}\nDay 7 milestone: ${day7?"YES":"NO"}\nDate: ${today}\nStatus: CLAIMED`
+   `${r[1]} ${r[2]}${rewardMultiplier>1?` ×${rewardMultiplier}`:""}`,
+   `Rarity: ${r[0]}\nReward: ${r[2]}\nDetails: ${r[3]}\nReward effect: ×${rewardMultiplier}\nStreak: ${n} day${n===1?"":"s"}\nDay 7 milestone: ${day7?"YES":"NO"}\nDate: ${today}\nStatus: CLAIMED`
  );
- refresh();rewardOverlay(r,n,day7);
+ refresh();rewardOverlay(r,n,day7,rewardMultiplier);
 }
 function open(){$("mysteryBoxWindow").classList.remove("hidden");refresh()}
 function close(){$("mysteryBoxWindow").classList.add("hidden")}
@@ -2881,6 +2994,9 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         moonflower:  {name:"Moonflower",emoji:"🌙",img:"assets/flowers/moonflower.png",type:"flower",rarity:"Legendary"},
         starBloom:   {name:"Star Bloom",emoji:"✨",img:"assets/flowers/starBloom.png",type:"flower",rarity:"Legendary"},
         gardenCrown: {name:"Garden Crown",emoji:"👑",img:"assets/flowers/gardenCrown.png",type:"flower",rarity:"Legendary"},
+        decorativeGardenItem:{name:"Decorative Garden Item",emoji:"🪴",type:"decoration",rarity:"Normal"},
+        rareGardenDecoration:{name:"Rare Garden Decoration",emoji:"💎",type:"decoration",rarity:"Rare"},
+        epicGardenDecoration:{name:"Epic Garden Decoration",emoji:"👑",type:"decoration",rarity:"Epic"},
         bananaTree:  {name:"Suspicious Banana Tree",emoji:"🍌",img:"assets/flowers/bananaTree.png",type:"tree",rarity:"Secret"},
         jacaranda:    {name:"Jacaranda Tree",emoji:"🌳",img:"assets/flowers/jacaranda.png",type:"tree",rarity:"Uncommon"},
         willow:       {name:"Willow Tree",emoji:"🌳",img:"assets/flowers/willow.png",type:"tree",rarity:"Rare"},
@@ -2898,6 +3014,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         babysBreath: {name:"Baby's Breath",emoji:"🤍",img:"assets/flowers/babysBreath.png",type:"flower",rarity:"Common"},
         ranunculus:  {name:"Ranunculus",emoji:"🌷",img:"assets/flowers/ranunculus.png",type:"flower",rarity:"Rare"},
         blueRose:    {name:"Blue Rose",emoji:"💙",img:"assets/flowers/blueRose.png",type:"flower",rarity:"Legendary"},
+        oneOfOneBloom:{name:"One-of-One Lizzy Bloom",emoji:"🌹",type:"flower",rarity:"ONE-OF-ONE"},
         weepingCherry:{name:"Weeping Cherry Tree",emoji:"🌸",img:"assets/flowers/weepingCherry.png",type:"tree",rarity:"Rare"},
         redwood:      {name:"Redwood Tree",emoji:"🌲",img:"assets/flowers/redwood.png",type:"tree",rarity:"Epic"},
         baobab:       {name:"Baobab Tree",emoji:"🌳",img:"assets/flowers/baobab.png",type:"tree",rarity:"Epic"},
@@ -2944,6 +3061,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         daffodilSeed:{name:"Daffodil Seed",emoji:"🌼",img:"assets/flowers/daffodil.png",plant:"daffodil"},
         pinkRoseSeed:{name:"Pink Rose Seed",emoji:"🌹",img:"assets/flowers/pinkRose.png",plant:"pinkRose"},
         whiteRoseSeed:{name:"White Rose Seed",emoji:"🤍",img:"assets/flowers/whiteRose.png",plant:"whiteRose"},
+        oneOfOneBloomSeed:{name:"One-of-One Lizzy Bloom Seed",emoji:"✨",plant:"oneOfOneBloom"},
         proteaSeed:{name:"Protea Seed",emoji:"🌺",img:"assets/flowers/protea.png",plant:"protea"},
         zinniaSeed:{name:"Zinnia Seed",emoji:"🌼",img:"assets/flowers/zinnia.png",plant:"zinnia"},
         camelliaSeed:{name:"Camellia Seed",emoji:"🌸",img:"assets/flowers/camellia.png",plant:"camellia"},
@@ -3066,7 +3184,28 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         "Free Vault Token":{emoji:"🔓",desc:"One free opening of Mikael's Secret Shelf vault. Redeem to load a free Vault credit."},
         "Roast Mr Perfect Token":{emoji:"🔥",desc:"One free roast of Mr Perfect. Retaliation officially prohibited."},
         "Reverse Card Shield":{emoji:"🛡️",desc:"Cancel one Reverse Token you owe Mikael."},
-        "Firework Token":{emoji:"🎆",desc:"Mikael owes Lizzy one celebration moment."}
+        "Firework Token":{emoji:"🎆",desc:"Mikael owes Lizzy one celebration moment."},
+        "Dessert Run Token":{emoji:"🍨",desc:"One dessert or ice-cream run on Mikael."},
+        "Ice Cream Token":{emoji:"🍦",desc:"One ice-cream request on Mikael."},
+        "Compliment Token":{emoji:"💌",desc:"One proper compliment from Mikael."},
+        "Song Request Token":{emoji:"🎵",desc:"Lizzy chooses one song request for Mikael."},
+        "Movie Suggestion Token":{emoji:"🎬",desc:"Lizzy gets one movie suggestion with strong lobbying rights."},
+        "Game Choice Token":{emoji:"🎮",desc:"Lizzy chooses the game once."},
+        "Mini Letter":{emoji:"📝",desc:"Mikael owes Lizzy one small personal letter."},
+        "Gallery Surprise":{emoji:"🖼️",desc:"Mikael owes one new Gallery surprise."},
+        "Mikael Song Recommendation":{emoji:"🎧",desc:"Mikael owes Lizzy one hand-picked song recommendation."},
+        "Mikael Joke Pack":{emoji:"😂",desc:"Mikael owes a premium pack of terrible jokes."},
+        "Premium Life Lesson":{emoji:"💡",desc:"Mikael owes one suspiciously premium piece of life advice."},
+        "Open When Bonus Message":{emoji:"💌",desc:"Mikael owes one extra Open When-style message."},
+        "Premium Treat Token":{emoji:"🎟️",desc:"One special treat on Mikael."},
+        "Ice Cream Run":{emoji:"🍦",desc:"One ice-cream run on Mikael."},
+        "Rare Compliment File":{emoji:"💜",desc:"One rare Mr Perfect compliment, properly delivered."},
+        "Secret Playlist Addition":{emoji:"🎵",desc:"Mikael must add one secret song choice to the shared playlist."},
+        "Epic Mystery Box":{emoji:"🎁",desc:"Mikael owes Lizzy one epic mystery surprise."},
+        "Mikael Dessert Run":{emoji:"🍦",desc:"Dessert on Mikael."},
+        "Epic Surprise":{emoji:"💜",desc:"Mikael owes Lizzy one genuinely good surprise."},
+        "Legendary Mystery Box":{emoji:"🎁",desc:"Mikael owes one major mystery surprise."},
+        "Dessert Adventure":{emoji:"🍦",desc:"One proper dessert adventure."}
     };
 
     function defaultGarden(){
@@ -3077,6 +3216,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             plants:[],
             seeds:{},
             flowers:{},
+            harvestHistory:[],
             selectedSeed:null,
             lastWeatherApplied:"",
             lastPestApplied:"",
@@ -3092,6 +3232,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     let garden = Object.assign(defaultGarden(), safeRead(KEYS.garden, {}));
     garden.seeds = garden.seeds || {};
     garden.flowers = garden.flowers || {};
+    garden.harvestHistory = Array.isArray(garden.harvestHistory) ? garden.harvestHistory : [];
     garden.plants = Array.isArray(garden.plants) ? garden.plants : [];
     let tokens = Object.assign(defaultTokens(), safeRead(KEYS.tokens, {}));
     tokens.inventory = tokens.inventory || {};
@@ -3119,6 +3260,35 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         localStorage.setItem(KEYS.migration, "done");
     }
     migrateOnce();
+
+    // One-of-One Garden Flower reward migration (26 Sep 2026).
+    // The reward was already CLAIMED before it granted a plantable seed.
+    // Only the browser/device that carries the matching Daily Reward record receives it.
+    function grantClaimedOneOfOneSeedOnce(){
+        const grantKey="lizzyOneOfOneGardenSeedGrantV1";
+        if(localStorage.getItem(grantKey)) return;
+        let earned=false;
+        try{
+            const opened=localStorage.getItem("lizzyMysteryOpened")||"";
+            const current=JSON.parse(localStorage.getItem("lizzyMysteryReward")||"null");
+            if(opened==="2026-09-26" && Array.isArray(current) && current[2]==="One-of-One Garden Flower") earned=true;
+            if(!earned){
+                const past=JSON.parse(localStorage.getItem("lizzyMysteryRewardHistoryV4")||"[]");
+                earned=Array.isArray(past) && past.some(entry=>
+                    entry && entry.date==="2026-09-26" && Array.isArray(entry.reward) && entry.reward[2]==="One-of-One Garden Flower"
+                );
+            }
+        }catch(e){}
+        if(!earned) return;
+        garden.seeds.oneOfOneBloomSeed=Number(garden.seeds.oneOfOneBloomSeed||0)+1;
+        saveGarden();
+        localStorage.setItem(grantKey,JSON.stringify({reward:"One-of-One Garden Flower",date:"2026-09-26",seed:"oneOfOneBloomSeed",grantedAt:nowISO()}));
+        setTimeout(()=>{
+            try{renderGarden()}catch(e){}
+            gardenComment("✨ Your Day 7 LEGENDARY reward has arrived: One-of-One Lizzy Bloom Seed ×1.");
+        },0);
+    }
+    grantClaimedOneOfOneSeedOnce();
 
 
     // One-time Argument Winner Pass migration for existing Token Jars.
@@ -3223,6 +3393,77 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         if(watered>=1)return 1;
         return 0;
     }
+    // GARDEN HARVEST V3: Only ordinary flowers in the original garden.
+    // Fruit trees, ornamental trees, and the unique One-of-One Lizzy Bloom
+    // retain their existing collection/reward behaviour unchanged.
+    const HARVEST_COOLDOWN_MS = 72 * 60 * 60 * 1000;
+    function harvestableFlower(plant){
+        const f = plant && FLOWERS[plant.flowerId];
+        return !!(f && f.type === "flower" && plant.flowerId !== "oneOfOneBloom");
+    }
+    function harvestRemaining(plant){
+        if(!plant || !plant.lastHarvestAt) return 0;
+        const at = Date.parse(plant.lastHarvestAt);
+        if(!Number.isFinite(at)) return 0;
+        return Math.max(0, Math.min(HARVEST_COOLDOWN_MS, HARVEST_COOLDOWN_MS - (Date.now() - at)));
+    }
+    function harvestCountdown(ms){
+        const totalMinutes = Math.max(1, Math.ceil(ms / 60000));
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
+        if(days) return `${days}d ${hours}h`;
+        if(hours) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
+    }
+    function harvestPlant(id){
+        // Re-sync from persistent garden state before inventory-affecting action.
+        // Bouquet Studio also consumes flowers via window.LizzyGarden.addFlower.
+        const latest = safeRead(KEYS.garden, null);
+        if(latest && typeof latest === "object") {
+            garden = Object.assign(defaultGarden(), latest);
+            garden.seeds = garden.seeds || {};
+            garden.flowers = garden.flowers || {};
+            garden.harvestHistory = Array.isArray(garden.harvestHistory) ? garden.harvestHistory : [];
+            garden.plants = Array.isArray(garden.plants) ? garden.plants : [];
+        }
+        const p = garden.plants.find(x=>x.id===id);
+        if(!p || !harvestableFlower(p)) return false;
+        const f = FLOWERS[p.flowerId];
+        if(growthStage(p)<4){gardenComment('🌱 '+f.name+' is still growing.');return false;}
+        const remaining = harvestRemaining(p);
+        if(remaining>0){gardenComment('⏳ '+f.name+' is ready in '+harvestCountdown(remaining)+'.');return false;}
+        if(currentHealth(p)<45 || p.pest){
+            gardenComment('💧 Water '+f.name+' and treat any pests before harvesting.');
+            return false;
+        }
+        garden.flowers[p.flowerId] = Math.max(0, Number(garden.flowers[p.flowerId]||0)) + 1;
+        p.lastHarvestAt = nowISO();
+        p.harvestCount = Math.max(0, Number(p.harvestCount||0)) + 1;
+        garden.harvestHistory.push({plantId:p.id,flowerId:p.flowerId,at:p.lastHarvestAt});
+        garden.harvestHistory = garden.harvestHistory.slice(-100);
+        saveGarden();
+        renderGarden();
+        gardenComment('✂️ Harvested 1 '+f.name+'! Added to Flower Storage. The plant stays in its plot; next harvest in 3 days.');
+        window.dispatchEvent(new CustomEvent('lizzyGardenHarvested', {detail:{plantId:p.id,flowerId:p.flowerId,quantity:1}}));
+        return true;
+    }
+    function migrateOriginalGardenHarvestOnce(){
+        if(Number(garden.harvestFeatureVersion||0)>=1) return;
+        // Before this update, a flower was automatically awarded at maturity.
+        // Respect that historical award: a mature pre-existing flower starts
+        // its first regrowth cycle from its most recent watering timestamp.
+        // New plants have no lastHarvestAt and become ready at maturity.
+        for(const p of garden.plants){
+            if(harvestableFlower(p) && growthStage(p)>=4 && !p.lastHarvestAt){
+                p.lastHarvestAt = p.lastWatered || p.plantedAt || nowISO();
+            }
+        }
+        garden.harvestFeatureVersion = 1;
+        saveGarden();
+    }
+    migrateOriginalGardenHarvestOnce();
+
     function flowerIcon(f,size=48){
         if(f&&f.img) return `<img class="flowerImg" src="${f.img}" alt="${f.name}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle">`;
         return f?f.emoji:"🌸";
@@ -3253,6 +3494,41 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         gardenComment(`${FLOWERS[flowerId].img?"🌸":FLOWERS[flowerId].emoji} ${FLOWERS[flowerId].name} added to the collection${reason?` — ${reason}`:""}.`);
         renderGarden();
     }
+    // Garden Magic V3 bouquet checkout. Count stems, validate everything, and save
+    // inventory + idempotency receipt together so a retried delivery cannot double-charge.
+    function consumeBouquetFlowers(stems, deliveryRef){
+        const ref=String(deliveryRef||'').trim();
+        if(!/^[a-zA-Z0-9_-]{10,100}$/.test(ref))return {ok:false,error:'Invalid bouquet reference'};
+        if(!Array.isArray(stems)||stems.length>6)return {ok:false,error:'Invalid bouquet size'};
+        const latest=safeRead(KEYS.garden,null);
+        if(latest&&typeof latest==='object'){
+            garden=Object.assign(defaultGarden(),latest);
+            garden.seeds=garden.seeds||{};garden.plants=Array.isArray(garden.plants)?garden.plants:[];
+            garden.flowers=garden.flowers||{};
+        }
+        garden.bouquetRedemptions=Array.isArray(garden.bouquetRedemptions)?garden.bouquetRedemptions:[];
+        if(garden.bouquetRedemptions.includes(ref))return {ok:true,duplicate:true};
+        const counts={};
+        for(const f of stems){
+            if(!FLOWERS[f]||FLOWERS[f].type!=='flower'||f==='oneOfOneBloom')return {ok:false,error:'Invalid flower in bouquet'};
+            counts[f]=(counts[f]||0)+1;
+        }
+        for(const [f,n] of Object.entries(counts)){
+            if(Number(garden.flowers[f]||0)<n)return {ok:false,error:'Not enough '+FLOWERS[f].name+' in Flower Storage'};
+        }
+        for(const [f,n] of Object.entries(counts))garden.flowers[f]-=n;
+        garden.bouquetRedemptions.push(ref);
+        garden.bouquetRedemptions=garden.bouquetRedemptions.slice(-160);
+        saveGarden();
+        if(!$('lizzyGardenWindow')?.classList.contains('hidden'))renderCollection();
+        return {ok:true,duplicate:false};
+    }
+    function canConsumeBouquetFlowers(stems){
+        const fresh=safeRead(KEYS.garden,{flowers:{}}),counts={};
+        for(const f of stems||[])counts[f]=(counts[f]||0)+1;
+        return Object.entries(counts).every(([id,n])=>FLOWERS[id]&&FLOWERS[id].type==='flower'&&id!=='oneOfOneBloom'&&Number(fresh.flowers?.[id]||0)>=n);
+    }
+
     function randomStandardFlower(){
         return STANDARD_FLOWERS[hash(Date.now()+"flower"+Math.random())%STANDARD_FLOWERS.length];
     }
@@ -3444,9 +3720,11 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
                     ${dying?`<small class="plantDyingWarning">⏳ Wilts away in ~${hoursLeft}h without water</small>`:""}
                     <div class="plantHealthBar"><div class="plantHealthFill" style="width:${health}%"></div></div>
                     <small>💧 Last watered: ${new Date(p.lastWatered).toLocaleString()}</small>
+                    ${harvestableFlower(p)&&growthStage(p)===4?`<small class="harvest-status">${harvestRemaining(p)>0?'🌱 Next blossom: '+harvestCountdown(harvestRemaining(p)):health<45||p.pest?'💧 Plant needs care before harvest':'🌸 Blossom ready to harvest'}</small>`:''}
                     <div class="plantActions">
                         <button data-water="${p.id}">💧 Water</button>
                         <button data-boost="${p.id}">✨ Check</button>
+                        ${harvestableFlower(p)&&growthStage(p)===4?`<button data-harvest-main="${p.id}" ${harvestRemaining(p)>0||health<45||p.pest?'disabled':''}>${harvestRemaining(p)>0?'⏳ '+harvestCountdown(harvestRemaining(p)):'✂️ Harvest Flower'}</button>`:''}
                         ${pestType?`<button data-spray="${p.id}" ${Number(garden.bugSpray||0)<=0?"disabled":""}>🧴 Bug Spray (${Number(garden.bugSpray||0)})</button><button data-quickfix="${p.id}">🎯 Quick Fix</button>`:""}
                     </div>
                 </div>
@@ -3458,6 +3736,7 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
 
         host.querySelectorAll("[data-empty-slot]").forEach(el=>el.onclick=()=>plantSelectedSeed(Number(el.dataset.emptySlot)));
         host.querySelectorAll("[data-water]").forEach(b=>b.onclick=e=>{e.stopPropagation();waterPlant(b.dataset.water)});
+        host.querySelectorAll("[data-harvest-main]").forEach(b=>b.onclick=e=>{e.stopPropagation();harvestPlant(b.dataset.harvestMain)});
         host.querySelectorAll("[data-boost]").forEach(b=>b.onclick=e=>{e.stopPropagation();inspectPlant(b.dataset.boost)});
         host.querySelectorAll("[data-spray]").forEach(b=>b.onclick=e=>{e.stopPropagation();useBugSpray(b.dataset.spray)});
         host.querySelectorAll("[data-quickfix]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPestMiniGame(b.dataset.quickfix)});
@@ -3466,11 +3745,12 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     function renderCollection(){
         const host=$("gardenFlowerCollection");
         const entries=Object.entries(garden.flowers).filter(([,n])=>n>0);
-        host.innerHTML=entries.length?entries.map(([id,n])=>`
+        host.innerHTML=`<div class="gardenHarvestStorageNote">✂️ Flowers you harvest are stored here for Bouquet Studio. Existing flowers and reward items remain in your collection. Plants regrow a harvestable blossom every 3 days.</div>`+
+        (entries.length?entries.map(([id,n])=>`
             <div class="flowerCollectionChip">
                 <b>${flowerIcon(FLOWERS[id],28)} ${FLOWERS[id].name} ×${n}</b>
                 <small>${FLOWERS[id].rarity}</small>
-            </div>`).join(""):`<div class="memoryMessage">Your collection will grow as flowers bloom and rewards drop. 🌷</div>`;
+            </div>`).join(""):`<div class="memoryMessage">No harvested flowers yet. Mature a flower, then press Harvest Flower. 🌷</div>`);
     }
 
     function renderGarden(){
@@ -3490,6 +3770,10 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             .plantPestBadge{color:#d97706;font-weight:600}
             .plantDyingWarning{color:#b91c1c;font-weight:600}
             .gardenGraveyard{grid-column:1/-1;text-align:center;opacity:.65;padding:10px 0;font-size:12px}
+            .gardenHarvestStorageNote{grid-column:1/-1;width:100%;padding:9px 12px;border-radius:12px;background:rgba(92,151,95,.12);font-size:12px;line-height:1.5;color:inherit}
+            .harvest-status{display:block;color:#2b8550;font-weight:700;margin:4px 0}
+            .plantActions button[data-harvest-main]{background:#327f53;color:#fff;border:1px solid #327f53}
+            .plantActions button[data-harvest-main]:disabled{background:#8b9f90;color:#f7f7f7;cursor:not-allowed;opacity:.77}
             #gardenPestAlert{background:#fef3c7;color:#92400e;border:1px solid #f59e0b}
             .pestGameOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:center;justify-content:center}
             .pestGameCard{background:#1c2117;border:1px solid #4a5d3a;border-radius:16px;padding:20px;width:min(360px,90vw);text-align:center;color:#eef5e5;font-family:inherit}
@@ -3612,15 +3896,22 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         p.waterCount=(p.waterCount||0)+1;
         const after=growthStage(p);
         if(after===4 && before<4){
-            addFlower(p.flowerId,1,"Fully grown in the Garden");
+            if(harvestableFlower(p)){
+                gardenComment('🌸 '+FLOWERS[p.flowerId].name+' is fully grown! Press Harvest Flower to collect its first blossom.');
+            }else{
+                // Preserve the established auto-award for trees and the unique flower.
+                addFlower(p.flowerId,1,"Fully grown in the Garden");
+            }
         }
         saveGarden();
         window.dispatchEvent(new CustomEvent("lizzyJobProof",{detail:{type:"plant_watered",plantId:id}}));
         const card=document.querySelector(`[data-plant="${id}"] .plantVisual`);
         card?.classList.add("waterSplash");setTimeout(()=>card?.classList.remove("waterSplash"),700);
-        gardenComment(p.flowerId==="bananaTree"
-            ? randomFrom(MIKAEL_COMMENTS.banana)
-            : "💧 Water delivered. The plant has decided not to file a complaint today.");
+        gardenComment(after===4&&before<4&&harvestableFlower(p)
+            ? '🌸 '+FLOWERS[p.flowerId].name+' is fully grown! Harvest its blossom when you are ready.'
+            : p.flowerId==="bananaTree"
+                ? randomFrom(MIKAEL_COMMENTS.banana)
+                : "💧 Water delivered. The plant has decided not to file a complaint today.");
         renderGarden();
     }
 
@@ -3804,10 +4095,10 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
     }
 
     // Reward names that should become real redeemable tokens.
-    const REWARD_TOKEN_MAP={
-        "Song Request Token":"Song Exchange",
-        "Movie Suggestion Token":"Movie Night Token",
-        "Game Choice Token":"Activity Date Token",
+        const REWARD_TOKEN_MAP={
+        "Song Request Token":"Song Request Token",
+        "Movie Suggestion Token":"Movie Suggestion Token",
+        "Game Choice Token":"Game Choice Token",
         "Good Day Pass":"Mikael's Wild Card",
         "Lucky Day Token":"Mikael's Wild Card",
         "Free Vault Item":"Free Vault Token",
@@ -3818,27 +4109,44 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
         "Mystery Mini Reward":"Mystery Gift Token",
         "Mikael Surprise":"Legendary Mystery Gift",
         "The Mr Perfect Special":"Agent Yelizaveta VIP Pass",
-        "Epic Surprise":"Mystery Gift Token",
-        "Epic Mystery Box":"Mystery Gift Token",
-        "Legendary Mystery Box":"Legendary Mystery Gift",
+        "Epic Surprise":"Epic Surprise",
+        "Epic Mystery Box":"Epic Mystery Box",
+        "Legendary Mystery Box":"Legendary Mystery Box",
         "Choose Your Own Reward":"Your Choice Voucher",
-        "Rare Compliment File":"Question Token",
-        "Mini Letter":"Mystery Gift Token",
-        "LizzyOS VIP Week":"Ultimate Princess Day",
+        "Rare Compliment File":"Rare Compliment File",
+        "Mini Letter":"Mini Letter",
         "Premium Lizzy Token":"Mystery Gift Token",
-        "Legendary Lizzy Token":"Legendary Mystery Gift"
+        "Legendary Lizzy Token":"Legendary Mystery Gift",
+        "Dessert Run Token":"Dessert Run Token",
+        "Ice Cream Token":"Ice Cream Token",
+        "Compliment Token":"Compliment Token",
+        "Gallery Surprise":"Gallery Surprise",
+        "Mikael Song Recommendation":"Mikael Song Recommendation",
+        "Mikael Joke Pack":"Mikael Joke Pack",
+        "Premium Life Lesson":"Premium Life Lesson",
+        "Open When Bonus Message":"Open When Bonus Message",
+        "Premium Treat Token":"Premium Treat Token",
+        "Ice Cream Run":"Ice Cream Run",
+        "Secret Playlist Addition":"Secret Playlist Addition",
+        "Mikael Dessert Run":"Mikael Dessert Run",
+        "Dessert Adventure":"Dessert Adventure"
     };
     function perkSummary(){
         const perks=safeRead("lizzyRewardPerksV1",{});
+        const livePeekCredits=Math.max(0,Number(localStorage.getItem("lizzyRareSecretPeekCredits")||0));
+        const liveDiscount=Math.max(0,Number(localStorage.getItem("lizzyRareShelfDiscount")||0));
+        const discountQueue=Array.isArray(perks.vaultDiscountQueue)?perks.vaultDiscountQueue.filter(x=>Number(x)>0):[];
+        const nextDiscount=Number(discountQueue[0]||perks.vaultDiscount||liveDiscount||0);
+        const discountUses=discountQueue.length||Math.max(Number(perks.vaultDiscountUses||0),liveDiscount>0?1:0);
         const rows=[
-            ["🔓","Free Vault Credits",Number(perks.vaultFree||0),"Open Mikael's Secret Shelf vault for free."],
+            ["🔓","Free Vault / Shelf Credits",Number(perks.vaultFree||0),"Claim one Secret Shelf item or Vault opening for free."],
             ["🪙","Second Chance Rerolls",Number(tokens.rerollCredits||0),"Reroll a claimed Daily Reward."],
-            ["🔐","Classified Peeks",Number(perks.classifiedPeeks||0),"Peek at a locked Secret Shelf file."],
-            ["🕵️","Crack-the-Code Hints",Number(perks.crackHints||0),"Free hints inside Crack the Code."],
-            ["🎁","Double Reward Tomorrow",Number(perks.doubleNext||0),"Your next Daily Reward counts double."],
-            ["✨","Triple Reward Tomorrow",Number(perks.tripleNext||0),"Your next Daily Reward counts triple."],
-            ["💰","Micky Bucs ×3 Next Win",Number(perks.mbTripleNext||0),"Triples the next Micky Bucs reward."],
-            ["🛍️","Vault Discount",Number(perks.vaultDiscount||0),"Percent off your next Vault purchase."]
+            ["🔐","Classified Peeks",livePeekCredits,"Use these in Interactive Rewards to preview locked files."],
+            ["🕵️","Crack-the-Code Reward Hints",Number(perks.crackHints||0),"Use the Hint button for an extra answer clue."],
+            ["🎁","Double Reward Credits",Number(perks.doubleNext||0),"The next non-Reverse Daily Reward gets a ×2 effect."],
+            ["✨","Triple Reward Credits",Number(perks.tripleNext||0),"The next non-Reverse Daily Reward gets a ×3 effect."],
+            ["💰","Micky Bucs ×3 Credits",Number(perks.mbTripleNext||0),"Triples the next Micky Bucs Daily Reward."],
+            ["🛍️",`${nextDiscount}% Vault Discount`,discountUses,"Queued Vault discounts are used one purchase at a time; this shows the next percentage."]
         ];
         return rows.filter(r=>r[2]>0);
     }
@@ -3876,11 +4184,44 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             list.insertAdjacentElement("afterend",host);
         }
 
+        const reverse=Object.entries(tokens.reverse).filter(([,v])=>Number(v.count||0)>0)
+            .sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+        const reverseHTML=`<section class="tokenShelf tokenShelfReverse">
+            <h3>🔄 Reverse Tokens Owed <span class="tokenShelfCount">${reverse.reduce((t,[,v])=>t+Number(v.count||0),0)} outstanding</span></h3>
+            <p class="tokenShelfNote">These are the Daily Rewards where Mikael won instead. Mark one settled after it has actually happened.</p>
+            ${reverse.length?`<div class="reverseTokenGrid">${reverse.map(([name,v])=>`
+                <div class="reverseTokenCard">
+                    <span class="keepsakeEmoji">${v.emoji||"🔄"}</span>
+                    <div><strong>${esc(name)}</strong><small>${esc(v.desc||"")}${Number(v.count||0)>1?` · ×${Number(v.count)}`:""}</small></div>
+                    <button data-settle-token="${encodeURIComponent(name)}">Mark settled</button>
+                </div>`).join("")}</div>`:`<div class="memoryMessage">No Reverse Tokens owed right now. Mikael will survive.</div>`}
+        </section>`;
+
+        const activePerks=perkSummary();
+        const perksHTML=`<section class="tokenShelf tokenShelfPerks">
+            <h3>⚡ Active Reward Perks <span class="tokenShelfCount">${activePerks.reduce((t,r)=>t+Number(r[2]||0),0)} active</span></h3>
+            <p class="tokenShelfNote">These are real stored effects. Their counters now drop when the feature actually uses them.</p>
+            ${activePerks.length?`<div class="rewardPerkGrid">${activePerks.map(([emoji,name,count,desc])=>`
+                <div class="rewardPerkCard"><span>${emoji}</span><div><strong>${esc(name)}</strong><small>${esc(desc)}</small></div><b>×${count}</b></div>`).join("")}</div>`:`<div class="memoryMessage">No active perk credits.</div>`}
+        </section>`;
+
+        const perks=safeRead("lizzyRewardPerksV1",{});
+        const badgeCounts={};
+        (Array.isArray(perks.badges)?perks.badges:[]).forEach(b=>badgeCounts[b]=Number(badgeCounts[b]||0)+1);
+        const badges=Object.entries(badgeCounts);
+        const memories=Array.isArray(perks.memoryUnlocks)?perks.memoryUnlocks:[];
+        const extrasHTML=`<section class="tokenShelf tokenShelfExtras">
+            <h3>🏆 Reward Extras</h3>
+            ${badges.length?`<div class="rewardBadgeGrid">${badges.map(([name,count])=>`<div class="rewardBadgeCard"><span>${/Epic/i.test(name)?"💎":"🏆"}</span><strong>${esc(name)}</strong>${count>1?`<small>×${count}</small>`:""}</div>`).join("")}</div>`:""}
+            ${memories.length?`<details class="rewardMemoryPrompts"><summary>📸 Unlocked Memory Prompts (${memories.length})</summary>${memories.map(x=>`<article><strong>Memory unlocked</strong><p>${esc(x.text||"")}</p><small>${x.at?new Date(x.at).toLocaleDateString():"Daily Reward"}</small></article>`).join("")}</details>`:""}
+            ${!badges.length&&!memories.length?`<div class="memoryMessage">Badges and hidden-memory rewards will appear here.</div>`:""}
+        </section>`;
+
         const keeps=Object.entries(tokens.keepsakes).filter(([,v])=>Number(v.count||0)>0)
             .sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
         const keepHTML=`<section class="tokenShelf tokenShelfKeepsakes">
             <h3>🧸 Keepsake Shelf <span class="tokenShelfCount">${keeps.reduce((t,[,v])=>t+Number(v.count||0),0)} kept</span></h3>
-            <p class="tokenShelfNote">Not redeemable — just permanently yours. Virtual hugs included. 💜</p>
+            <p class="tokenShelfNote">Joke rewards and collectibles that do not promise a spendable effect live here permanently. 💜</p>
             ${keeps.length?`<div class="keepsakeGrid">${keeps.map(([name,v])=>`
                 <div class="keepsakeCard" title="${esc(v.desc||"")}">
                     <span class="keepsakeEmoji">${v.emoji||"🎁"}</span>
@@ -3890,10 +4231,12 @@ window.LizzyDailyRewardsV4={counts:{basic:BASIC.length,reverse:REVERSE.length,no
             `).join("")}</div>`:`<div class="memoryMessage">No keepsakes yet. Daily Rewards will fix that.</div>`}
         </section>`;
 
-        host.innerHTML=keepHTML;
+        host.innerHTML=reverseHTML+perksHTML+extrasHTML+keepHTML;
         host.querySelectorAll("[data-settle-token]").forEach(b=>b.onclick=()=>{
             const n=decodeURIComponent(b.dataset.settleToken);
-            if(confirm(`Mark "${n}" as settled?\n\nThis removes it from what Lizzy owes Mikael.`))settleReverse(n);
+            if(confirm(`Mark "${n}" as settled?
+
+This removes one from what Lizzy owes Mikael.`))settleReverse(n);
         });
     }
     function openRedeem(name){
@@ -4025,23 +4368,51 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
         "A mysterious seed may be hiding behind unusually good game performance."
     ];
 
+    const MEMORY_PROMPTS=[
+        "Write down one tiny moment with Mikael that made you laugh harder than it should have.",
+        "Pick one photo or memory you never want LizzyOS to lose and write one sentence about why.",
+        "What is one completely ordinary moment together that somehow became memorable?",
+        "Record one thing Mikael said that still makes you laugh when you remember it.",
+        "Choose one day you would happily replay for an hour. What made it good?",
+        "Write one future memory you hope the two of you accidentally create.",
+        "Name one moment when Mr Perfect was, very unfortunately, actually right.",
+        "Write one thing you noticed about Mikael before he realised you noticed it."
+    ];
+    function unlockMemoryPrompt(source){
+        const perkKey="lizzyRewardPerksV1";
+        const perks=safeRead(perkKey,{});
+        perks.memoryUnlocks=Array.isArray(perks.memoryUnlocks)?perks.memoryUnlocks:[];
+        const used=new Set(perks.memoryUnlocks.map(x=>String(x?.text||"")));
+        const available=MEMORY_PROMPTS.filter(x=>!used.has(x));
+        const pool=available.length?available:MEMORY_PROMPTS;
+        const text=pool[hash(nowISO()+source+Math.random())%pool.length];
+        perks.memoryUnlocks.unshift({text,source:source||"Daily Reward",at:nowISO()});
+        perks.memoryUnlocks=perks.memoryUnlocks.slice(0,30);
+        safeWrite(perkKey,perks);
+        return text;
+    }
+
     function processReward(r,opts){
         if(!Array.isArray(r))return;
         const [rarity,icon,name,desc,meta={}] = r;
         const source=(opts&&opts.source)||"Daily Reward";
+        const mult=Math.max(1,Math.floor(Number(opts&&opts.multiplier||1)));
         const routed=[];
 
         // Interactive rewards are their own app, not Jar items.
-        if(name==="VIP Status — One Day" || name==="VIP Status - One Day" || name==="Mystery Rare Box"){
-            if(window.InteractiveRewardsApp?.grant)window.InteractiveRewardsApp.grant(name);
-            else if(window.grantInteractiveReward)window.grantInteractiveReward(name);
-            else grantInteractiveFallback(name);
-            logCollected(name,icon,rarity,"Interactive Rewards");
+        if(name==="VIP Status — One Day" || name==="VIP Status - One Day" || name==="Mystery Rare Box" || name==="LizzyOS VIP Week"){
+            for(let i=0;i<mult;i++){
+                if(window.InteractiveRewardsApp?.grant)window.InteractiveRewardsApp.grant(name);
+                else if(window.grantInteractiveReward)window.grantInteractiveReward(name);
+                else grantInteractiveFallback(name);
+            }
+            logCollected(name,icon,rarity,`Interactive Rewards${mult>1?` ×${mult}`:""}`);
             saveTokens();renderTokens();
             return;
         }
 
-        // Reverse Tokens: owed to Mikael, kept on their own shelf.
+        // Reverse Tokens are penalties/IOUs and are deliberately never multiplied
+        // by a positive "Double/Triple Reward" perk.
         if(rarity==="REVERSE TOKEN" || /^Reverse Token/i.test(name)){
             addReverseToken(name,icon,desc);
             logCollected(name,icon,rarity,"Reverse shelf");
@@ -4049,110 +4420,196 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
             return;
         }
 
-        // Micky Bucs
+        const perkKey="lizzyRewardPerksV1";
+        const perks=safeRead(perkKey,{rerolls:0,doubleNext:0,tripleNext:0,mbTripleNext:0,vaultDiscount:0,vaultDiscountUses:0,vaultDiscountQueue:[],vaultFree:0,classifiedPeeks:0,crackHints:0,badges:[],memoryUnlocks:[]});
+        let perkChanged=false;
+        const addPerk=(k,n=1)=>{perks[k]=Number(perks[k]||0)+n;perkChanged=true;routed.push(`${k}${n>1?` ×${n}`:""}`)};
+
+        // Micky Bucs. Daily ×2/×3 and MB ×3 correctly stack (e.g. ×2 + MB×3 = ×6).
         if(meta.mb){
-            const perksNow=safeRead("lizzyRewardPerksV1",{});
-            let amount=Number(meta.mb||0);
-            if(Number(perksNow.mbTripleNext||0)>0){
+            let amount=Number(meta.mb||0)*mult;
+            if(Number(perks.mbTripleNext||0)>0){
                 amount*=3;
-                perksNow.mbTripleNext=Number(perksNow.mbTripleNext)-1;
-                safeWrite("lizzyRewardPerksV1",perksNow);
+                perks.mbTripleNext=Math.max(0,Number(perks.mbTripleNext)-1);
+                perkChanged=true;
             }
-            const current=Number(safeRead("lizzyMickyBucsTESTV1",0))||0;
-            safeWrite("lizzyMickyBucsTESTV1",current+amount);
+            const current=Number(safeRead("lizzyMickyBucsV1",0))||0;
+            safeWrite("lizzyMickyBucsV1",current+amount);
             window.dispatchEvent(new Event("lizzyStoreRefresh"));
             routed.push(`${amount} Micky Bucs`);
         }
 
-        // Garden: seeds, flowers and boosts always reach the Garden inventory.
+        // Garden: seeds, flowers, decorations and boosts reach the Garden inventory.
         let seeded=false;
-        if(meta.seed==="random"||meta.seed===true){grantSeedFromReward(rarity,`${source} — ${name}`);seeded=true;routed.push("Garden seed")}
-        else if(typeof meta.seed==="string"&&SEEDS[meta.seed]){addSeed(meta.seed,1,`${source} — ${name}`);seeded=true;routed.push("Garden seed")}
-        if(Number(meta.seeds||0)>0){for(let i=0;i<Number(meta.seeds);i++)grantSeedFromReward(rarity,`${source} — ${name}`);seeded=true;routed.push("Garden seeds")}
-        if(meta.flower==="random"){addFlower(randomStandardFlower(),1,source);routed.push("Garden flower")}
-        if(Number(meta.flowers||0)>0){for(let i=0;i<Number(meta.flowers);i++)addFlower(randomStandardFlower(),1,source);routed.push("Garden flowers")}
-        if(meta.gardenBoost){gardenBoost();routed.push("Garden boost")}
-        if(meta.gardenCrown){addFlower("gardenCrown",1,"LEGENDARY Garden Crown");routed.push("Garden Crown")}
+        if(meta.seed==="random"||meta.seed===true){
+            for(let i=0;i<mult;i++)grantSeedFromReward(rarity,`${source} — ${name}`);
+            seeded=true;routed.push(`Garden seed${mult>1?` ×${mult}`:""}`);
+        }else if(typeof meta.seed==="string"&&SEEDS[meta.seed]){
+            // "One-of-One" always remains exactly one, regardless of a multiplier.
+            const count=meta.seed==="oneOfOneBloomSeed"?1:mult;
+            addSeed(meta.seed,count,`${source} — ${name}`);
+            seeded=true;routed.push(`Garden seed${count>1?` ×${count}`:""}`);
+        }
+        if(Number(meta.seeds||0)>0){
+            const total=Number(meta.seeds)*mult;
+            for(let i=0;i<total;i++)grantSeedFromReward(rarity,`${source} — ${name}`);
+            seeded=true;routed.push(`Garden seeds ×${total}`);
+        }
+        if(meta.flower==="random"){
+            for(let i=0;i<mult;i++)addFlower(randomStandardFlower(),1,source);
+            routed.push(`Garden flower${mult>1?` ×${mult}`:""}`);
+        }
+        if(Number(meta.flowers||0)>0){
+            const total=Number(meta.flowers)*mult;
+            for(let i=0;i<total;i++)addFlower(randomStandardFlower(),1,source);
+            routed.push(`Garden flowers ×${total}`);
+        }
+        if(meta.gardenBoost){
+            for(let i=0;i<mult;i++)gardenBoost();
+            routed.push(`Garden boost${mult>1?` ×${mult}`:""}`);
+        }
+        if(meta.gardenCrown){
+            addFlower("gardenCrown",mult,"LEGENDARY Garden Crown");
+            routed.push(`Garden Crown${mult>1?` ×${mult}`:""}`);
+        }
 
-        // Named garden rewards
-        if(name==="Random Flower"||name==="Digital Flower"){addFlower(randomStandardFlower(),1,source);routed.push("Garden flower")}
-        else if(name==="Random Plant Seed"){grantSeedFromReward(rarity,source);seeded=true;routed.push("Garden seed")}
-        else if(name==="Garden Boost"){gardenBoost();routed.push("Garden boost")}
-        else if(name==="Rare Flower Pack"){["lilyValley","cryingLily","orchid"].forEach(id=>addFlower(id,1,"Rare Flower Pack"));routed.push("Rare Flower Pack")}
-        else if(name==="Garden Jackpot"){for(let i=0;i<5;i++)addFlower(randomStandardFlower(),1,"Garden Jackpot");routed.push("Garden Jackpot")}
-        else if(name==="Garden Crown"){addFlower("gardenCrown",1,"LEGENDARY Garden Crown");routed.push("Garden Crown")}
-        else if(name==="Garden of Lizzy"){STANDARD_FLOWERS.forEach(id=>addFlower(id,1,"Garden of Lizzy"));routed.push("Garden of Lizzy")}
+        // Named Garden rewards.
+        if(name==="Random Flower"||name==="Digital Flower"){
+            for(let i=0;i<mult;i++)addFlower(randomStandardFlower(),1,source);
+            routed.push(`Garden flower${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Random Plant Seed"){
+            for(let i=0;i<mult;i++)grantSeedFromReward(rarity,source);
+            seeded=true;routed.push(`Garden seed${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Garden Boost"){
+            for(let i=0;i<mult;i++)gardenBoost();
+            routed.push(`Garden boost${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Rare Flower Pack"){
+            for(let n=0;n<mult;n++)["lilyValley","cryingLily","orchid"].forEach(id=>addFlower(id,1,"Rare Flower Pack"));
+            routed.push(`Rare Flower Pack${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Garden Jackpot"){
+            for(let i=0;i<5*mult;i++)addFlower(randomStandardFlower(),1,"Garden Jackpot");
+            routed.push(`Garden Jackpot${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Garden Crown"){
+            addFlower("gardenCrown",mult,"LEGENDARY Garden Crown");
+            routed.push(`Garden Crown${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Garden of Lizzy"){
+            STANDARD_FLOWERS.forEach(id=>addFlower(id,mult,"Garden of Lizzy"));
+            routed.push(`Garden of Lizzy${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Decorative Garden Item"){
+            addFlower("decorativeGardenItem",mult,source);routed.push(`Garden decoration${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Rare Garden Decoration"){
+            addFlower("rareGardenDecoration",mult,source);routed.push(`Rare Garden decoration${mult>1?` ×${mult}`:""}`);
+        }else if(name==="Epic Garden Decoration"){
+            addFlower("epicGardenDecoration",mult,source);routed.push(`Epic Garden decoration${mult>1?` ×${mult}`:""}`);
+        }
 
         // Any reward that reads like a seed still plants itself in the Garden.
         if(!seeded && /\b(seed|sapling)\b/i.test(name)){
-            grantSeedFromReward(rarity,`${source} — ${name}`);
-            seeded=true;routed.push("Garden seed");
+            for(let i=0;i<mult;i++)grantSeedFromReward(rarity,`${source} — ${name}`);
+            seeded=true;routed.push(`Garden seed${mult>1?` ×${mult}`:""}`);
         }
 
-        // Tokens from metadata
-        if(meta.token){
-            const qty=Math.max(1,Number(meta.count||1));
-            for(let i=0;i<qty;i++)addToken(meta.token,1);
-            routed.push(`${meta.token} ×${qty}`);
+        // Memory rewards now unlock a real, visible prompt instead of an invisible counter.
+        if(name==="Memory Unlock" || name==="Hidden Memory Unlock"){
+            for(let i=0;i<mult;i++)unlockMemoryPrompt(name);
+            routed.push(`Memory prompt${mult>1?` ×${mult}`:""}`);
         }
 
-        // Perks and credits
-        const perkKey="lizzyRewardPerksV1";
-        const perks=safeRead(perkKey,{rerolls:0,doubleNext:0,tripleNext:0,mbTripleNext:0,vaultDiscount:0,vaultFree:0,classifiedPeeks:0,crackHints:0,badges:[],memories:0,playlistAdds:0,choiceRewards:0,surprises:[]});
-        let perkChanged=false;
-        const addPerk=(k,n=1)=>{perks[k]=Number(perks[k]||0)+n;perkChanged=true;routed.push(k)};
+        // Classified rewards: peeks are usable in Interactive Rewards.
         if(["Tiny Classified Clue","Classified Fragment","Classified Hint","Full Classified Fragment","Classified File Preview","Secret Shelf Clue","Classified File Unlock"].includes(name)){
-            const n=name==="Classified File Unlock"?3:name==="Full Classified Fragment"?2:1;
+            const baseCount=name==="Classified File Unlock"?3:name==="Full Classified Fragment"?2:1;
+            const n=baseCount*mult;
             addPerk("classifiedPeeks",n);
             localStorage.setItem("lizzyRareSecretPeekCredits",String(Number(localStorage.getItem("lizzyRareSecretPeekCredits")||0)+n));
+            // Legendary File Unlock additionally gives a real free Secret Shelf claim.
+            if(name==="Classified File Unlock"){
+                perks.vaultFree=Number(perks.vaultFree||0)+mult;
+                perkChanged=true;routed.push(`Free Secret Shelf claim${mult>1?` ×${mult}`:""}`);
+            }
         }
-        if(["Crack-the-Code Hint","Free Crack-the-Code Hint","Major Crack-the-Code Hint"].includes(name))addPerk("crackHints",name==="Major Crack-the-Code Hint"?2:1);
-        if(name==="Vault Discount"){perks.vaultDiscount=Math.max(Number(perks.vaultDiscount||0),15);perkChanged=true;localStorage.setItem("lizzyRareShelfDiscount","15");routed.push("Vault discount")}
-        if(name==="Vault Item Discount — 50%"){perks.vaultDiscount=Math.max(Number(perks.vaultDiscount||0),50);perkChanged=true;localStorage.setItem("lizzyRareShelfDiscount","50");routed.push("Vault discount")}
-        if(["Double Daily Reward Tomorrow","Double Reward Tomorrow"].includes(name))addPerk("doubleNext",1);
-        if(name==="Triple Reward Tomorrow")addPerk("tripleNext",1);
-        if(name==="Micky Bucs ×3 Next Win")addPerk("mbTripleNext",1);
-        if(name==="Hidden Memory Unlock")addPerk("memories",1);
-        if(name==="Secret Playlist Addition")addPerk("playlistAdds",1);
-        if(["Rare LizzyOS Badge","Epic LizzyOS Badge"].includes(name)){perks.badges=Array.isArray(perks.badges)?perks.badges:[];perks.badges.push(name);perkChanged=true}
-        if(perkChanged)safeWrite(perkKey,perks);
 
-        // Named rewards that are genuinely redeemable become real tokens.
+        // Crack-the-Code hint rewards now power the stronger hint button.
+        if(["Crack-the-Code Hint","Free Crack-the-Code Hint","Major Crack-the-Code Hint"].includes(name)){
+            const n=(name==="Major Crack-the-Code Hint"?2:1)*mult;
+            addPerk("crackHints",n);
+        }
+
+        // Vault discounts are queued in the order they are won, so a later 15%
+        // reward can never overwrite an unused 50% reward (or vice versa).
+        if(name==="Vault Discount" || name==="Vault Item Discount — 50%"){
+            const pct=name==="Vault Item Discount — 50%"?50:15;
+            perks.vaultDiscountQueue=Array.isArray(perks.vaultDiscountQueue)?perks.vaultDiscountQueue:[];
+            // Preserve any pre-audit live discount/use count before adding the new one.
+            if(!perks.vaultDiscountQueue.length && Number(perks.vaultDiscountUses||0)>0 && Number(perks.vaultDiscount||0)>0){
+                for(let i=0;i<Number(perks.vaultDiscountUses||0);i++)perks.vaultDiscountQueue.push(Number(perks.vaultDiscount));
+            }
+            for(let i=0;i<mult;i++)perks.vaultDiscountQueue.push(pct);
+            perks.vaultDiscountUses=perks.vaultDiscountQueue.length;
+            perks.vaultDiscount=Number(perks.vaultDiscountQueue[0]||0);
+            perkChanged=true;
+            if(perks.vaultDiscount>0)localStorage.setItem("lizzyRareShelfDiscount",String(perks.vaultDiscount));
+            routed.push(`${pct}% Vault discount ×${mult}`);
+        }
+
+        // Future multipliers. If today's reward itself was doubled, two/three future credits are earned.
+        if(["Double Daily Reward Tomorrow","Double Reward Tomorrow"].includes(name))addPerk("doubleNext",mult);
+        if(name==="Triple Reward Tomorrow")addPerk("tripleNext",mult);
+        if(name==="Micky Bucs ×3 Next Win")addPerk("mbTripleNext",mult);
+
+        // Badges are now shown in the Token Jar Reward Extras shelf.
+        if(["Rare LizzyOS Badge","Epic LizzyOS Badge"].includes(name)){
+            perks.badges=Array.isArray(perks.badges)?perks.badges:[];
+            for(let i=0;i<mult;i++)perks.badges.push(name);
+            perkChanged=true;routed.push(`${name}${mult>1?` ×${mult}`:""}`);
+        }
+
+        // Redeemable/manual rewards become exact Token Jar items. The named mapping
+        // takes priority over older generic metadata, preserving the reward promised.
         const mapped=REWARD_TOKEN_MAP[name];
-        const tokenName=(mapped&&TOKEN_DEFS[mapped])?mapped:(TOKEN_DEFS[name]?name:null);
-        if(tokenName && !(meta.token===tokenName)){addToken(tokenName,1);routed.push(tokenName)}
+        const tokenName=(mapped&&TOKEN_DEFS[mapped])?mapped:((meta.token&&TOKEN_DEFS[meta.token])?meta.token:(TOKEN_DEFS[name]?name:null));
+        if(tokenName){
+            const qty=Math.max(1,Number(meta.count||1))*mult;
+            addToken(tokenName,qty);
+            routed.push(`${tokenName} ×${qty}`);
+        }
 
-        // Lightweight instant rewards
-        if(name==="Pocket Compliment"){alert("💌 "+randomFrom(compliments,"compliment"));routed.push("Compliment")}
+        // Lightweight instant rewards.
+        if(name==="Pocket Compliment" || name==="Secret Compliment"){
+            alert("💌 "+randomFrom(compliments,"compliment"));routed.push("Compliment");
+        }
         if(name==="Cheeky Joke"){alert("😂 "+randomFrom(jokes,"joke"));routed.push("Joke")}
         if(name==="Easter Egg Hint"){alert("🕵️ "+randomFrom(hints,"hint"));routed.push("Hint")}
 
-        // Secret Mikael Seed
+        // Secret Mikael Seed.
         if(name==="Random Plant Seed" && hash(dayKey()+"mikael-secret")%23===0){
             addSeed("mikaelSeed",1,"CLASSIFIED");
         }
 
-        // Everything with no other destination is kept forever as a keepsake.
+        if(perkChanged)safeWrite(perkKey,perks);
+
+        // Everything with no other destination is a deliberate keepsake/collectible.
         if(!routed.length){
-            addKeepsake(name,icon,desc,rarity,source);
-            routed.push("Keepsake shelf");
+            for(let i=0;i<mult;i++)addKeepsake(name,icon,desc,rarity,source);
+            routed.push(`Keepsake shelf${mult>1?` ×${mult}`:""}`);
         }
 
         logCollected(name,icon,rarity,routed.join(", "));
         saveTokens();renderTokens();
+        window.dispatchEvent(new Event("lizzyRewardPerksUpdated"));
     }
     function ensureInteractiveReward(name){
         try{
             const K="lizzyInteractiveRewardsProductionV3";
             const st=safeRead(K,{})||{};
-            st.vip=Object.assign({owned:0,status:"ready"},st.vip||{});
+            st.vip=Object.assign({owned:0,weekOwned:0,status:"ready"},st.vip||{});
             st.rareBox=Object.assign({owned:0,status:"unopened"},st.rareBox||{});
             if(/VIP Status/i.test(name)){st.vip.owned=Math.max(1,Number(st.vip.owned||0));st.vip.status=st.vip.status==="active"?"active":"ready"}
+            if(/LizzyOS VIP Week/i.test(name)){st.vip.weekOwned=Math.max(1,Number(st.vip.weekOwned||0));st.vip.status=st.vip.status==="active"?"active":"ready"}
             if(/Mystery Rare Box/i.test(name)){st.rareBox.owned=Math.max(1,Number(st.rareBox.owned||0));st.rareBox.status="unopened"}
             safeWrite(K,st);
         }catch(e){}
     }
-    const PERK_NAMES=new Set(["Tiny Classified Clue","Classified Fragment","Classified Hint","Full Classified Fragment","Classified File Preview","Secret Shelf Clue","Classified File Unlock","Crack-the-Code Hint","Free Crack-the-Code Hint","Major Crack-the-Code Hint","Vault Discount","Vault Item Discount — 50%","Double Daily Reward Tomorrow","Double Reward Tomorrow","Triple Reward Tomorrow","Micky Bucs ×3 Next Win","Hidden Memory Unlock","Secret Playlist Addition","Rare LizzyOS Badge","Epic LizzyOS Badge","Pocket Compliment","Cheeky Joke","Easter Egg Hint","VIP Status — One Day","VIP Status - One Day","Mystery Rare Box"]);
+    const PERK_NAMES=new Set(["Tiny Classified Clue","Classified Fragment","Classified Hint","Full Classified Fragment","Classified File Preview","Secret Shelf Clue","Classified File Unlock","Crack-the-Code Hint","Free Crack-the-Code Hint","Major Crack-the-Code Hint","Vault Discount","Vault Item Discount — 50%","Double Daily Reward Tomorrow","Double Reward Tomorrow","Triple Reward Tomorrow","Micky Bucs ×3 Next Win","Memory Unlock","Hidden Memory Unlock","Secret Playlist Addition","Rare LizzyOS Badge","Epic LizzyOS Badge","Pocket Compliment","Secret Compliment","Cheeky Joke","Easter Egg Hint","VIP Status — One Day","VIP Status - One Day","LizzyOS VIP Week","Mystery Rare Box"]);
 
     // One-time backfill: past Daily Rewards that previously had nowhere to go
     // are recovered onto the Keepsake / Reverse shelves. Nothing that already
@@ -4176,18 +4633,87 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
         localStorage.setItem("lizzyRewardBackfillV1","done");
     }
 
+    // Reward audit repair: converts previously inert/invisible rewards into the
+    // real destinations introduced by the September 2026 reward audit.
+    if(!localStorage.getItem("lizzyRewardAuditRepairV1")){
+        try{
+            ensureShelves();
+
+            // Old "Memory Unlock" rewards were keepsakes; move them into visible prompts.
+            const oldMemoryKeepsake=Math.max(0,Number(tokens.keepsakes?.["Memory Unlock"]?.count||0));
+            if(oldMemoryKeepsake){
+                for(let i=0;i<oldMemoryKeepsake;i++)unlockMemoryPrompt("Recovered Memory Unlock");
+                delete tokens.keepsakes["Memory Unlock"];
+            }
+
+            // Hidden Memory Unlock used to be only an invisible numeric counter.
+            let p=safeRead("lizzyRewardPerksV1",{});
+            const legacyMemories=Math.max(0,Number(p.memories||0));
+            if(legacyMemories){
+                for(let i=0;i<legacyMemories;i++)unlockMemoryPrompt("Recovered Hidden Memory Unlock");
+                p=safeRead("lizzyRewardPerksV1",{});
+                p.memories=0;
+            }
+
+            // Playlist additions were also invisible; convert them to redeemable requests.
+            const playlistAdds=Math.max(0,Number(p.playlistAdds||0));
+            if(playlistAdds){
+                tokens.inventory["Secret Playlist Addition"]=Number(tokens.inventory["Secret Playlist Addition"]||0)+playlistAdds;
+                p.playlistAdds=0;
+            }
+
+            // Old discount state did not preserve individual percentages. Convert
+            // the currently active legacy discount into the new ordered queue.
+            const liveDiscount=Math.max(0,Number(localStorage.getItem("lizzyRareShelfDiscount")||0));
+            p.vaultDiscountQueue=Array.isArray(p.vaultDiscountQueue)?p.vaultDiscountQueue.filter(x=>Number(x)>0).map(Number):[];
+            if(!p.vaultDiscountQueue.length && (Number(p.vaultDiscount||0)>0||liveDiscount>0)){
+                const pct=Math.max(Number(p.vaultDiscount||0),liveDiscount);
+                const uses=Math.max(1,Number(p.vaultDiscountUses||0));
+                for(let i=0;i<uses;i++)p.vaultDiscountQueue.push(pct);
+            }
+            p.vaultDiscountUses=p.vaultDiscountQueue.length;
+            p.vaultDiscount=Number(p.vaultDiscountQueue[0]||0);
+            if(p.vaultDiscount>0)localStorage.setItem("lizzyRareShelfDiscount",String(p.vaultDiscount));
+            safeWrite("lizzyRewardPerksV1",p);
+
+            // Garden decorations used to land on the keepsake shelf.
+            const decoMap={
+                "Decorative Garden Item":"decorativeGardenItem",
+                "Rare Garden Decoration":"rareGardenDecoration",
+                "Epic Garden Decoration":"epicGardenDecoration"
+            };
+            Object.entries(decoMap).forEach(([rewardName,flowerId])=>{
+                const count=Math.max(0,Number(tokens.keepsakes?.[rewardName]?.count||0));
+                if(count){garden.flowers[flowerId]=Number(garden.flowers[flowerId]||0)+count;delete tokens.keepsakes[rewardName]}
+            });
+
+            // Manual-action rewards that used to be inert keepsakes become exact tokens.
+            ["Gallery Surprise","Mikael Song Recommendation","Mikael Joke Pack","Premium Life Lesson","Open When Bonus Message"].forEach(name=>{
+                const count=Math.max(0,Number(tokens.keepsakes?.[name]?.count||0));
+                if(count&&TOKEN_DEFS[name]){
+                    tokens.inventory[name]=Number(tokens.inventory[name]||0)+count;
+                    delete tokens.keepsakes[name];
+                }
+            });
+
+            saveGarden();saveTokens();
+        }catch(e){console.warn("Reward audit repair skipped",e)}
+        localStorage.setItem("lizzyRewardAuditRepairV1","done");
+    }
+
     function grantInteractiveFallback(name){
         try{
             const K="lizzyInteractiveRewardsProductionV3";
             const st=safeRead(K,{})||{};
-            st.vip=Object.assign({owned:0,status:"ready"},st.vip||{});
+            st.vip=Object.assign({owned:0,weekOwned:0,status:"ready"},st.vip||{});
             st.rareBox=Object.assign({owned:0,status:"unopened"},st.rareBox||{});
             if(/VIP Status/i.test(name)){st.vip.owned=Number(st.vip.owned||0)+1;st.vip.status="ready"}
+            if(/LizzyOS VIP Week/i.test(name)){st.vip.weekOwned=Number(st.vip.weekOwned||0)+1;st.vip.status="ready"}
             if(/Mystery Rare Box/i.test(name)){st.rareBox.owned=Number(st.rareBox.owned||0)+1;st.rareBox.status="unopened"}
             safeWrite(K,st);
         }catch(e){}
     }
-    window.addEventListener("lizzyDailyRewardClaimed",e=>processReward(e.detail?.reward));
+    window.addEventListener("lizzyDailyRewardClaimed",e=>processReward(e.detail?.reward,{multiplier:e.detail?.rewardMultiplier||1}));
     window.addEventListener("lizzyRareBoxInteractionWon",e=>{
         const name=e.detail?.name;
         if(name && TOKEN_DEFS[name]) addToken(name,1);
@@ -4259,7 +4785,7 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
 
     // Public helper for the upcoming Cloudflare/Telegram setup:
     // localStorage.setItem("lizzyTelegramWorkerURL","https://YOUR-WORKER.workers.dev")
-    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken};
+    window.LizzyGarden = {render:renderGarden,addSeed,addFlower,addToken,harvestPlant,consumeBouquetFlowers,canConsumeBouquetFlowers};
 
     /* ---------------------------------------------------------------
        EXTERNAL REWARD SYNC (Vault / Secret Shelf / Daily Rewards)
@@ -4273,6 +4799,7 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
             garden=Object.assign(defaultGarden(),g);
             garden.seeds=garden.seeds||{};
             garden.flowers=garden.flowers||{};
+            garden.harvestHistory=Array.isArray(garden.harvestHistory)?garden.harvestHistory:[];
             garden.plants=Array.isArray(garden.plants)?garden.plants:[];
         }
         const t=safeRead(KEYS.tokens,null);
@@ -4284,7 +4811,7 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
         try{renderTokens()}catch(e){}
         try{if(!$("lizzyGardenWindow")?.classList.contains("hidden"))renderGarden()}catch(e){}
     }
-    ["lizzyTokenJarUpdated","lizzyGardenUpdated","lizzyExternalRewardGranted","lizzyStoreRefresh"]
+    ["lizzyTokenJarUpdated","lizzyGardenUpdated","lizzyExternalRewardGranted","lizzyStoreRefresh","lizzyRewardPerksUpdated"]
         .forEach(ev=>window.addEventListener(ev,reloadRewardState));
     window.addEventListener("storage",e=>{
         if(e.key===KEYS.tokens||e.key===KEYS.garden)reloadRewardState();
@@ -4301,6 +4828,13 @@ Status: REDEEMED${isArgument?"\n\nMikael's right to appeal: DENIED 😂":""}`;
         seedIds(){return Object.keys(SEEDS)}
     };
 
+    // Repaint only while the original garden is visible; the 72-hour timer
+    // is based on saved timestamps, not on the tab remaining open.
+    setInterval(()=>{
+        if(!$('lizzyGardenWindow')?.classList.contains('hidden')){
+            try{renderPlots()}catch(e){}
+        }
+    },60000);
     renderTokens();
 })();
 
@@ -4363,6 +4897,7 @@ if(false)(() => {
  function openLetter(){
    if(localStorage.getItem(KEY)!=="yes")return;
    $("unreleasedLetterWindow")?.classList.remove("hidden");
+   window.LizzyV3NotifyStandaloneLetter?.("unreleased_legendary","The Unreleased Letter");
  }
  function unlock(showDecrypt=true){
    const first=localStorage.getItem(KEY)!=="yes";
@@ -5584,8 +6119,8 @@ const ANNOY_EFFECTS = {
     const reasons = ["for taking too long to text back", "for existing so likeably", "just because", "for winning the last argument"];
     const reason = reasons[Math.floor(Math.random() * reasons.length)];
     try {
-      const bal = Math.max(0, Number(localStorage.getItem("lizzyMickyBucsTESTV1") || 0) - 1);
-      localStorage.setItem("lizzyMickyBucsTESTV1", String(bal));
+      const bal = Math.max(0, Number(localStorage.getItem("lizzyMickyBucsV1") || 0) - 1);
+      localStorage.setItem("lizzyMickyBucsV1", String(bal));
     } catch (e) {}
     annoyToast("💸 Petty Tax: -1 MB (" + reason + ")", 3000);
   },

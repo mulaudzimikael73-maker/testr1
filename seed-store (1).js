@@ -107,7 +107,7 @@ const V2={
  pending:"lizzyMickyPendingClaimsV1", proof:"lizzyMickyProofV1"
 };
 const WALLET="lizzyMickyBucsV1", JOBSKEY="lizzyMickyJobsV1";
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL || "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL || "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const wallet=()=>Number(localStorage.getItem(WALLET)||0);
@@ -240,7 +240,7 @@ const $=id=>document.getElementById(id);
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch{return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const WALLET="lizzyMickyBucsV1",SHELF="lizzySecretShelfV1",LETTERS="lizzyPurchasedLettersV1",DOSSIERS="lizzyPurchasedDossiers",MTOKENS="lizzyMikaelTokensV1";
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const LETTER002=`Lizzy,
 
 I think one of the funniest things about getting to know someone is that eventually you start remembering things you never actually tried to remember.
@@ -908,7 +908,7 @@ localStorage.setItem(SNAP,JSON.stringify(snapshot));
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const LOCAL="lizzyMikaelTokensV1";
 const MIG="lizzyMikaelTokensCloudMigratedV2";
 const ADMIN_DEVICE="lizzyMikaelAdminDeviceV1";

@@ -1,7 +1,7 @@
 LizzyOS Telegram Update
 
 Connected to Cloudflare Worker:
-https://lizzyos-notifications.mulaudzimikael73.workers.dev/
+https://mickyhq-test.mulaudzimikael73.workers.dev/
 
 Telegram notifications added for:
 - Mikhail Quiz: score, result, each question/answer/correct answer, claimed reward

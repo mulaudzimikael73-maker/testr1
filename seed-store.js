@@ -3,7 +3,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const KEYS={
- wallet:"lizzyMickyBucsTESTV1",
+ wallet:"lizzyMickyBucsV1",
  jobs:"lizzyMickyJobsV1",
  allowance:"lizzyMickyDailyAllowanceV1",
  activity:"lizzyMickyActivityV1",
@@ -224,7 +224,7 @@ render();
 /* =========================================================
    STORE EXPANSION V2 — VERIFIED JOBS + BANK + EXTRAS
    IMPORTANT: this module NEVER initializes/overwrites:
-   lizzyMickyBucsTESTV1, lizzyMickyJobsV1, lizzyGardenV1,
+   lizzyMickyBucsV1, lizzyMickyJobsV1, lizzyGardenV1,
    lizzyTokenJarV1, lizzyMysteryStreak.
    ========================================================= */
 (() => {
@@ -235,8 +235,8 @@ const V2={
  achievements:"lizzyMickyAchievementsV1", extras:"lizzyStoreExtrasV1",
  pending:"lizzyMickyPendingClaimsV1", proof:"lizzyMickyProofV1"
 };
-const WALLET="lizzyMickyBucsTESTV1", JOBSKEY="lizzyMickyJobsV1";
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL || "https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WALLET="lizzyMickyBucsV1", JOBSKEY="lizzyMickyJobsV1";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL || "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const wallet=()=>Number(localStorage.getItem(WALLET)||0);
@@ -368,8 +368,8 @@ renderExtras();renderBank();renderAchievements();
 const $=id=>document.getElementById(id);
 const read=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch{return f}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const WALLET="lizzyMickyBucsTESTV1",SHELF="lizzySecretShelfV1",LETTERS="lizzyPurchasedLettersV1",DOSSIERS="lizzyPurchasedDossiers",MTOKENS="lizzyMikaelTokensV1";
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WALLET="lizzyMickyBucsV1",SHELF="lizzySecretShelfV1",LETTERS="lizzyPurchasedLettersV1",DOSSIERS="lizzyPurchasedDossiers",MTOKENS="lizzyMikaelTokensV1";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const LETTER002=`Lizzy,
 
 I think one of the funniest things about getting to know someone is that eventually you start remembering things you never actually tried to remember.
@@ -644,12 +644,18 @@ const ITEMS=[
 {id:"mwa_005",icon:"🎯",publicName:"Classified File #005",kind:"dossier",title:"MWA-005 — Mikael Weakness Assessment",content:MWA005,teaser:"FILE: MWA-005 • VULNERABILITIES: CLASSIFIED"},
 {id:"aypp_006",icon:"🔐",publicName:"Classified File #006",kind:"dossier",title:"AYPP-006 — Agent Yelizaveta Psychological Profile",content:AYPP006,encrypted:true,teaser:"FILE: AYPP-006 • ENCRYPTED • CLEARANCE REQUIRED"}
 ];
+// Fixed new prices; existing items retain original alternating pricing.
+const NEW_SECRET_ITEMS=(window.LizzyV3SecretContent?.items||[]);
+ITEMS.push(...NEW_SECRET_ITEMS.map(x=>({...x,icon:x.kind==="dossier"?"📁":"💌",teaser:x.kind==="dossier"?"CASE: CLASSIFIED • CONTENTS SEALED":"An unreleased letter. Contents unavailable before purchase."})));
+const escHtml=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LEGACY_LETTER_TITLES={letter_001:"The Unreleased Letter",letter_002:"A Letter About the Little Things I Remember",letter_003:"The Little Things I Notice About You",letter_004:"I've Gotten Used to You"};
+function titleForLetter(x){return (ITEMS.find(i=>i.id===x?.id)?.title)||LEGACY_LETTER_TITLES[x?.id]||x?.title||"Purchased Letter"}
 const SHELF_PRICES=[32,23];
 const VAULT_PRICE=32;
-function priceOf(i){const n=ITEMS.findIndex(x=>x.id===(i&&i.id?i.id:i));return SHELF_PRICES[(n<0?0:n)%SHELF_PRICES.length]}
+function priceOf(i){const found=ITEMS.find(x=>x.id===(i&&i.id?i.id:i));if(Number.isInteger(found?.price))return found.price;const n=ITEMS.findIndex(x=>x.id===(i&&i.id?i.id:i));return SHELF_PRICES[(n<0?0:n)%SHELF_PRICES.length]}
 const wallet=()=>Number(localStorage.getItem(WALLET)||0),setWallet=n=>localStorage.setItem(WALLET,String(Math.max(0,Math.floor(Number(n)||0))));
 const REWARD_PERKS="lizzyRewardPerksV1";
-function rewardPerks(){const p=read(REWARD_PERKS,{vaultFree:0,vaultDiscount:0});p.vaultFree=Math.max(0,Number(p.vaultFree||0));return p}
+function rewardPerks(){const p=read(REWARD_PERKS,{vaultFree:0,vaultDiscount:0,vaultDiscountUses:0,vaultDiscountQueue:[]});p.vaultFree=Math.max(0,Number(p.vaultFree||0));p.vaultDiscount=Math.max(0,Number(p.vaultDiscount||0));p.vaultDiscountUses=Math.max(0,Number(p.vaultDiscountUses||0));p.vaultDiscountQueue=Array.isArray(p.vaultDiscountQueue)?p.vaultDiscountQueue.filter(x=>Number(x)>0).map(Number):[];if(!p.vaultDiscountQueue.length&&p.vaultDiscountUses>0&&p.vaultDiscount>0){for(let i=0;i<p.vaultDiscountUses;i++)p.vaultDiscountQueue.push(p.vaultDiscount)}if(p.vaultDiscountQueue.length){p.vaultDiscount=p.vaultDiscountQueue[0];p.vaultDiscountUses=p.vaultDiscountQueue.length}return p}
 function saveRewardPerks(p){write(REWARD_PERKS,p)}
 function freeVaultCredits(){return rewardPerks().vaultFree}
 
@@ -657,7 +663,28 @@ const shelf=()=>{const s=read(SHELF,{owned:{},bids:{}});s.owned=s.owned||{};s.bi
 function addDossier(i,price=0){let l=read(DOSSIERS,[]);if(!Array.isArray(l))l=[];if(!l.some(x=>x.id===i.id)){l.push({id:i.id,title:i.title,content:i.content,encrypted:!!i.encrypted,price,acquiredAt:new Date().toISOString()});write(DOSSIERS,l)}window.dispatchEvent(new Event("lizzyClassifiedUpdated"))}
 function migrate(){const s=shelf();if(s.owned.archive_x17){const c=ITEMS.find(x=>x.id==="archive_x17");addDossier({id:"archive_x17",title:"Cody Legal Documents",content:c.content},s.owned.archive_x17.price||0)}if(s.owned.hater_file)addDossier(ITEMS.find(x=>x.id==="hater_file"),s.owned.hater_file.price||0);if(s.owned.vault||s.owned.mrperfect_file)addDossier(ITEMS.find(x=>x.id==="mrperfect_file"),s.owned.vault?.price||s.owned.mrperfect_file?.price||0);const old=read("lizzyVaultRewardsV1",[]);if(Array.isArray(old)&&old.some(x=>x.id==="mrperfect_file"||String(x.title||"").includes("#003")))addDossier(ITEMS.find(x=>x.id==="mrperfect_file"),0);let l=read(LETTERS,[]);if(Array.isArray(l)){const f=l.filter(x=>!(x.id==="letter_002"&&String(x.content||"").includes("I like us.")));if(f.length!==l.length)write(LETTERS,f)}}
 function st(b,o){return o?"OWNED 🔓":"AVAILABLE"}
-function repairPurchasedDestinations(){const s=shelf();if(s.owned.archive_x17){const c=ITEMS.find(x=>x.id==="archive_x17");if(c)addDossier({id:"archive_x17",title:"Cody Legal Documents",content:c.content},s.owned.archive_x17.price||0)}for(const id of ["dossier_001","hater_file","mrperfect_file","o4e_004","mwa_005","aypp_006"]){if(s.owned[id]){const i=ITEMS.find(x=>x.id===id);if(i)addDossier(i,s.owned[id].price||0)}}}
+function repairPurchasedDestinations(){
+ const s=shelf();
+ if(s.owned.archive_x17){const c=ITEMS.find(x=>x.id==="archive_x17");if(c)addDossier({id:"archive_x17",title:"Cody Legal Documents",content:c.content},s.owned.archive_x17.price||0)}
+ for(const id of ["dossier_001","hater_file","mrperfect_file","o4e_004","mwa_005","aypp_006",...NEW_SECRET_ITEMS.filter(x=>x.kind==="dossier").map(x=>x.id)]){
+  if(s.owned[id]){const i=ITEMS.find(x=>x.id===id);if(i)addDossier(i,s.owned[id].price||0)}
+ }
+ // Recover paid letters on the same device from ownership WITHOUT another purchase.
+ // Keep complete existing copies intact; only fill missing records or missing content.
+ const ownedLetters=ITEMS.filter(i=>i.kind==="letter"&&s.owned[i.id]);
+ if(ownedLetters.length){
+  let letters=read(LETTERS,[]);if(!Array.isArray(letters))letters=[];
+  let changed=false;
+  for(const i of ownedLetters){
+   const at=letters.findIndex(x=>x&&x.id===i.id);
+   if(at<0){letters.push({id:i.id,title:titleForLetter(i),content:i.content,folder:"open_when_purchased",purchasedAt:s.owned[i.id].at||new Date().toISOString()});changed=true}
+   else if(!String(letters[at].content||"").trim()){
+    letters[at].content=i.content;letters[at].title=titleForLetter(i);changed=true;
+   }
+  }
+  if(changed){write(LETTERS,letters);window.dispatchEvent(new Event("lizzyPurchasedLettersUpdated"))}
+ }
+}
 
 const VAULT_STATE="lizzyVaultStateV3";
 const VAULT_TOKEN="lizzyVaultTokenV1";
@@ -739,7 +766,12 @@ function renderShelf(){
  ${t>0?`<button id="openFreeVaultBtn" class="vaultOpenBtn">🎟️ OPEN VAULT WITH FREE TOKEN</button>`:`<small>No Free Vault Token available.</small>`}
  <div id="vaultResult"></div></section>
  <div class="vaultBidBox"><button id="vaultBuyBtn">🎰 OPEN THE VAULT — ${VAULT_PRICE} MB</button><small id="vaultBidStatus">Fixed price: ${VAULT_PRICE} MB. No bidding, no waiting.</small></div>
- <div class="secretShelfGrid">${(()=>{const avail=ITEMS.filter(x=>!sh.owned[x.id]);if(!avail.length)return `<p class="seedStoreIntro">🗃️ Every Secret Shelf item has been purchased. Purchased items now live in Open When → Purchased Letters, Classified Dossiers and the Token Jar.</p>`;return avail.map(i=>{const p=priceOf(i),afford=wallet()>=p,free=freeVaultCredits()>0;return `<article class="secretItem vaultItem"><div class="vaultItemIcon">${i.icon}</div><strong>${i.publicName}</strong><p>${i.teaser}</p><small class="vaultStatus">PRICE: ${p} MB</small><div class="vaultBidControls"><button data-buy-shelf="${i.id}" ${afford?"":"disabled"}>${afford?`BUY FOR ${p} MB`:`NEED ${p} MB`}</button>${free?`<button data-free-claim="${i.id}">🎟️ USE FREE CREDIT</button>`:""}</div></article>`}).join("")})()}</div>`;
+ <div class="secretShelfGrid">${(()=>{const avail=ITEMS.filter(x=>!sh.owned[x.id]);if(!avail.length)return `<p class="seedStoreIntro">🗃️ Every Secret Shelf item has been purchased. Purchased items now live in Open When → Purchased Letters, Classified Dossiers and the Token Jar.</p>`;return avail.map(i=>{const p=priceOf(i),afford=wallet()>=p,free=freeVaultCredits()>0;return `<article class="secretItem vaultItem"><div class="vaultItemIcon">${i.icon}</div><strong>${i.publicName}</strong><p>${i.teaser}</p><small class="vaultStatus">PRICE: ${p} MB</small><div class="vaultBidControls"><button data-buy-shelf="${i.id}" ${afford?"":"disabled"}>${afford?`BUY FOR ${p} MB`:`NEED ${p} MB`}</button>${free?`<button data-free-claim="${i.id}">🎟️ USE FREE CREDIT</button>`:""}</div></article>`}).join("")})()}</div>
+ <details class="vaultOwnedSummary" style="margin:18px 0;padding:12px;border:1px solid #c6abc7;border-radius:12px">
+ <summary style="cursor:pointer;font-weight:700">🗃️ My Purchased Shelf Files (${ITEMS.filter(x=>!!sh.owned[x.id]).length}) — tap to view</summary>
+ <p class="seedStoreIntro">Already purchased files never need to be bought again. Open letters in <b>Open When → Purchased Letters</b>, dossiers in <b>Classified Dossiers</b>, and token rewards in <b>Token Jar</b>.</p>
+ <div>${ITEMS.filter(x=>!!sh.owned[x.id]).map(i=>`<p style="margin:6px 0">✅ ${escHtml(i.title||i.publicName)} <small>— ${i.kind==="letter"?"Open When":i.kind==="dossier"||i.kind==="document"?"Classified Dossiers":"Token Jar"}</small></p>`).join("")||"No purchased files on this device yet."}</div>
+ </details>`;
  h.querySelector("#openFreeVaultBtn")?.addEventListener("click",()=>openVault("token"));
  h.querySelector("#vaultBuyBtn")?.addEventListener("click",buyVaultOpen);
  h.querySelectorAll("[data-buy-shelf]").forEach(x=>x.addEventListener("click",()=>buyShelfItem(x.dataset.buyShelf)));
@@ -755,13 +787,13 @@ function claimFreeVaultItem(id){
  if(!grant(i,0,true)){alert("The free claim could not be completed.");return}
  perks.vaultFree=Math.max(0,Number(perks.vaultFree||0)-1);saveRewardPerks(perks);
  window.dispatchEvent(new CustomEvent("lizzyFreeVaultItemClaimed",{detail:{itemId:i.id,item:i.publicName,remaining:perks.vaultFree}}));
- try{fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"free_vault_item_claimed",item:i.id,itemName:i.publicName,remaining:perks.vaultFree})}).catch(()=>{})}catch(e){}
+ try{fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"free_vault_item_claimed",item:i.id,itemName:i.publicName,actualTitle:i.title||i.publicName,remaining:perks.vaultFree})}).catch(()=>{})}catch(e){}
  renderShelf();
  alert(`🔓 ${i.publicName} claimed for FREE.\n\nRemaining Free Vault Item credits: ${perks.vaultFree}`);
 }
 
 function shelfNotifyPurchase(i,paid,balanceAfter){
- try{fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"secret_shelf_purchase",item:i.publicName,itemId:i.id,kind:i.kind||"item",paid,price:paid,cost:paid,balance:balanceAfter,details:`Paid: ${paid} MB\nRemaining balance: ${balanceAfter} MB`})}).catch(()=>{})}catch(e){}
+ try{fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"secret_shelf_purchase",item:i.publicName,actualTitle:(i.title||i.publicName),itemId:i.id,kind:i.kind||"item",paid,price:paid,cost:paid,balance:balanceAfter,details:`Paid: ${paid} MB\nRemaining balance: ${balanceAfter} MB`})}).catch(()=>{})}catch(e){}
 }
 function buyShelfItem(id){
  const i=ITEMS.find(x=>x.id===id);if(!i)return;
@@ -770,7 +802,8 @@ function buyShelfItem(id){
  if(before<price)return alert(`${i.publicName} costs ${price} MB.\n\nYour balance: ${before} MB.`);
  if(!confirm(`Buy ${i.publicName} for ${price} MB?\n\nBalance after purchase: ${before-price} MB`))return;
  if(!grant(i,price))return alert("The purchase could not be completed.");
- const after=wallet(),paid=Math.max(0,before-after);
+ const after=wallet(),paid=Math.max(0,Number(shelf().owned[i.id]?.price ?? (before-after)));
+ // A newly unlocked achievement may award bonus MB during checkout; receipt must still show the true item price.
  shelfNotifyPurchase(i,paid,after);
  window.dispatchEvent(new CustomEvent("lizzySecretPurchaseGranted",{detail:{itemId:i.id,kind:i.kind}}));
  repairPurchasedDestinations();renderShelf();renderLetters();renderMikaelTokens();
@@ -783,7 +816,7 @@ function buyVaultOpen(){
  try{fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"secret_shelf_purchase",item:"The Vault — one opening",itemId:"vault",kind:"vault",paid:VAULT_PRICE,price:VAULT_PRICE,cost:VAULT_PRICE,balance:before-VAULT_PRICE,details:`Paid: ${VAULT_PRICE} MB\nRemaining balance: ${before-VAULT_PRICE} MB`})}).catch(()=>{})}catch(e){}
  showVaultResult(vaultPick(),"purchase",VAULT_PRICE);
 }
-function grant(i,price,serverAccepted=false){const s=shelf();if(s.owned[i.id])return true;price=Math.max(0,Math.floor(Number(price)||0));const vd=Number(localStorage.getItem("lizzyVipShelfDiscount")||0),rd=Number(localStorage.getItem("lizzyRareShelfDiscount")||0),discount=Math.max(vd,rd),originalPrice=price;if(discount>0&&price>0){price=Math.max(1,Math.ceil(price*(100-discount)/100));localStorage.removeItem("lizzyVipShelfDiscount");localStorage.removeItem("lizzyRareShelfDiscount")}if(!serverAccepted&&(price<1||wallet()<price))return false;if(price>0)setWallet(Math.max(0,wallet()-price));s.owned[i.id]={at:new Date().toISOString(),price,originalPrice,discount};saveShelf(s);if(i.kind==="letter"){let l=read(LETTERS,[]);if(!Array.isArray(l))l=[];const entry={id:i.id,title:i.publicName,content:i.content,folder:"open_when_purchased",purchasedAt:new Date().toISOString()};const at=l.findIndex(x=>x.id===i.id);if(at>=0)l[at]={...l[at],...entry};else l.push(entry);write(LETTERS,l);renderLetters();window.dispatchEvent(new Event("lizzyPurchasedLettersUpdated"))}if(i.kind==="dossier")addDossier(i,price);if(i.kind==="document"&&i.id==="archive_x17"){addDossier({id:"archive_x17",title:"Cody Legal Documents",content:i.content},price)}if(i.kind==="mikael_token"){const t=read(MTOKENS,{inventory:{},history:[]});t.inventory=t.inventory||{};t.history=t.history||[];t.inventory["UNO Reverse"]=Number(t.inventory["UNO Reverse"]||0)+1;t.history.push({type:"earned",token:"UNO Reverse",source:"Mystery Reward",at:new Date().toISOString()});write(MTOKENS,t);renderMikaelTokens()}window.dispatchEvent(new Event("lizzyStoreRefresh"));return true}
+function grant(i,price,serverAccepted=false){const s=shelf();if(s.owned[i.id])return true;price=Math.max(0,Math.floor(Number(price)||0));const vd=Number(localStorage.getItem("lizzyVipShelfDiscount")||0),rp=rewardPerks(),rd=Number((rp.vaultDiscountQueue&&rp.vaultDiscountQueue[0])||localStorage.getItem("lizzyRareShelfDiscount")||0),discount=Math.max(vd,rd),originalPrice=price;if(discount>0&&price>0){price=Math.max(1,Math.ceil(price*(100-discount)/100));const useReward=rd>=vd&&rd>0;if(useReward){const p=rewardPerks();if(p.vaultDiscountQueue.length)p.vaultDiscountQueue.shift();else p.vaultDiscountUses=Math.max(0,Number(p.vaultDiscountUses||0)-1);p.vaultDiscountUses=p.vaultDiscountQueue.length||p.vaultDiscountUses;p.vaultDiscount=Number(p.vaultDiscountQueue[0]||0);if(p.vaultDiscountUses>0&&p.vaultDiscount>0)localStorage.setItem("lizzyRareShelfDiscount",String(p.vaultDiscount));else localStorage.removeItem("lizzyRareShelfDiscount");saveRewardPerks(p)}else if(vd>0){localStorage.removeItem("lizzyVipShelfDiscount")}window.dispatchEvent(new Event("lizzyRewardPerksUpdated"))}if(!serverAccepted&&(price<1||wallet()<price))return false;if(price>0)setWallet(Math.max(0,wallet()-price));s.owned[i.id]={at:new Date().toISOString(),price,originalPrice,discount};saveShelf(s);if(i.kind==="letter"){let l=read(LETTERS,[]);if(!Array.isArray(l))l=[];const entry={id:i.id,title:titleForLetter(i),content:i.content,folder:"open_when_purchased",purchasedAt:new Date().toISOString()};const at=l.findIndex(x=>x.id===i.id);if(at>=0)l[at]={...l[at],...entry};else l.push(entry);write(LETTERS,l);renderLetters();window.dispatchEvent(new Event("lizzyPurchasedLettersUpdated"))}if(i.kind==="dossier")addDossier(i,price);if(i.kind==="document"&&i.id==="archive_x17"){addDossier({id:"archive_x17",title:"Cody Legal Documents",content:i.content},price)}if(i.kind==="mikael_token"){const t=read(MTOKENS,{inventory:{},history:[]});t.inventory=t.inventory||{};t.history=t.history||[];t.inventory["UNO Reverse"]=Number(t.inventory["UNO Reverse"]||0)+1;t.history.push({type:"earned",token:"UNO Reverse",source:"Mystery Reward",at:new Date().toISOString()});write(MTOKENS,t);renderMikaelTokens()}window.dispatchEvent(new Event("lizzyStoreRefresh"));return true}
 async function sync(){return}
 async function pollVault(){return}
 async function poll(){repairPurchasedDestinations();renderShelf();renderLetters();renderMikaelTokens()}
@@ -792,12 +825,13 @@ async function notifyPurchasedLetterOpened(letter){
   await fetch(WORKER,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
    type:"secret_shelf_letter_opened",
    letterId:String(letter?.id||""),
-   title:String(letter?.title||"Purchased Letter"),
+   title:titleForLetter(letter),folder:"Purchased Letters",
    openedAt:new Date().toISOString()
   })});
  }catch(e){console.warn("Letter-open notification failed",e)}
 }
-function renderLetters(){const w=$("openWhenWindow")||$("openWhenFolderWindow");if(!w)return;const host=w.querySelector(".windowScroll")||w;let b=$("purchasedLettersBox");if(!b){b=document.createElement("section");b.id="purchasedLettersBox";host.appendChild(b)}const l=read(LETTERS,[]);b.innerHTML=Array.isArray(l)&&l.length?`<h3>🛍️ Purchased Letters</h3>${l.map((x,i)=>`<article class="purchasedLetter"><div class="purchasedLetterHead"><strong>💌 ${x.title}</strong><button type="button" data-purchased-letter-open="${i}">OPEN LETTER</button></div><div class="purchasedLetterBody hidden" data-purchased-letter-body="${i}"><pre>${x.content}</pre></div></article>`).join("")}`:"";b.querySelectorAll("[data-purchased-letter-open]").forEach(btn=>btn.addEventListener("click",()=>{const i=Number(btn.dataset.purchasedLetterOpen),letter=l[i],body=b.querySelector(`[data-purchased-letter-body="${i}"]`);if(!letter||!body)return;const opening=body.classList.contains("hidden");body.classList.toggle("hidden");btn.textContent=opening?"CLOSE LETTER":"OPEN LETTER";if(opening)notifyPurchasedLetterOpened(letter)}))}
+function upgradePurchasedLetterTitles(){const l=read(LETTERS,[]);if(!Array.isArray(l))return;let changed=false;for(const x of l){if(!x||!x.id)continue;const correct=titleForLetter(x);if(correct&&x.title!==correct&&(LEGACY_LETTER_TITLES[x.id]||NEW_SECRET_ITEMS.some(i=>i.id===x.id))){x.title=correct;changed=true}}if(changed)write(LETTERS,l)}
+function renderLetters(){upgradePurchasedLetterTitles();const w=$("openWhenWindow")||$("openWhenFolderWindow");if(!w)return;const host=w.querySelector(".windowScroll")||w;let b=$("purchasedLettersBox");if(!b){b=document.createElement("section");b.id="purchasedLettersBox";host.appendChild(b)}const l=read(LETTERS,[]);b.innerHTML=Array.isArray(l)&&l.length?`<h3>🛍️ Purchased Letters</h3>${l.map((x,i)=>`<article class="purchasedLetter"><div class="purchasedLetterHead"><strong>💌 ${escHtml(x.title)}</strong><button type="button" data-purchased-letter-open="${i}">OPEN LETTER</button></div><div class="purchasedLetterBody hidden" data-purchased-letter-body="${i}"><pre>${escHtml(x.content)}</pre></div></article>`).join("")}`:"";b.querySelectorAll("[data-purchased-letter-open]").forEach(btn=>btn.addEventListener("click",()=>{const i=Number(btn.dataset.purchasedLetterOpen),letter=l[i],body=b.querySelector(`[data-purchased-letter-body="${i}"]`);if(!letter||!body)return;const opening=body.classList.contains("hidden");body.classList.toggle("hidden");btn.textContent=opening?"CLOSE LETTER":"OPEN LETTER";if(opening)notifyPurchasedLetterOpened(letter)}))}
 function renderMikaelTokens(){const w=$("tokenJarWindow");if(!w)return;const host=w.querySelector(".windowScroll")||w;let b=$("mikaelTokensBox");if(!b){b=document.createElement("section");b.id="mikaelTokensBox";host.appendChild(b)}const t=read(MTOKENS,{inventory:{}}),n=Number(t.inventory?.["UNO Reverse"]||0);b.innerHTML=n?`<h3>🕴️ Mikael's Tokens</h3><div class="tokenCard"><div class="tokenCardEmoji">🔄</div><div><strong>UNO Reverse</strong><p>Mikael has the power: one playful, reasonable request for Lizzy.</p></div><div class="tokenCount">×${n}</div></div>`:""}
 migrate();repairPurchasedDestinations();$("seedStoreIcon")?.addEventListener("click",()=>setTimeout(()=>{renderShelf();poll()},60));document.querySelector('[data-store-tab="secret"]')?.addEventListener("click",()=>setTimeout(poll,30));$("openWhenIcon")?.addEventListener("click",()=>setTimeout(renderLetters,60));window.addEventListener("lizzyPurchasedLettersUpdated",renderLetters);window.addEventListener("lizzySecretPurchaseGranted",e=>{if(e.detail?.kind==="letter")renderLetters()});$("tokenJarIcon")?.addEventListener("click",()=>setTimeout(renderMikaelTokens,60));window.addEventListener("focus",()=>{if(!$("secretShelfPanel")?.classList.contains("hidden"))poll()});document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll()});window.addEventListener("focus",()=>poll());renderShelf();pollVault();renderLetters();renderMikaelTokens();setTimeout(poll,500);
 })();
@@ -1012,7 +1046,7 @@ localStorage.setItem(SNAP,JSON.stringify(snapshot));
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://lizzyos-notifications.mulaudzimikael73.workers.dev/";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
 const LOCAL="lizzyMikaelTokensV1";
 const MIG="lizzyMikaelTokensCloudMigratedV2";
 const ADMIN_DEVICE="lizzyMikaelAdminDeviceV1";
