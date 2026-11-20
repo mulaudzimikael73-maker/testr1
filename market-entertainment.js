@@ -2,7 +2,7 @@
 "use strict";
 const core=window.LizzyInternetCore;if(!core)return;
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const WORKER=(core.worker||window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/").trim();
+const WORKER=(core.worker||window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/").trim();
 const MARKET_KEY="lizzyFictionalStockMarketV1",ENT_KEY="lizzyEntertainmentTicketsV1";
 const MARKET_TICK_MS=30*60*1000;
 const STOCKS=[
@@ -124,18 +124,7 @@ function market(){
  const news=s.news.slice(0,5).map(n=>`<div class="marketNewsItem ${esc(n.sentiment||"neutral")}"><b>${sentIcon(n)} ${esc(n.ticker)}</b><span>${esc(n.headline)}</span></div>`).join("")||'<div class="marketEmpty">No ridiculous market news yet.</div>';
  $("browserPage").innerHTML=`<div class="marketSite"><header class="marketHero"><div><small>100% FICTIONAL • FAKE MONEY</small><h1>Micky Stock Exchange</h1><p>Invest MB in extremely questionable companies.</p></div><div class="marketTotals"><span>Spendable cash <b>${fmt(cash)}</b></span><span>Portfolio <b>${fmt(portfolio)}</b></span><span>Portfolio P/L <b class="${portfolioPL>=0?"gain":"loss"}">${portfolioPL>=0?"+":""}${fmt(portfolioPL)}</b></span></div></header><div class="marketTicker">${STOCKS.slice(0,8).map(st=>`<span>${st.ticker} <b>${fmt(s.prices[st.ticker])}</b></span>`).join("")}</div><section class="marketNews"><h3>Market News</h3>${news}</section><div class="stockGrid">${cards}</div></div>`;
  }
-function buyStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const price=s.prices[ticker],cost=round(q*price);if(!core.bankSpend(cost,`Bought ${q} ${ticker} share${q===1?"":"s"}`,"stock-buy")){alert(`Not enough MB. You need ${fmt(cost)}.`);return}const h=s.holdings[ticker]||{shares:0,avg:0},newShares=h.shares+q;h.avg=round(((h.avg*h.shares)+(price*q))/newShares);h.shares=newShares;s.holdings[ticker]=h;saveMarket(s);market();pushSnapshot();
- // TESTR ONLY: confirmed local stock purchase was saved successfully.
- // Outbox persists offline; auth is provided through the TEST Lab setup.
- if(window.LizzyTestShareNotificationBridge){
-   const holdings=Object.fromEntries(Object.entries(s.holdings).filter(([,v])=>Number(v?.shares)>0).map(([t,v])=>[STOCKS.find(x=>x.ticker===t)?.name||t,Number(v.shares)]));
-   window.LizzyTestShareNotificationBridge.recordConfirmedPurchase({
-      tradeId:'testr-stock-'+crypto.randomUUID(),company:st.name,quantity:q,unitPrice:price,
-      holdingsAfter:newShares,portfolioHoldings:holdings,
-      portfolioValue:totalPortfolio(s),walletBalance:core.bankSpendable()
-   }).catch(e=>console.warn('TEST share alert queued:',e));
- }
-}
+function buyStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const price=s.prices[ticker],cost=round(q*price);if(!core.bankSpend(cost,`Bought ${q} ${ticker} share${q===1?"":"s"}`,"stock-buy")){alert(`Not enough MB. You need ${fmt(cost)}.`);return}const h=s.holdings[ticker]||{shares:0,avg:0},newShares=h.shares+q;h.avg=round(((h.avg*h.shares)+(price*q))/newShares);h.shares=newShares;s.holdings[ticker]=h;saveMarket(s);market();pushSnapshot();}
 function sellStock(ticker){const s=marketTick(),st=STOCKS.find(x=>x.ticker===ticker),q=Math.max(1,Math.floor(Number(document.querySelector(`[data-stock-qty="${CSS.escape(ticker)}"]`)?.value)||1));if(!st)return;const h=s.holdings[ticker]||{shares:0,avg:0};if(h.shares<q){alert(`You only own ${h.shares} ${ticker} share${h.shares===1?"":"s"}.`);return}const proceeds=round(q*s.prices[ticker]);h.shares-=q;if(!h.shares)delete s.holdings[ticker];else s.holdings[ticker]=h;core.bankCredit(proceeds,`Sold ${q} ${ticker} share${q===1?"":"s"}`,"stock-sell");saveMarket(s);market();pushSnapshot();}
 
 const ENT_ITEMS={

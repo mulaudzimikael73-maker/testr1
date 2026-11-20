@@ -1,6 +1,6 @@
 /* LizzyOS V3 Presidential Tax — first-device collection, separate browser wallets. */
 (()=>{'use strict';
-const URL=window.LIZZY_TELEGRAM_WORKER_URL||'https://mickyhq-test.mulaudzimikael73.workers.dev/v3/';
+const URL=window.LIZZY_TELEGRAM_WORKER_URL||'https://mickyhq-test.mulaudzimikael73.workers.dev/';
 const DEVICE_KEY='lizzyV3TaxDeviceIdV1', WALLET='lizzyMickyBucsV1', RECEIPT='lizzyV3TaxReceiptsV1',HISTORY='lizzyV3TaxHistoryV1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function read(key,otherwise){try{return JSON.parse(localStorage.getItem(key)||'null')??otherwise}catch{return otherwise}}

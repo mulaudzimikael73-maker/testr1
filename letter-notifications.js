@@ -2,7 +2,7 @@
 "use strict";
 
 const WORKER = window.LIZZY_TELEGRAM_WORKER_URL ||
-  "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+  "https://mickyhq-test.mulaudzimikael73.workers.dev/";
 
 const BUILTIN_NAMES = {
   miss: "❤️ Open When You Miss Me",

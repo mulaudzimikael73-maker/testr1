@@ -1,6 +1,6 @@
 /* LizzyOS — Messages from Mikael + Synced Feelings (Today's Connection) */
 (()=>{"use strict";
-const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+const WORKER=window.LIZZY_TELEGRAM_WORKER_URL||"https://mickyhq-test.mulaudzimikael73.workers.dev/";
 const SEEN_KEY="lizzyMikaelMessagesSeenV1";
 
 const seen=()=>{try{let x=JSON.parse(localStorage.getItem(SEEN_KEY)||"[]");return Array.isArray(x)?x:[]}catch{return[]}};

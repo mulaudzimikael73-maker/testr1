@@ -3,7 +3,7 @@
 // LIZZYOS TELEGRAM NOTIFICATION BRIDGE
 // Uses text/plain to avoid browser CORS preflight failures.
 // =====================================================
-const LIZZY_TELEGRAM_WORKER_URL = "https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+const LIZZY_TELEGRAM_WORKER_URL = "https://mickyhq-test.mulaudzimikael73.workers.dev/";
 // Expose the production Worker URL to modules loaded in separate script files.
 window.LIZZY_TELEGRAM_WORKER_URL = LIZZY_TELEGRAM_WORKER_URL;
 
@@ -2100,7 +2100,7 @@ document.addEventListener("keydown", (event) => {
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const API = window.LIZZY_TELEGRAM_WORKER_URL || 'https://mickyhq-test.mulaudzimikael73.workers.dev/v3/';
+  const API = window.LIZZY_TELEGRAM_WORKER_URL || 'https://mickyhq-test.mulaudzimikael73.workers.dev/';
   const VERSION='presidential-v3-100-20261018';
   let round=null, current=0, picks=[], busy=false;
   const app=$('wouldMikaelRatherWindow');

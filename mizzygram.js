@@ -1714,7 +1714,7 @@ function homeExtras(){
    Phase 7 — Mikael HQ bridge (HQ queues commands on the Worker; this
    device polls, applies them, and publishes a small snapshot back)
    ===================================================================== */
-const WORKER="https://mickyhq-test.mulaudzimikael73.workers.dev/v3/";
+const WORKER="https://mickyhq-test.mulaudzimikael73.workers.dev/";
 const hqPost=async body=>{const r=await fetch(WORKER,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({type:body.action,...body})});const d=await r.json();if(!r.ok||d.success===false)throw new Error(d.error||"HQ sync failed");return d};
 async function applyCommand(c){
   const p=c.postId?(c.postId==="latest"?state.posts.find(x=>x.userId==="lizzy"):state.posts.find(x=>x.id===c.postId)):null,save=()=>Store.savePost(p);
