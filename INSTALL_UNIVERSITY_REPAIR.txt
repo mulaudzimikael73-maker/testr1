@@ -1,0 +1,48 @@
+TESTR UNIVERSITY OF MIKAEL — RESTORE R1 (22 Nov 2026)
+========================================================
+
+This package fixes the missing University of Mikael desktop launcher.
+Only TESTR website files are changed. No Test HQ or Worker update is required.
+
+WHY IT HAPPENED
+- The existing University icon is dynamically inserted by uom-v3.js and
+  depends on uom-data-v3.js loading successfully.
+- The older launcher is appended at the end of the desktop icons, making
+  it easy to miss on a phone with many apps.
+- Changed-files-only deployments may have omitted the original University
+  catalog/theory scripts if they were not already on TESTR.
+
+WHAT THE REPAIR DOES
+- Makes 🎓 University of Mikael a permanent icon near the TOP of TESTR desktop.
+- Includes the original course catalog, theory material, stylesheet and the
+  Part 3 University module (Office Hours integration retained).
+- Adds an on-demand recovery loader if a module fails during initial startup.
+- Uses a cache-busting version to prevent old scripts persisting after upload.
+- Does not touch or reset wallet, enrolments, University KV data, grades, awards,
+  saved progress or the current TEST Cloudflare Worker.
+
+HOW TO INSTALL
+1. BACK UP the full TESTR website and keep the existing browser storage.
+2. Unzip this package and copy all 6 files into the ROOT of the existing
+   TESTR website source folder (beside its current index.html).
+3. Replace the matching index.html and uom-* files. Keep every other file.
+4. Deploy the ENTIRE merged existing website folder to Cloudflare Pages.
+   DO NOT deploy this small ZIP as a standalone website—it is only changed files.
+5. Open TESTR, force-refresh the page, return to desktop.
+6. University should appear near the FIRST row of icons.
+7. Open it and verify the course catalog and previous awards are visible.
+8. Open a previously enrolled course; confirm the prior progress and the
+   Office Hours section appear without another charge.
+
+IF IT STILL FAILS
+- The desktop icon should now remain visible, even if its data fails.
+- Clicking it shows a named missing-file error if an asset is unavailable.
+- Check the deployed website root has uom-data-v3.js, uom-theory-v3.js,
+  uom-v3.js, uom-v3.css, and uom-launcher-repair.js.
+- If the icon opens but shows an API error, test that the Worker binding and
+  URL in index.html refer to your TEST Cloudflare Worker and that the test
+  Worker has the University endpoints. This patch never changes that Worker.
+
+SOURCE
+Based on YourUltimateFanV3-main (39).zip with the latest Part 1/2 R3 and
+Part 3 changed files applied. For TESTR only; production V3 is untouched.

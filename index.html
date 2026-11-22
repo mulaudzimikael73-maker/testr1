@@ -32,7 +32,7 @@
 <link rel="stylesheet" href="garden-magic-v3.css?v=20261016-realbouquets">
 
 <!-- LizzyOS V3 University, Holidays and Tiny Victories -->
-<link rel="stylesheet" href="uom-v3.css?v=20261104prod1">
+<link rel="stylesheet" href="uom-v3.css?v=20261122-restore-r1">
 <link rel="stylesheet" href="tiny-victories-v3.css?v=20261104-award-replies-v3">
 <script>window.LIZZY_TELEGRAM_WORKER_URL="https://mickyhq-test.mulaudzimikael73.workers.dev/";</script><link rel="stylesheet" href="presidential-part2.css?v=20261122-p2-visible-r3"><link rel="stylesheet" href="article-polls-v2.css?v=20261122-full-edition">
 <link rel="stylesheet" href="evidence-box-v2.css?v=20261122-detective">
@@ -516,6 +516,14 @@
         <div id="desktopArea" class="hidden">
 
             <!-- Desktop Icons -->
+            <!-- University launcher is intentionally static and near the top of the desktop.
+                 It must remain visible even if University catalog JavaScript fails to load. -->
+            <button type="button" class="desktopIcon uomDesktopIcon" id="uomDesktopIcon"
+                    aria-label="Open University of Mikael"
+                    onclick="if(window.LizzyUniversityRepair){window.LizzyUniversityRepair.open('university')}else if(window.LizzyUniversityV3){window.LizzyUniversityV3.open('university')}else{alert('University files have not loaded. Check that uom-data-v3.js, uom-theory-v3.js and uom-v3.js are uploaded to TESTR.')} ">
+                <span class="desktopEmoji">🎓</span><span>University of Mikael</span>
+            </button>
+
 
             <div class="desktopIcon" id="coopWorldIcon" role="button" tabindex="0"
                  onclick="window.location.href='coop.html';"
@@ -2210,11 +2218,12 @@ if (window.netlifyIdentity) {
 <script src="garden-magic-v3.js?v=20261016-realbouquets"></script>
 
 <!-- V3-only University & Tiny Victories modules: uses existing /v3 Worker. -->
-<script src="uom-data-v3.js?v=20261104prod1"></script>
-<script src="uom-theory-v3.js?v=20261104prod1"></script>
-<script src="uom-v3.js?v=20261122-office-hours"></script>
+<script src="uom-data-v3.js?v=20261122-restore-r1"></script>
+<script src="uom-theory-v3.js?v=20261122-restore-r1"></script>
+<script src="uom-v3.js?v=20261122-restore-r1"></script>
 <script src="tiny-victories-v3.js?v=20261104-award-replies-v3"></script>
 <script src="presidential-part3.js?v=20261122-part3"></script>
+<script src="uom-launcher-repair.js?v=20261122-restore-r1"></script>
 <script src="evidence-box-v2.js?v=20261122-detective"></script>
 <script src="presidential-part2.js?v=20261122-evidence2"></script></body>
 </html>
