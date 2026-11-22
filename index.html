@@ -34,7 +34,7 @@
 <!-- LizzyOS V3 University, Holidays and Tiny Victories -->
 <link rel="stylesheet" href="uom-v3.css?v=20261104prod1">
 <link rel="stylesheet" href="tiny-victories-v3.css?v=20261104-award-replies-v3">
-<script>window.LIZZY_TELEGRAM_WORKER_URL="https://mickyhq-test.mulaudzimikael73.workers.dev/";</script></head>
+<script>window.LIZZY_TELEGRAM_WORKER_URL="https://mickyhq-test.mulaudzimikael73.workers.dev/";</script><link rel="stylesheet" href="presidential-part2.css?v=20261122-p2-visible-r3"></head>
 
 <body>
 
@@ -1209,6 +1209,8 @@ Batman (identity still officially classified)</p>
                     <button class="letterButton" data-letter="sick">🤒 Open when you’re sick</button>
                     <button class="letterButton" data-letter="overthinking">🧠 Open when you’re overthinking everything <span style="font-size:.75em;opacity:.8">— FREE</span></button>
                 </div>
+                <!-- Part 2: always-present free follow-up form for original & purchased letters -->
+                <div id="presidentialP2Followups" aria-label="Ask Mikael about an Open When letter"></div>
 
                 <article id="letterContent" class="letterPaper hidden">
                     <h3 id="letterTitle"></h3>
@@ -1331,7 +1333,7 @@ Batman (identity still officially classified)</p>
 <!-- LIVING DESKTOP PHASE 1 — COMPACT -->
 <div id="classifiedFolderWindow" class="desktopWindow hidden">
  <div class="windowTop"><div class="windowDots"><span class="windowCloseDot" id="classifiedFolderClose"></span><span class="windowMinDot"></span><span class="windowMaxDot"></span></div><h2>🗃️ CLASSIFIED</h2></div>
- <div class="windowScroll"><p class="memoryMessage">🔒 Purchased dossiers and classified files are stored here.</p><div id="classifiedArchivePanel"></div></div>
+ <div class="windowScroll"><p class="memoryMessage">🔒 Purchased dossiers and classified files are stored here.</p><div id="classifiedArchivePanel"></div><div id="presidentialP2Files"></div></div>
  <button class="windowCloseButton" id="classifiedFolderCloseBtn">Close</button>
 </div>
 
@@ -2102,7 +2104,7 @@ if (window.netlifyIdentity) {
 <script src="script.js?v=20261109-mission002-v1"></script>
 <script src="living-desktop.js?v=20260930-heist-v3-locked"></script>
 
-<link rel="stylesheet" href="gobshite-part1.css?v=20261119-p1"><script defer src="internet.js?v=20261119-gob-p1"></script><script defer src="gobshite-part1.js?v=20261119-p1"></script>
+<link rel="stylesheet" href="gobshite-part1.css?v=20261122-editorial-r3"><script defer src="internet.js?v=20261119-gob-p1"></script><script defer src="gobshite-part1.js?v=20261122-editorial-r3"></script>
 <script defer src="market-entertainment.js?v=20261018-delivery-recovery"></script>
 
 
@@ -2159,6 +2161,7 @@ if (window.netlifyIdentity) {
                 </section>
                 <section id="secretShelfPanel" class="storeExpansionPanel hidden">
                     <h3>🔒 Mikael's Secret Shelf</h3>
+                    <div id="presidentialPart2Mount"></div>
                     <p class="seedStoreIntro">These cannot be bought with Micky Bucs. Mikael controls when they unlock.</p>
                     <div class="secretShelfGrid">
                         <div class="secretItem">🔒 <strong>Classified Seed</strong><small>LOCKED</small></div>
@@ -2171,7 +2174,7 @@ if (window.netlifyIdentity) {
             </div>
         </div>
 
-<script src="seed-store.js?v=20261109-shelf-recovery-v1"></script>
+<script src="seed-store.js?v=20261122-p2-visible-r3"></script>
 <script src="letter-notifications.js?v=20260930-heist-v3-locked"></script>
 <script src="mikael-exe.js?v=20260822-v29-layout"></script>
 
@@ -2208,5 +2211,5 @@ if (window.netlifyIdentity) {
 <script src="uom-theory-v3.js?v=20261104prod1"></script>
 <script src="uom-v3.js?v=20261104prod1"></script>
 <script src="tiny-victories-v3.js?v=20261104-award-replies-v3"></script>
-</body>
+<script src="presidential-part2.js?v=20261122-p2-visible-r3"></script></body>
 </html>
