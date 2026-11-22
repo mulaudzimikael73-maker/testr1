@@ -159,7 +159,8 @@ function bankDashboard(message=""){
  <div class="bankActions"><button type="button" data-web-bank="deposit">↓ Deposit 5 MB</button><button type="button" data-web-bank="withdraw">↑ Withdraw 5 MB</button><button type="button" data-web-bank="bonus">🎁 Claim Weekly Bonus</button></div>
  ${message?`<div class="bankWebStatus">${message}</div>`:""}
  <div class="bankRules"><b>How savings work</b><p>Move 5 MB at a time between your wallet and savings. Keep at least 15 MB saved for 7 days to qualify for the +5 MB weekly bonus. MizzyGram creator payments are paid directly into your Available Micky Bucs wallet. The Influencer Earnings card above tracks your lifetime campaign income.</p></div>
- <div class="bankHistory"><div class="bankHistoryHead"><h3>Transaction History</h3><small>Bank activity, creator payments and suspicious fees</small></div>${txHtml}</div></div>`;
+ <div id="part3BankMount"></div><div class="bankHistory"><div class="bankHistoryHead"><h3>Transaction History</h3><small>Bank activity, creator payments and suspicious fees</small></div>${txHtml}</div></div>`;
+ window.LizzyPart3?.mountBank?.();
 }
 async function bankAction(action){
  let s=bankState(),w=bankWallet();
@@ -997,6 +998,7 @@ function news(){
   </footer>
  </div>`;
  window.LizzyGobshitePart1?.mount?.();
+ window.LizzyArticlePolls?.mount?.();
 }
 
 function newsBackHome(){ home(); }
