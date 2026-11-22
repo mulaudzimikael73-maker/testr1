@@ -32,14 +32,18 @@ function renderContent(o){if(o.product===77)return mystery(o);const c=o.content;
 function mystery(o){return `<div data-evidence2-id="${esc(o.id)}"><p>🔎 Opening your saved detective case…</p></div>`;}
 function orderCard(o){return `<article class="p2order"><div class="p2meta">${esc(o.title)} · ${o.price} MB · ${esc(o.status)} · ${esc(o.id)}</div>${o.status==='delivered'?`<details ${o.product===77&&!o.mystery?.solvedAt?'open':''}><summary>📖 ${o.product===77?'Open mystery':'Read your delivered document'}</summary><div class="p2response">${renderContent(o)}</div></details>`:o.status==='refunded'?'<p class="p2good">Refund authorised. Reopen your Secret Shelf to receive the credit.</p>':'<p>Awaiting the President’s personal reply. You will not pay again.</p>'}</article>`}
 function renderShelf(){const host=$('presidentialPart2Mount');if(!host)return;const p=products.find(x=>x.id===selected)||products[0];const dr=read(DRAFT,{}),form=dr[selected]||{};let wallet='—';try{wallet=core().bankSpendable().toFixed(0)}catch{}
- host.innerHTML=`<section class="p2suite"><div class="p2heading"><small>TESTR · SECRET SHELF · EVIDENCE BOX 2.0</small><h3>📜 Presidential Requests & Classified Experiences</h3><p>Pay once with your real TESTR Bank of Micky wallet. Your request goes straight to Mikael's existing HQ Letters section.</p></div>${notice?`<p class="p2notice" role="status">${esc(notice)}</p>`:''}<div class="p2products">${products.map(x=>`<button type="button" data-p2="choose" data-product="${x.id}" class="${selected===x.id?'chosen':''}">${x.icon} ${esc(x.title)} <b>${x.price} MB</b></button>`).join('')}</div><div class="p2checkout"><h4>${esc(p.title)} · ${p.price} MB</h4><details><summary>Read the confidential preview</summary><p>${esc(p.teaser)}</p><p>Includes one complete experience or personally authored fulfilment. No extra charge to read it again.</p></details>${p.fields.map(([k,title,type])=>`<label>${esc(title)}${type==='textarea'?`<textarea data-p2field="${k}" rows="${k==='questions'?5:3}">${esc(form[k]||'')}</textarea>`:`<input data-p2field="${k}" value="${esc(form[k]||'')}">`}</label>`).join('')}<div class="p2buy"><span>Available: <b>${wallet} MB</b></span><button type="button" data-p2="buy" ${loading?'disabled':''}>Buy for ${p.price} MB</button></div></div><div class="p2archive"><h4>📁 Your Presidential Requests</h4>${state?.orders?.length?state.orders.map(orderCard).join(''):'<p>Your requests, delivered letters, dossiers and case files will appear here.</p>'}</div></section>`;
+ host.innerHTML=`<section class="p2suite"><div class="p2heading"><small>SECRET SHELF · PRESIDENTIAL EXPERIENCES</small><h3>📜 Presidential Requests & Classified Experiences</h3><p>Pay once with your real TESTR Bank of Micky wallet. The President receives your request, and your finished experience stays in your collection.</p></div>${notice?`<p class="p2notice" role="status">${esc(notice)}</p>`:''}<div class="p2products">${products.map(x=>`<button type="button" data-p2="choose" data-product="${x.id}" class="${selected===x.id?'chosen':''}">${x.icon} ${esc(x.title)} <b>${x.price} MB</b></button>`).join('')}</div><div class="p2checkout"><h4>${esc(p.title)} · ${p.price} MB</h4><details><summary>Read the confidential preview</summary><p>${esc(p.teaser)}</p><p>Includes one complete experience or personally authored fulfilment. No extra charge to read it again.</p></details>${p.fields.map(([k,title,type])=>`<label>${esc(title)}${type==='textarea'?`<textarea data-p2field="${k}" rows="${k==='questions'?5:3}">${esc(form[k]||'')}</textarea>`:`<input data-p2field="${k}" value="${esc(form[k]||'')}">`}</label>`).join('')}<div class="p2buy"><span>Available: <b>${wallet} MB</b></span><button type="button" data-p2="buy" ${loading?'disabled':''}>Buy for ${p.price} MB</button></div></div><div class="p2archive"><h4>📁 Your Presidential Requests</h4>${state?.orders?.length?state.orders.map(orderCard).join(''):'<p>Your requests, delivered letters, dossiers and case files will appear here.</p>'}</div></section>`;
  host.querySelectorAll('[data-p2]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.p2,b)));
  host.querySelectorAll('[data-p2field]').forEach(x=>x.addEventListener('input',()=>{const s=read(DRAFT,{});s[selected]=Object.fromEntries([...host.querySelectorAll('[data-p2field]')].map(e=>[e.dataset.p2field,e.value]));save(DRAFT,s)}));
  renderFolders();
  setTimeout(()=>window.LizzyEvidenceBoxV2?.mountAll?.(),0);
 }
-function renderFolders(){const letters=$('presidentialP2Letters');if(letters){const mine=state?.orders?.filter(o=>o.product===19&&o.status==='delivered')||[];letters.innerHTML=mine.length?`<h3>💌 Your Personal Letters from Mikael</h3>${mine.map(o=>`<article class="p2order"><details><summary>${esc(o.content?.title||o.title)}</summary><p>${esc(o.content?.body||'')}</p></details></article>`).join('')}`:'';}
-const dos=$('presidentialP2Files');if(dos){const mine=state?.orders?.filter(o=>o.product!==19&&o.status==='delivered')||[];dos.innerHTML=mine.length?`<h3>🗃️ Presidential Classified Files</h3>${mine.map(o=>`<article class="p2order"><details><summary>${esc(o.title)}</summary><div class="p2response">${renderContent(o)}</div></details></article>`).join('')}`:'';dos.querySelectorAll('[data-p2]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.p2,b)));}setTimeout(()=>window.LizzyEvidenceBoxV2?.mountAll?.(),0);}
+function renderFolders(){const letters=$('presidentialP2Letters');if(letters){
+ const mine=state?.orders?.filter(o=>o.product===19&&['pending','delivered'].includes(o.status))||[];
+ letters.innerHTML=mine.length?`<h3>💌 Personal Letters from Mikael</h3>${mine.map(o=>`<article class="p2order" data-p2letter-id="${esc(o.id)}"><details ${o.status==='pending'?'open':''}><summary>💌 ${esc(o.status==='delivered'?(o.content?.title||o.title):(o.fields?.topic||'Your Requested Letter'))}</summary>${o.status==='delivered'?`<div class="p2response"><p>${esc(o.content?.body||'')}</p><small>Delivered ${esc(o.updatedAt||'')}</small></div>`:`<p>Your personal letter is being prepared 💌</p><p class="p2notice">Awaiting Presidential Letter · No further payment required.</p>`}</details></article>`).join('')}`:'';
+ }
+ const dos=$('presidentialP2Files');if(dos){const mine=state?.orders?.filter(o=>o.product!==19&&o.status==='delivered')||[];dos.innerHTML=mine.length?`<h3>🗃️ Presidential Classified Files</h3>${mine.map(o=>`<article class="p2order"><details><summary>${esc(o.title)}</summary><div class="p2response">${renderContent(o)}</div></details></article>`).join('')}`:'';dos.querySelectorAll('[data-p2]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.p2,b)));}setTimeout(()=>window.LizzyEvidenceBoxV2?.mountAll?.(),0);
+}
 function letterOptions(){
  // The seven original Open When letters are FREE and must appear even if no paid Secret Shelf letters exist.
  const originals=[...document.querySelectorAll('#letterList [data-letter]')].map(b=>({id:'openwhen_'+b.dataset.letter,title:b.textContent.replace(/\s*—\s*FREE\s*/ig,'').trim()}));
@@ -54,7 +58,7 @@ function renderLetters(){
  const options=letterOptions(),qs=state?.followups||[];
  const previously=host.querySelector('#p2LetterPick')?.value||currentOpenLetter;
  const draftQuestion=host.querySelector('#p2LetterQuestion')?.value||'';
- host.innerHTML=`<section class="p2suite p2FollowupSuite"><small>OPEN WHEN · QUESTIONS TO MIKAEL · REPAIR R3</small><h3>💬 Ask Mikael About a Letter</h3><p>Select any original Open When letter, an owned letter or a delivered personalised letter. This is free, and Mikael answers personally through Test HQ.</p>
+ host.innerHTML=`<section class="p2suite p2FollowupSuite"><small>OPEN WHEN · QUESTIONS TO MIKAEL</small><h3>💬 Ask Mikael About a Letter</h3><p>Select any original Open When letter, an owned letter or a delivered personalised letter. This is free, and Mikael answers personally.</p>
  <label>Letter<select id="p2LetterPick">${options.map(x=>`<option value="${esc(x.id)}" ${previously===x.id?'selected':''}>${esc(x.title)}</option>`).join('')}</select></label>
  <label>Your question<textarea id="p2LetterQuestion" rows="3" maxlength="1200" placeholder="What would you really say to me about this letter?">${esc(draftQuestion)}</textarea></label>
  <button type="button" data-p2="followup" ${!options.length?'disabled':''}>Send my question to Mikael</button>
@@ -69,8 +73,8 @@ function attachCurrentLetterButton(){
  btn.addEventListener('click',()=>{mountLetters();const pick=$('p2LetterPick');if(pick&&currentOpenLetter)pick.value=currentOpenLetter;$('presidentialP2Followups')?.scrollIntoView({behavior:'smooth',block:'nearest'});$('p2LetterQuestion')?.focus();});
  article.insertBefore(btn,article.querySelector('#backLetters'));
 }
-async function refresh(force=false){if(loading)return;const now=Date.now();if(!force&&state&&now-fetchAt<7000){renderShelf();renderLetters();return;}loading=true;
- try{await recover();state=await call('p2_state');refunds();fetchAt=now;}catch(e){notice='Secret Shelf service: '+e.message;}finally{loading=false;renderShelf();renderLetters();}}
+async function refresh(force=false){if(loading)return;const now=Date.now();if(!force&&state&&now-fetchAt<7000){renderShelf();renderFolders();renderLetters();return;}loading=true;
+ try{await recover();state=await call('p2_state');refunds();fetchAt=now;}catch(e){notice='Secret Shelf service: '+e.message;}finally{loading=false;renderShelf();renderFolders();renderLetters();}}
 async function purchase(){const p=products.find(x=>x.id===selected),host=$('presidentialPart2Mount');if(!p)return;const fields=Object.fromEntries([...host.querySelectorAll('[data-p2field]')].map(x=>[x.dataset.p2field,x.value.trim()]));if(selected===18&&(!fields.title||fields.allegation?.length<10)){notice='Enter a case title and an allegation of at least 10 characters.';renderShelf();return;}if(selected===19&&(fields.topic||'').length<5){notice='Tell Mikael what to write about (at least 5 characters).';renderShelf();return;}if(selected===29){const qs=(fields.questions||'').split(/\n+/).map(s=>s.trim()).filter(Boolean);if(qs.length<1||qs.length>5){notice='Enter between 1 and 5 questions, one on each line.';renderShelf();return;}}if([46,50].includes(selected)&&(fields.topic||'').length<5){notice='Choose a topic of at least 5 characters.';renderShelf();return;}
  if(!confirm('Purchase '+p.title+' for '+p.price+' MB?\n\nMikael personally fulfils requests that need a response.'))return;
  // Check the test Worker has these endpoints BEFORE touching the browser wallet.
@@ -83,7 +87,7 @@ async function purchase(){const p=products.find(x=>x.id===selected),host=$('pres
  rs[receipt].status='paid';save(RECS,rs);loading=true;renderShelf();
  try{await call('p2_purchase',{product:p.id,receipt,fields});rs[receipt].status='submitted';save(RECS,rs);const dr=read(DRAFT,{});delete dr[selected];save(DRAFT,dr);notice='Purchase received! You can track it here.';}
  catch(e){notice='Payment recorded under '+receipt+'. The request will retry when the Secret Shelf is opened again: '+e.message;}
- finally{loading=false;await refresh(true)}
+ finally{loading=false;await refresh(true);mountLetters();renderFolders();}
 }
 async function action(a,b){try{if(a==='choose'){selected=Number(b.dataset.product);notice='';renderShelf();return;}
  if(a==='buy'){await purchase();return;}
@@ -102,14 +106,15 @@ async function action(a,b){try{if(a==='choose'){selected=Number(b.dataset.produc
  function mountLetters(){const w=$('openWhenWindow')||$('openWhenFolderWindow');if(!w)return;const h=w.querySelector('.windowScroll')||w;
   if(!$('presidentialP2Letters')){const n=document.createElement('div');n.id='presidentialP2Letters';h.appendChild(n)}
   if(!$('presidentialP2Followups')){const n=document.createElement('div');n.id='presidentialP2Followups';const anchor=h.querySelector('#letterContent');if(anchor)h.insertBefore(n,anchor);else h.appendChild(n)}
-  attachCurrentLetterButton();renderFolders();renderLetters();}
+  attachCurrentLetterButton();renderFolders();renderLetters();if(!state&&!loading)refresh(true);}
 
  function mountClassified(){const w=$('classifiedFolderWindow');if(!w)return;const h=w.querySelector('.windowScroll')||w;if(!$('presidentialP2Files')){const n=document.createElement('div');n.id='presidentialP2Files';h.appendChild(n)}renderFolders();}
  window.LizzyP2={mountShelf,mountLetters,mountClassified,refresh};
  document.addEventListener('click',e=>{if(e.target.closest('#openWhenIcon'))setTimeout(()=>{mountLetters();refresh(false);},100);if(e.target.closest('#classifiedFolderIcon'))setTimeout(()=>{mountClassified();refresh(false);},100);if(e.target.closest('#seedStoreIcon,[data-store-tab="secret"]'))setTimeout(()=>{mountShelf();refresh(false);},100);
  const letter=e.target.closest('#letterList [data-letter]');if(letter){currentOpenLetter='openwhen_'+letter.dataset.letter;setTimeout(()=>{mountLetters();const p=$('p2LetterPick');if(p)p.value=currentOpenLetter;},100);}
  });
- window.addEventListener('focus',()=>{if(!$('secretShelfPanel')?.classList.contains('hidden'))refresh(false)});
+ window.addEventListener('focus',()=>{if(!$('secretShelfPanel')?.classList.contains('hidden')||!$('openWhenWindow')?.classList.contains('hidden'))refresh(true)});
+ setInterval(()=>{if(!$('openWhenWindow')?.classList.contains('hidden'))refresh(true)},20000);
  // The old Store rewrites #secretShelfPanel.innerHTML. Reinstate our content after every rewrite.
  const shelfParent=$('secretShelfPanel');if(shelfParent){
   const mo=new MutationObserver(()=>{if(!$('presidentialPart2Mount'))mountShelf();});

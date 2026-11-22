@@ -1,0 +1,8 @@
+/* Existing Lizzy Assistant modal: only lightweight additions, mobile-safe. */
+#asAddons{margin-top:18px;border-top:1px solid rgba(140,114,162,.25);padding-top:12px;text-align:left;max-width:100%;}
+#asAddons h3{font-size:17px;margin:6px 0 10px;}#asAddons details{border:1px solid rgba(145,124,177,.25);border-radius:12px;margin:9px 0;background:rgba(255,255,255,.06);padding:10px;}
+#asAddons details summary{cursor:pointer;font-weight:700;padding:4px 1px;min-height:28px;}#asAddons details p{font-size:13px;line-height:1.5;}#asAddons .asRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:space-between;font-size:13px;}
+#asAddons label{display:block;font-size:13px;margin:8px 0 5px;}#asAddons textarea,#asAddons input,#asAddons select{max-width:100%;width:100%;padding:9px;border-radius:9px;box-sizing:border-box;background:#fff;color:#302340;border:1px solid #b7a3c7;font:inherit;}
+#asAddons button{max-width:100%;padding:9px 12px;min-height:38px;border:0;border-radius:10px;margin:5px 4px 5px 0;background:#8151b4;color:white;font-weight:650;cursor:pointer;}#asAddons button:disabled{opacity:.5;cursor:not-allowed;}
+#asAddons .asHistoryItem{border-bottom:1px solid rgba(155,127,164,.24);padding:8px 0;overflow-wrap:anywhere}#asAddons .asHistoryItem p{margin:5px 0;white-space:pre-wrap}#asAddons .asHistoryItem small{opacity:.8;font-size:11px}#asAddons .asAnswer{border-left:3px solid #8f65be;padding-left:8px}
+#asAddons .asIntro,#asAddons .asNotice,#asAddons .asComment{font-size:12px;line-height:1.5;overflow-wrap:anywhere;}#asAddons .asNotice:not(:empty){background:rgba(127,103,176,.12);padding:10px;border-radius:9px;}@media(max-width:640px){#asAddons button{font-size:12px;}#asAddons details{padding:9px}#asAddons textarea{min-height:74px;}}
